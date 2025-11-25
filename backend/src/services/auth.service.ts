@@ -14,7 +14,7 @@ import mongoose from 'mongoose';
  * @returns {Promise<IUser>}
  */
 const loginUserWithEmailAndPassword = async (email: string, password: string): Promise<IUser> => {
-  const user = await userService.getUserByEmail(email);
+  const user = await userService.getUserByEmail(email, true); // Include password for authentication
   if (!user || !(await user.isPasswordMatch(password))) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
   }

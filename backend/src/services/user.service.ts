@@ -38,10 +38,15 @@ const getUserById = async (id: mongoose.Types.ObjectId): Promise<IUser | null> =
 /**
  * Get user by email
  * @param {string} email
+ * @param {boolean} includePassword - Whether to include password field
  * @returns {Promise<IUser | null>}
  */
-const getUserByEmail = async (email: string): Promise<IUser | null> => {
-  return User.findOne({ email });
+const getUserByEmail = async (email: string, includePassword: boolean = false): Promise<IUser | null> => {
+  const query = User.findOne({ email });
+  if (includePassword) {
+    query.select('+password');
+  }
+  return query;
 };
 
 /**
