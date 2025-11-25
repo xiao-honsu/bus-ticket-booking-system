@@ -36,11 +36,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // Redirect to dashboard if logged in user tries to access auth pages
-  if (token && (pathname.startsWith('/auth/login') || pathname.startsWith('/auth/register'))) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
+  // Allow logged-in users to access auth pages - they'll see a logout confirmation modal
+  // No redirect here, let the client-side component handle it gracefully
+  
   return NextResponse.next();
 }
 

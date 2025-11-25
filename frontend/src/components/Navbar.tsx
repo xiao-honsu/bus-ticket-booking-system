@@ -22,10 +22,22 @@ export default function Navbar() {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
   const handleLogout = () => {
+    // Clear Redux state
     dispatch(logout());
-    // Clear cookies
-    document.cookie = 'token=; path=/; max-age=0';
-    document.cookie = 'userRole=; path=/; max-age=0';
+    
+    // Clear all cookies
+    const cookies = document.cookie.split(';');
+    cookies.forEach(cookie => {
+      const cookieName = cookie.split('=')[0].trim();
+      document.cookie = `${cookieName}=; path=/; max-age=0`;
+    });
+    
+    // Clear localStorage and sessionStorage
+    if (typeof window !== 'undefined') {
+      localStorage.clear();
+      sessionStorage.clear();
+    }
+    
     toast.success('Logged out successfully');
     router.push('/');
   };
