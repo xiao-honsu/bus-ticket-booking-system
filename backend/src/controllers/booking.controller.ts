@@ -1,0 +1,52 @@
+import httpStatus from 'http-status';
+import { Request, Response } from 'express';
+import mongoose from 'mongoose';
+import catchAsync from '../utils/catchAsync';
+import { bookingService } from '../services';
+import pick from '../utils/pick';
+import ApiError from '../utils/ApiError';
+
+const createBooking = catchAsync(async (req: Request, res: Response) => {
+  const bookingData = {
+    ...req.body,
+    user: (req.user as any)._id,
+  };
+  const booking = await bookingService.createBooking(bookingData);
+  res.status(httpStatus.CREATED).send(booking);
+});
+
+const getBookings = catchAsync(async (req: Request, res: Response) => {
+  const filter = pick(req.query, ['user', 'trip', 'status', 'paymentStatus']);
+  const options: any = pick(req.query, ['sortBy', 'limit', 'page', 'populate']);
+  const result = await bookingService.queryBookings(filter, options);
+  res.send(result);
+});
+
+const getBooking = catchAsync(async (req: Request, res: Response) => {
+  const booking = await bookingService.getBookingById(new mongoose.Types.ObjectId(req.params.bookingId));
+  if (!booking) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Booking not found');
+  }
+  res.send(booking);
+});
+
+const updateBooking = catchAsync(async (req: Request, res: Response) => {
+  const booking = await bookingService.updateBookingById(new mongoose.Types.ObjectId(req.params.bookingId), req.body);
+  res.send(booking);
+});
+
+const cancelBooking = catchAsync(async (req: Request, res: Response) => {
+  const booking = await bookingService.cancelBooking(
+    new mongoose.Types.ObjectId(req.params.bookingId),
+    req.body.reason
+  );
+  res.send(booking);
+});
+
+export default {
+  createBooking,
+  getBookings,
+  getBooking,
+  updateBooking,
+  cancelBooking,
+};
