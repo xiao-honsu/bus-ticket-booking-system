@@ -32,6 +32,7 @@ const tokenSchema = new mongoose.Schema<IToken>(
     expires: {
       type: Date,
       required: true,
+      // Note: TTL index is created separately below, not here
     },
     blacklisted: {
       type: Boolean,

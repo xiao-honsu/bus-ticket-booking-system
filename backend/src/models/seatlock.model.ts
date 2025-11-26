@@ -32,12 +32,12 @@ const seatLockSchema = new mongoose.Schema<ISeatLock>(
     sessionId: {
       type: String,
       required: true,
-      index: true,
+      // Note: Index is created in compound index below
     },
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
+      // Note: TTL index is created separately below, not here
     },
   },
   {

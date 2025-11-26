@@ -12,16 +12,26 @@ let payOS: any = null;
 if (config.payos.clientId && config.payos.apiKey && config.payos.checksumKey) {
   try {
     // Dynamic import to handle ESM module in tests
-    const PayOS = require('@payos/node');
-    const PayOSConstructor = PayOS.default || PayOS;
-    payOS = new PayOSConstructor(
-      config.payos.clientId,
-      config.payos.apiKey,
-      config.payos.checksumKey
-    );
+    const PayOSModule = require('@payos/node');
+    // Handle both CommonJS and ES Module exports
+    const PayOSConstructor = PayOSModule.default || PayOSModule;
+    
+    // Verify it's a constructor function
+    if (typeof PayOSConstructor === 'function') {
+      payOS = new PayOSConstructor(
+        config.payos.clientId,
+        config.payos.apiKey,
+        config.payos.checksumKey
+      );
+    } else {
+      throw new Error('PayOS constructor not found in module exports');
+    }
   } catch (error) {
     // Silently fail if PayOS is not available (e.g., in tests)
-    console.warn('PayOS SDK not available:', error);
+    // Don't show warning in test environment to keep test output clean
+    if (process.env.NODE_ENV !== 'test') {
+      console.warn('PayOS SDK not available:', error instanceof Error ? error.message : error);
+    }
   }
 }
 
