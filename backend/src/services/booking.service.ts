@@ -2,7 +2,10 @@ import httpStatus from 'http-status';
 import mongoose, { PaginateOptions } from 'mongoose';
 import Booking, { IBooking } from '../models/booking.model';
 import Trip from '../models/trip.model';
+import User from '../models/user.model';
 import ApiError from '../utils/ApiError';
+import emailService from './email.service';
+import logger from '../config/logger';
 
 /**
  * Create a booking
@@ -36,6 +39,69 @@ const createBooking = async (bookingBody: Partial<IBooking>): Promise<IBooking> 
   trip.bookedSeats.push(...requestedSeats);
   trip.availableSeats -= requestedSeats.length;
   await trip.save();
+
+  // Send confirmation email
+  try {
+    if (bookingBody.user) {
+      const user = await User.findById(bookingBody.user);
+      if (user && user.email) {
+        await emailService.sendBookingConfirmation(user.email, booking);
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to send booking confirmation email:', error);
+    // Don't fail the booking if email fails
+  }
+
+  return booking;
+};
+
+/**
+ * Create a guest booking (without authentication)
+ * @param {Object} bookingBody
+ * @returns {Promise<IBooking>}
+ */
+const createGuestBooking = async (bookingBody: Partial<IBooking>): Promise<IBooking> => {
+  // Validate trip exists
+  const trip = await Trip.findById(bookingBody.trip);
+  if (!trip) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Trip not found');
+  }
+
+  const requestedSeats = bookingBody.passengers?.map((p) => p.seatNumber) || [];
+
+  // Check seat availability - check if seats are already booked
+  const alreadyBookedSeats = requestedSeats.filter((seat) => trip.bookedSeats.includes(seat));
+  if (alreadyBookedSeats.length > 0) {
+    throw new ApiError(httpStatus.BAD_REQUEST, `One or more seats (${alreadyBookedSeats.join(', ')}) are already booked`);
+  }
+
+  // Check if enough seats available
+  if (trip.availableSeats < requestedSeats.length) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Not enough available seats');
+  }
+
+  // Create booking with pending status
+  const booking = await Booking.create({
+    ...bookingBody,
+    status: 'pending',
+    paymentStatus: 'pending',
+  } as Partial<IBooking>);
+
+  // Update trip's booked seats and available seats
+  trip.bookedSeats.push(...requestedSeats);
+  trip.availableSeats -= requestedSeats.length;
+  await trip.save();
+
+  // Send confirmation email to guest
+  try {
+    if (bookingBody.guestEmail) {
+      await emailService.sendBookingConfirmation(bookingBody.guestEmail, booking);
+    }
+  } catch (error) {
+    logger.error('Failed to send guest booking confirmation email:', error);
+    // Don't fail the booking if email fails
+  }
 
   return booking;
 };
@@ -109,11 +175,31 @@ const cancelBooking = async (bookingId: mongoose.Types.ObjectId, reason: string)
   booking.cancelledAt = new Date();
   await booking.save();
 
+  // Send cancellation email
+  try {
+    let email: string | undefined;
+    
+    if (booking.user) {
+      const user = await User.findById(booking.user);
+      email = user?.email;
+    } else if (booking.guestEmail) {
+      email = booking.guestEmail;
+    }
+    
+    if (email) {
+      await emailService.sendBookingCancellation(email, booking);
+    }
+  } catch (error) {
+    logger.error('Failed to send booking cancellation email:', error);
+    // Don't fail the cancellation if email fails
+  }
+
   return booking;
 };
 
 export default {
   createBooking,
+  createGuestBooking,
   queryBookings,
   getBookingById,
   updateBookingById,

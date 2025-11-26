@@ -15,6 +15,11 @@ const createBooking = catchAsync(async (req: Request, res: Response) => {
   res.status(httpStatus.CREATED).send(booking);
 });
 
+const createGuestBooking = catchAsync(async (req: Request, res: Response) => {
+  const booking = await bookingService.createGuestBooking(req.body);
+  res.status(httpStatus.CREATED).send(booking);
+});
+
 const getBookings = catchAsync(async (req: Request, res: Response) => {
   const filter = pick(req.query, ['user', 'trip', 'status', 'paymentStatus']);
   const options: any = pick(req.query, ['sortBy', 'limit', 'page', 'populate']);
@@ -45,6 +50,7 @@ const cancelBooking = catchAsync(async (req: Request, res: Response) => {
 
 export default {
   createBooking,
+  createGuestBooking,
   getBookings,
   getBooking,
   updateBooking,

@@ -60,8 +60,31 @@ const cancelBooking = {
   }),
 };
 
+const createGuestBooking = {
+  body: Joi.object().keys({
+    trip: Joi.string().required().custom(objectId),
+    guestEmail: Joi.string().email().required(),
+    guestPhone: Joi.string().required().regex(/^[0-9]{10,11}$/),
+    passengers: Joi.array()
+      .items(
+        Joi.object().keys({
+          name: Joi.string().required(),
+          age: Joi.number().integer().min(0).max(120),
+          gender: Joi.string().valid('male', 'female', 'other'),
+          seatNumber: Joi.string().required(),
+        })
+      )
+      .min(1)
+      .required(),
+    contactPhone: Joi.string().required(),
+    contactEmail: Joi.string().email().required(),
+    totalAmount: Joi.number().required().min(0),
+  }),
+};
+
 export default {
   createBooking,
+  createGuestBooking,
   getBookings,
   getBooking,
   updateBooking,

@@ -1,7 +1,25 @@
 const allRoles = {
-  user: ['bookTicket', 'manageOwnBookings', 'getTrips', 'getBuses'],
-  admin: ['getUsers', 'manageUsers', 'manageBuses', 'manageRoutes', 'manageTrips', 'manageBookings'],
-  operator: ['manageBuses', 'manageTrips', 'getBookings'],
+  user: [
+    'bookTicket',
+    'manageOwnBookings',
+    'getTrips',
+    'getBuses',
+    'getRoutes',
+    'createReview',
+    'manageOwnReviews',
+    'getSearchHistory'
+  ],
+  admin: [
+    'getUsers',
+    'manageUsers',
+    'manageBuses',
+    'manageRoutes',
+    'manageTrips',
+    'manageBookings',
+    'manageOperators',
+    'viewAnalytics',
+    'manageReviews'
+  ]
 };
 
 export const roles = Object.keys(allRoles);

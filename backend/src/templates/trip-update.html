@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Trip Update</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      line-height: 1.6; 
+      color: #333; 
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container { 
+      max-width: 600px; 
+      margin: 0 auto; 
+      padding: 20px;
+      background-color: #ffffff;
+    }
+    .header { 
+      background-color: #FF9800; 
+      color: white; 
+      padding: 20px; 
+      text-align: center;
+      border-radius: 5px 5px 0 0;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .content { 
+      padding: 20px; 
+      background-color: #f9f9f9; 
+    }
+    .update-info { 
+      background-color: white; 
+      padding: 15px; 
+      margin: 20px 0; 
+      border-left: 4px solid #FF9800;
+      border-radius: 4px;
+    }
+    .update-info h3 {
+      margin-top: 0;
+      color: #FF9800;
+    }
+    .update-info p {
+      margin: 10px 0;
+    }
+    .footer { 
+      text-align: center; 
+      padding: 20px; 
+      color: #777; 
+      font-size: 12px;
+      background-color: #f4f4f4;
+    }
+    .alert {
+      background-color: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 15px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚠️ Trip Update</h1>
+    </div>
+    <div class="content">
+      <p>Dear Customer,</p>
+      <p>There has been an important update regarding your upcoming trip.</p>
+      
+      <div class="update-info">
+        <h3>Update Details</h3>
+        <p><strong>Trip ID:</strong> {{tripId}}</p>
+        <p><strong>Update:</strong> {{updateMessage}}</p>
+      </div>
+      
+      <div class="alert">
+        <strong>⚠️ Action Required:</strong> Please check your booking details and plan accordingly.
+      </div>
+      
+      <p><strong>What should you do?</strong></p>
+      <ul>
+        <li>Review the update carefully.</li>
+        <li>Check your booking confirmation for the latest details.</li>
+        <li>Contact our support team if you have any concerns.</li>
+      </ul>
+      
+      <p>We apologize for any inconvenience this may cause and appreciate your understanding.</p>
+      
+      <p>If you have any concerns, please contact our support team immediately.</p>
+    </div>
+    <div class="footer">
+      <p>&copy; 2025 Bus Ticket Booking System. All rights reserved.</p>
+      <p>This is an automated email. Please do not reply to this message.</p>
+    </div>
+  </div>
+</body>
+</html>
