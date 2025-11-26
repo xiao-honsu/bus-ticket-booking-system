@@ -7,7 +7,7 @@ import compression from 'compression';
 import mongoSanitize from '@exortek/express-mongo-sanitize';
 import config from './config/config';
 import { successHandler, errorHandler } from './config/morgan';
-import { jwtStrategy } from './config/passport';
+import { jwtStrategy, googleStrategy } from './config/passport';
 import { generalLimiter } from './middlewares/rateLimiter';
 import { errorConverter, errorHandler as customErrorHandler } from './middlewares/error';
 import ApiError from './utils/ApiError';
@@ -19,7 +19,12 @@ const app: Express = express();
 app.use(helmet());
 
 // enable cors
-app.use(cors());
+app.use(
+  cors({
+    origin: config.frontendUrl, // Allow frontend origin
+    credentials: true, // Allow credentials (cookies, authorization headers)
+  })
+);
 
 // parse json request body
 app.use(express.json());
@@ -36,6 +41,9 @@ app.use(compression());
 // jwt authentication
 app.use(passport.initialize());
 passport.use('jwt', jwtStrategy);
+if (googleStrategy) {
+  passport.use('google', googleStrategy);
+}
 
 // limit repeated failed requests to auth endpoints
 if (config.env === 'production') {

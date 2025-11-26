@@ -29,6 +29,9 @@ const envVarsSchema = Joi.object()
     PAYOS_API_KEY: Joi.string().description('PayOS API key'),
     PAYOS_CHECKSUM_KEY: Joi.string().description('PayOS checksum key'),
     FRONTEND_URL: Joi.string().default('http://localhost:3000').description('Frontend URL for payment redirects'),
+    GOOGLE_CLIENT_ID: Joi.string().description('Google OAuth client ID'),
+    GOOGLE_CLIENT_SECRET: Joi.string().description('Google OAuth client secret'),
+    GOOGLE_CALLBACK_URL: Joi.string().description('Google OAuth callback URL'),
     LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'http', 'verbose', 'debug').default('info'),
   })
   .unknown();
@@ -78,6 +81,11 @@ export default {
     checksumKey: envVars.PAYOS_CHECKSUM_KEY,
   },
   frontendUrl: envVars.FRONTEND_URL,
+  google: {
+    clientId: envVars.GOOGLE_CLIENT_ID,
+    clientSecret: envVars.GOOGLE_CLIENT_SECRET,
+    callbackUrl: envVars.GOOGLE_CALLBACK_URL,
+  },
   logging: {
     level: envVars.LOG_LEVEL,
   },

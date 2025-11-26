@@ -2,6 +2,7 @@ import httpStatus from 'http-status';
 import { Request, Response } from 'express';
 import catchAsync from '../utils/catchAsync';
 import { authService, userService, tokenService } from '../services';
+import config from '../config/config';
 
 const register = catchAsync(async (req: Request, res: Response) => {
   const user = await userService.createUser(req.body);
@@ -42,6 +43,15 @@ const verifyEmail = catchAsync(async (req: Request, res: Response) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+const googleCallback = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+  const tokens = await tokenService.generateAuthTokens(user._id);
+
+  // Redirect to frontend with tokens in URL (will be extracted and stored in cookies)
+  const redirectUrl = `${config.frontendUrl}/auth/callback?token=${tokens.access.token}&refreshToken=${tokens.refresh.token}`;
+  res.redirect(redirectUrl);
+});
+
 export default {
   register,
   login,
@@ -50,4 +60,5 @@ export default {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  googleCallback,
 };
