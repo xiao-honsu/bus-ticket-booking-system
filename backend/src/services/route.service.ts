@@ -79,6 +79,21 @@ const searchRoutes = async (originCity: string, destinationCity: string) => {
   });
 };
 
+/**
+ * Toggle route active status
+ * @param {mongoose.Types.ObjectId} routeId
+ * @returns {Promise<IRoute | null>}
+ */
+const toggleRouteStatus = async (routeId: mongoose.Types.ObjectId): Promise<IRoute | null> => {
+  const route = await getRouteById(routeId);
+  if (!route) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Route not found');
+  }
+  route.isActive = !route.isActive;
+  await route.save();
+  return route;
+};
+
 export default {
   createRoute,
   queryRoutes,
@@ -86,4 +101,5 @@ export default {
   updateRouteById,
   deleteRouteById,
   searchRoutes,
+  toggleRouteStatus,
 };

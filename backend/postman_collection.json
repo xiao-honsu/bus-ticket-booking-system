@@ -1,0 +1,725 @@
+{
+  "info": {
+    "name": "Bus Ticket Booking System - API Tests",
+    "description": "Complete API testing collection for Phase 3 comprehensive testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/v1",
+      "type": "string"
+    },
+    {
+      "key": "userToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tripId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "routeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "operatorId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reviewId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "1.1 Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has tokens', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.tokens).to.exist;",
+                  "    pm.environment.set('userToken', jsonData.tokens.access.token);",
+                  "    pm.environment.set('refreshToken', jsonData.tokens.refresh.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser{{$timestamp}}@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.2 Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has tokens', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.tokens).to.exist;",
+                  "    pm.environment.set('userToken', jsonData.tokens.access.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.3 Login with Wrong Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"WrongPassword123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.4 Refresh Tokens",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh-tokens",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh-tokens"]
+            }
+          }
+        },
+        {
+          "name": "1.5 Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Guest Booking Flow",
+      "item": [
+        {
+          "name": "2.1 Search Trips",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.length > 0) {",
+                  "    pm.environment.set('tripId', jsonData[0]._id || jsonData[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips/search?routeId={{routeId}}&date=2025-12-01&originCity=Hanoi&destinationCity=Ho Chi Minh",
+              "host": ["{{baseUrl}}"],
+              "path": ["trips", "search"],
+              "query": [
+                {
+                  "key": "routeId",
+                  "value": "{{routeId}}"
+                },
+                {
+                  "key": "date",
+                  "value": "2025-12-01"
+                },
+                {
+                  "key": "originCity",
+                  "value": "Hanoi"
+                },
+                {
+                  "key": "destinationCity",
+                  "value": "Ho Chi Minh"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.2 Lock Seats",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"seats\": [\"A1\", \"A2\"],\n  \"sessionId\": \"guest_session_{{$timestamp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/seatlock/lock",
+              "host": ["{{baseUrl}}"],
+              "path": ["seatlock", "lock"]
+            }
+          }
+        },
+        {
+          "name": "2.3 Create Guest Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('bookingId', jsonData._id || jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trip\": \"{{tripId}}\",\n  \"seats\": [\"A1\", \"A2\"],\n  \"guestEmail\": \"guest{{$timestamp}}@example.com\",\n  \"guestPhone\": \"0123456789\",\n  \"passengers\": [\n    {\n      \"name\": \"John Doe\",\n      \"age\": 30,\n      \"gender\": \"male\"\n    },\n    {\n      \"name\": \"Jane Doe\",\n      \"age\": 28,\n      \"gender\": \"female\"\n    }\n  ],\n  \"sessionId\": \"guest_session_123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/guest",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings", "guest"]
+            }
+          }
+        },
+        {
+          "name": "2.4 Create Payment Link",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"returnUrl\": \"http://localhost:3000/booking-success\",\n  \"cancelUrl\": \"http://localhost:3000/booking-cancelled\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "create"]
+            }
+          }
+        },
+        {
+          "name": "2.5 Get Payment Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/{{bookingId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "{{bookingId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "2.6 Simulate Payment Webhook",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"orderCode\": 123456,\n    \"amount\": 500000,\n    \"description\": \"Payment for booking\",\n    \"accountNumber\": \"0123456789\",\n    \"reference\": \"{{bookingId}}\",\n    \"transactionDateTime\": \"2025-11-26T10:00:00Z\",\n    \"code\": \"00\",\n    \"desc\": \"Thành công\"\n  },\n  \"signature\": \"valid_signature\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "webhook"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Reviews",
+      "item": [
+        {
+          "name": "3.1 Create Review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('reviewId', jsonData._id || jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking\": \"{{bookingId}}\",\n  \"trip\": \"{{tripId}}\",\n  \"operator\": \"{{operatorId}}\",\n  \"rating\": 5,\n  \"comment\": \"Excellent service! Very comfortable ride.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["reviews"]
+            }
+          }
+        },
+        {
+          "name": "3.2 Get Reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reviews?trip={{tripId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reviews"],
+              "query": [
+                {
+                  "key": "trip",
+                  "value": "{{tripId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.3 Upvote Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"voteType\": \"upvote\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reviews/{{reviewId}}/vote",
+              "host": ["{{baseUrl}}"],
+              "path": ["reviews", "{{reviewId}}", "vote"]
+            }
+          }
+        },
+        {
+          "name": "3.4 Downvote Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"voteType\": \"downvote\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reviews/{{reviewId}}/vote",
+              "host": ["{{baseUrl}}"],
+              "path": ["reviews", "{{reviewId}}", "vote"]
+            }
+          }
+        },
+        {
+          "name": "3.5 Remove Vote",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reviews/{{reviewId}}/vote",
+              "host": ["{{baseUrl}}"],
+              "path": ["reviews", "{{reviewId}}", "vote"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Operators",
+      "item": [
+        {
+          "name": "4.1 Create Operator (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('operatorId', jsonData._id || jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"VIP Bus Lines\",\n  \"email\": \"contact@vipbus.com\",\n  \"phone\": \"0123456789\",\n  \"address\": \"456 Highway Street, Hanoi\",\n  \"licenseNumber\": \"BUS789012\",\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operators",
+              "host": ["{{baseUrl}}"],
+              "path": ["operators"]
+            }
+          }
+        },
+        {
+          "name": "4.2 Get Operators (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/operators",
+              "host": ["{{baseUrl}}"],
+              "path": ["operators"]
+            }
+          }
+        },
+        {
+          "name": "4.3 Update Operator",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0987654321\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operators/{{operatorId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["operators", "{{operatorId}}"]
+            }
+          }
+        },
+        {
+          "name": "4.4 Delete Operator",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operators/{{operatorId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["operators", "{{operatorId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Routes",
+      "item": [
+        {
+          "name": "5.1 Get Routes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/routes",
+              "host": ["{{baseUrl}}"],
+              "path": ["routes"]
+            }
+          }
+        },
+        {
+          "name": "5.2 Toggle Route Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/routes/{{routeId}}/toggle-status",
+              "host": ["{{baseUrl}}"],
+              "path": ["routes", "{{routeId}}", "toggle-status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Search History",
+      "item": [
+        {
+          "name": "6.1 Get My Search History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/search-history?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "search-history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Seat Locking",
+      "item": [
+        {
+          "name": "7.1 Lock Seats",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"seats\": [\"B1\", \"B2\"],\n  \"sessionId\": \"session_{{$timestamp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/seatlock/lock",
+              "host": ["{{baseUrl}}"],
+              "path": ["seatlock", "lock"]
+            }
+          }
+        },
+        {
+          "name": "7.2 Get Locked Seats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/seatlock/trip/{{tripId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["seatlock", "trip", "{{tripId}}"]
+            }
+          }
+        },
+        {
+          "name": "7.3 Release Locks",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"seats\": [\"B1\", \"B2\"],\n  \"sessionId\": \"session_123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/seatlock/release",
+              "host": ["{{baseUrl}}"],
+              "path": ["seatlock", "release"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

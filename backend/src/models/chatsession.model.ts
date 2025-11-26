@@ -44,8 +44,7 @@ const chatSessionSchema = new mongoose.Schema<IChatSession>(
     sessionId: {
       type: String,
       required: true,
-      unique: true,
-      index: true,
+      unique: true, // unique automatically creates an index
     },
     status: {
       type: String,
@@ -130,7 +129,7 @@ const chatSessionSchema = new mongoose.Schema<IChatSession>(
 );
 
 // Indexes
-chatSessionSchema.index({ sessionId: 1 });
+// Note: sessionId index is already created by unique constraint
 chatSessionSchema.index({ user: 1, status: 1 });
 
 // TTL index - Keep only 90 days
