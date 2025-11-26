@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import { clearAuthCookies } from '@/lib/utils/cookies';
 
 export default function Navbar() {
   const router = useRouter();
@@ -25,12 +26,8 @@ export default function Navbar() {
     // Clear Redux state
     dispatch(logout());
     
-    // Clear all cookies
-    const cookies = document.cookie.split(';');
-    cookies.forEach(cookie => {
-      const cookieName = cookie.split('=')[0].trim();
-      document.cookie = `${cookieName}=; path=/; max-age=0`;
-    });
+    // Clear auth cookies
+    clearAuthCookies();
     
     // Clear localStorage and sessionStorage
     if (typeof window !== 'undefined') {

@@ -1,5 +1,41 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+interface IOAuthProvider {
+  provider: 'google' | 'facebook';
+  providerId: string;
+  providerData?: any;
+  connectedAt: Date;
+}
+
+interface INotificationPreferences {
+  email: {
+    enabled: boolean;
+    bookingConfirmations: boolean;
+    tripReminders: boolean;
+    tripUpdates: boolean;
+    promotional: boolean;
+  };
+  sms: {
+    enabled: boolean;
+    bookingConfirmations: boolean;
+    tripReminders: boolean;
+    tripUpdates: boolean;
+  };
+  push: {
+    enabled: boolean;
+    bookingConfirmations: boolean;
+    tripReminders: boolean;
+    tripUpdates: boolean;
+  };
+}
+
+interface IUserStats {
+  totalBookings: number;
+  completedTrips: number;
+  cancelledBookings: number;
+  totalSpent: number;
+}
+
 interface User {
   id: string;
   name: string;
@@ -8,6 +44,15 @@ interface User {
   phone?: string;
   isEmailVerified: boolean;
   profilePictureUrl?: string;
+  status: 'active' | 'suspended' | 'deleted';
+  failedLoginAttempts: number;
+  lockedUntil?: Date;
+  lastLoginAt?: Date;
+  oauthProviders: IOAuthProvider[];
+  notificationPreferences: INotificationPreferences;
+  stats: IUserStats;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 interface AuthState {
@@ -33,7 +78,7 @@ const authSlice = createSlice({
     setCredentials: (
       state,
       action: PayloadAction<{
-        user: User;
+        user: User | null;
         tokens: { access: { token: string }; refresh: { token: string } };
       }>
     ) => {

@@ -8,3 +8,4 @@ export const useAppStore = useStore.withTypes<AppStore>();
 
 // Export custom hooks
 export { useAuthGuard } from './hooks/useAuthGuard';
+export { useAuthSync } from './hooks/useAuthSync';

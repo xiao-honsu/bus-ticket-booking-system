@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/lib/hooks';
 import { logout } from '@/lib/store/features/auth/authSlice';
 import { toast } from 'sonner';
+import { clearAuthCookies } from '@/lib/utils/cookies';
 
 interface UseAuthGuardOptions {
   redirectIfAuthenticated?: boolean;
@@ -29,12 +30,8 @@ export function useAuthGuard(options: UseAuthGuardOptions = {}) {
     // Clear Redux state
     dispatch(logout());
     
-    // Clear all cookies
-    const cookies = document.cookie.split(';');
-    cookies.forEach(cookie => {
-      const cookieName = cookie.split('=')[0].trim();
-      document.cookie = `${cookieName}=; path=/; max-age=0`;
-    });
+    // Clear auth cookies
+    clearAuthCookies();
     
     // Clear localStorage
     if (typeof window !== 'undefined') {

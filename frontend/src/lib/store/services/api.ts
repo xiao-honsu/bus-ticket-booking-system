@@ -1,11 +1,26 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+"use client";
+
+import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
 import type { RootState } from '@/lib/store';
+import { setCredentials, logout as logoutAction } from '../features/auth/authSlice';
+import { Mutex } from 'async-mutex';
+import { clearAuthCookies, setAuthCookies, getCookie } from '@/lib/utils/cookies';
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+// Create a mutex to prevent multiple simultaneous refresh token calls
+const mutex = new Mutex();
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1',
+  baseUrl: `${BASE_URL}/api/v1`,
   prepareHeaders: (headers, { getState }) => {
-    // Get token from auth state
-    const token = (getState() as RootState).auth.token;
+    // Get token from auth state first
+    let token = (getState() as RootState).auth.token;
+    
+    // If no token in Redux state, try to get from cookies
+    if (!token && typeof document !== 'undefined') {
+      token = getCookie('token');
+    }
     
     // If we have a token, include it in the headers
     if (token) {
@@ -14,11 +29,119 @@ const baseQuery = fetchBaseQuery({
     
     return headers;
   },
+  credentials: 'include', // Include cookies in requests
 });
+
+// Enhanced base query with automatic token refresh on 401 errors
+const baseQueryWithReauth: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  // Wait until the mutex is available without locking it
+  await mutex.waitForUnlock();
+  
+  let result = await baseQuery(args, api, extraOptions);
+  
+  // If we get a 401 Unauthorized error, try to refresh the token
+  if (result.error && result.error.status === 401) {
+    // Check if another request is already refreshing the token
+    if (!mutex.isLocked()) {
+      const release = await mutex.acquire();
+      
+      try {
+        const state = api.getState() as RootState;
+        const refreshToken = state.auth.refreshToken;
+        
+        if (!refreshToken) {
+          // No refresh token available, logout user
+          api.dispatch(logoutAction());
+          
+          // Clear cookies
+          if (typeof document !== 'undefined') {
+            clearAuthCookies();
+          }
+          
+          // Redirect to login
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
+          
+          return result;
+        }
+        
+        // Attempt to refresh the access token
+        const refreshResult = await baseQuery(
+          {
+            url: '/auth/refresh-tokens',
+            method: 'POST',
+            body: { refreshToken },
+          },
+          api,
+          extraOptions
+        );
+        
+        if (refreshResult.data) {
+          const data = refreshResult.data as {
+            access: { token: string; expires: string };
+            refresh: { token: string; expires: string };
+          };
+          
+          const state = api.getState() as RootState;
+          const user = state.auth.user;
+          
+          if (user) {
+            // Update tokens in Redux store
+            api.dispatch(
+              setCredentials({
+                user,
+                tokens: {
+                  access: data.access,
+                  refresh: data.refresh,
+                },
+              })
+            );
+            
+            // Update cookies with new tokens
+            if (typeof document !== 'undefined') {
+              setAuthCookies({ access: data.access, refresh: data.refresh }, user.role);
+            }
+            
+            // Retry the original request with the new access token
+            result = await baseQuery(args, api, extraOptions);
+          }
+        } else {
+          // Refresh token is invalid or expired, logout user
+          api.dispatch(logoutAction());
+          
+          // Clear cookies
+          if (typeof document !== 'undefined') {
+            clearAuthCookies();
+          }
+          
+          // Redirect to login with session expired message
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login?session_expired=true';
+          }
+        }
+      } finally {
+        // Release the mutex
+        release();
+      }
+    } else {
+      // Wait for the ongoing refresh to complete
+      await mutex.waitForUnlock();
+      // Retry the original request (token should be refreshed now)
+      result = await baseQuery(args, api, extraOptions);
+    }
+  }
+  
+  return result;
+};
 
 export const api = createApi({
   reducerPath: 'api',
-  baseQuery,
+  baseQuery: baseQueryWithReauth,
   tagTypes: ['Auth', 'User', 'Bus', 'Route', 'Trip', 'Booking'],
   endpoints: (builder) => ({
     // Auth endpoints

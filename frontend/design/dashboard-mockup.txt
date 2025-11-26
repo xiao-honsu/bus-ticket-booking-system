@@ -1,0 +1,127 @@
+Dashboard Mockup - Visual Representation
+==========================================
+
+This file describes the dashboard UI layout implemented in the application.
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                         HEADER / NAVIGATION BAR                             │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│  Dashboard Title                                                           │
+│  Welcome back, [User Name]! (or "Admin Dashboard" for admin)              │
+│  Subtitle text describing dashboard purpose                               │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────┬─────────────────────────┬─────────────────────────┐
+│  📝 Total Bookings     │  📅 Upcoming Trips      │  💵 Total Spent         │
+│                        │                         │                         │
+│        12              │         3               │      $847.50            │
+│  All time bookings     │  Scheduled trips        │  Lifetime spending      │
+└─────────────────────────┴─────────────────────────┴─────────────────────────┘
+
+┌────────────────────────────────────────────────────┬───────────────────────┐
+│  Recent Bookings                                   │  Quick Actions        │
+│                                                    │                       │
+│  Trip              Date          Status    Price   │  ┌─────────────────┐ │
+│  ──────────────────────────────────────────────   │  │ 🔍 Book New     │ │
+│  HCM → Hanoi      Dec 1, 2024   ✓Confirmed $45    │  │    Trip         │ │
+│  Hanoi → Da Nang  Dec 15, 2024  ⏳Pending   $32    │  └─────────────────┘ │
+│  HCM → Can Tho    Dec 20, 2024  ✓Confirmed $18    │                       │
+│  Da Nang → Hue    Jan 5, 2025   ✓Confirmed $15    │  ┌─────────────────┐ │
+│  Hue → HCM        Jan 10, 2025  ✓Confirmed $52    │  │ 👤 View Profile │ │
+│                                                    │  └─────────────────┘ │
+│                                                    │                       │
+│                                                    │  ┌─────────────────┐ │
+│                                                    │  │ 📅 My Bookings  │ │
+│                                                    │  └─────────────────┘ │
+│                                                    │                       │
+│                                                    │  ┌─────────────────┐ │
+│                                                    │  │ 📄 Help         │ │
+│                                                    │  └─────────────────┘ │
+└────────────────────────────────────────────────────┴───────────────────────┘
+
+[ADMIN ONLY SECTION - Appears only for admin users]
+┌────────────────────────────────────────────────────────────────────────────┐
+│  System Statistics                                                         │
+│                                                                            │
+│  ┌────────────────────┬────────────────────┬────────────────────┐        │
+│  │ System-wide        │ Total Buses        │ Total Routes       │        │
+│  │ Bookings           │                    │                    │        │
+│  │     245            │      42            │      18            │        │
+│  │ All users combined │ Active fleet       │ Available routes   │        │
+│  └────────────────────┴────────────────────┴────────────────────┘        │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────┬──────────────────────────────────────────────┐
+│  Upcoming Trips              │  Profile Settings                            │
+│                              │                                              │
+│  [Existing widget content]   │  [Existing widget content]                   │
+└─────────────────────────────┴──────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│  Booking History                                                           │
+│                                                                            │
+│  [Existing comprehensive booking history table]                           │
+└────────────────────────────────────────────────────────────────────────────┘
+
+WIDGET DESCRIPTIONS:
+====================
+
+Widget 1: Summary Cards (3 cards in a row)
+- Total Bookings: Shows count of all bookings made by the user
+- Upcoming Trips: Shows count of trips with future departure dates
+- Total Spent: Shows sum of all booking prices in USD
+- Each card has an icon, large number display, and descriptive text
+- Uses Card, CardHeader, CardTitle, and CardContent components
+
+Widget 2: Recent Bookings Table
+- Displays last 5 bookings in a table format
+- Columns: Trip (origin → destination), Date, Status, Price
+- Status shown with colored badges (green=confirmed, yellow=pending, etc.)
+- Uses Table, TableHeader, TableBody, TableRow, TableCell components
+- Empty state shown when no bookings exist
+
+Widget 3: Quick Actions
+- Vertical list of action buttons
+- Book New Trip: Links to /search
+- View Profile: Links to /dashboard/profile
+- My Bookings: Links to /dashboard/bookings
+- Help & Support: Links to /support
+- Each button has an icon and description
+- Primary button for main action, outline buttons for others
+
+ROLE-BASED DIFFERENCES:
+========================
+
+USER ROLE:
+- Shows personal statistics only
+- Summary cards reflect user's own bookings
+- Quick actions focused on user activities
+- No system-wide statistics section
+
+ADMIN ROLE:
+- Title changes to "Admin Dashboard"
+- Additional "System Statistics" section appears
+- Shows system-wide booking count (all users)
+- Shows total buses in fleet
+- Shows total routes available
+- Different colored statistics for visual distinction
+
+RESPONSIVE DESIGN:
+==================
+- Mobile (< 768px): Single column stack, cards stack vertically
+- Tablet (768px - 1024px): 2 columns for summary cards
+- Desktop (> 1024px): 3 columns for summary, 2:1 ratio for table:actions split
+
+COLOR SCHEME:
+=============
+- Receipt Icon: Default muted
+- Calendar Icon: Default muted
+- Dollar Sign Icon: Default muted
+- Confirmed Status: Green (#10B981)
+- Pending Status: Yellow (#F59E0B)
+- Cancelled Status: Red (#EF4444)
+- Completed Status: Blue (#3B82F6)
+- Card Background: White with border and shadow
+- Admin Stats: Blue (bookings), Green (buses), Purple (routes)

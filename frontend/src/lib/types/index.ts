@@ -1,17 +1,58 @@
 // User types
+export interface IOAuthProvider {
+  provider: 'google' | 'facebook';
+  providerId: string;
+  providerData?: any;
+  connectedAt: Date;
+}
+
+export interface INotificationPreferences {
+  email: {
+    enabled: boolean;
+    bookingConfirmations: boolean;
+    tripReminders: boolean;
+    tripUpdates: boolean;
+    promotional: boolean;
+  };
+  sms: {
+    enabled: boolean;
+    bookingConfirmations: boolean;
+    tripReminders: boolean;
+    tripUpdates: boolean;
+  };
+  push: {
+    enabled: boolean;
+    bookingConfirmations: boolean;
+    tripReminders: boolean;
+    tripUpdates: boolean;
+  };
+}
+
+export interface IUserStats {
+  totalBookings: number;
+  completedTrips: number;
+  cancelledBookings: number;
+  totalSpent: number;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   password?: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'operator';
   phone?: string;
   isEmailVerified: boolean;
   profilePictureUrl?: string;
   status: 'active' | 'suspended' | 'deleted';
-  lastLogin?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  failedLoginAttempts: number;
+  lockedUntil?: Date;
+  lastLoginAt?: Date;
+  oauthProviders: IOAuthProvider[];
+  notificationPreferences: INotificationPreferences;
+  stats: IUserStats;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 // Passenger types
