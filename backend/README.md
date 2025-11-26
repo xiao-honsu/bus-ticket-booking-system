@@ -114,6 +114,79 @@ npm start
 
 # Run with PM2 (cluster mode)
 npm run start:pm2
+```
+
+## 🌱 Seed Data for Testing
+
+The project includes comprehensive seed scripts to populate your database with test data for dashboard testing and development.
+
+### Quick Start
+
+```bash
+# Option 1: Seed everything (recommended for first-time setup)
+npm run seed:data
+
+# Option 2: Seed only admin user
+npm run seed:admin
+```
+
+### Seed Data Script (`npm run seed:data`)
+
+Creates a complete dataset for testing all dashboard features with **real data**:
+
+**Created Data:**
+- **2 Users**: Admin (admin@busticket.com) & Test User (user@busticket.com)
+- **2 Operators**: FUTA Bus Lines, Hoang Long Bus
+- **3 Buses**: Mix of sleeper & seater buses with different capacities
+- **4 Routes**: Popular routes (HCMC-Da Lat, Hanoi-Ha Long, etc.)
+- **9 Trips**: Past, present, and future trips for testing
+- **9 Bookings**: Various statuses (completed, confirmed, pending, cancelled)
+
+**Features:**
+- ✅ **Idempotent**: Safe to run multiple times - checks if data exists before creating
+- ✅ **Realistic Data**: Vietnamese city names, proper locations, realistic prices
+- ✅ **Time-based Trips**: Past (completed), today (ongoing), future (upcoming)
+- ✅ **Multiple Statuses**: Test all booking states (pending, confirmed, cancelled, completed)
+- ✅ **Payment States**: Completed payments, pending, refunded statuses
+
+**Login Credentials:**
+```
+Admin:
+  Email: admin@busticket.com
+  Password: Admin@123456
+
+Test User:
+  Email: user@busticket.com
+  Password: User@123456
+```
+
+**What You Can Test After Seeding:**
+- ✅ Dashboard widgets with real booking data
+- ✅ Trip search with actual routes and schedules
+- ✅ Booking flow with available seats
+- ✅ Admin panel with system statistics
+- ✅ User dashboard with booking history
+- ✅ Payment integration testing
+
+**Example Output:**
+```
+✅ Connected to MongoDB
+📋 Step 1: Seeding Users...
+   ✅ Admin user created: admin@busticket.com
+   ✅ Test user created: user@busticket.com
+📋 Step 2: Seeding Operators...
+   ✅ Operator created: Phuong Trang (FUTA Bus Lines)
+   ✅ Operator created: Hoang Long Bus
+...
+✅ ============= SEED COMPLETE =============
+```
+
+### Admin Seed Script (`npm run seed:admin`)
+
+Creates only the admin user if you just need admin access:
+- Email: admin@busticket.com
+- Password: Admin@123456
+- Role: admin
 
 # Lint và format code
 npm run lint

@@ -2,7 +2,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import Joi from 'joi';
 
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+// Load .env from project root (where package.json is located)
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const envVarsSchema = Joi.object()
   .keys({
