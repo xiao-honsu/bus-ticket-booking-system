@@ -25,6 +25,10 @@ const envVarsSchema = Joi.object()
     EMAIL_FROM: Joi.string().description('the from field in the emails sent by the app'),
     PAYMENT_GATEWAY_URL: Joi.string().description('payment gateway URL'),
     PAYMENT_SECRET_KEY: Joi.string().description('payment secret key'),
+    PAYOS_CLIENT_ID: Joi.string().description('PayOS client ID'),
+    PAYOS_API_KEY: Joi.string().description('PayOS API key'),
+    PAYOS_CHECKSUM_KEY: Joi.string().description('PayOS checksum key'),
+    FRONTEND_URL: Joi.string().default('http://localhost:3000').description('Frontend URL for payment redirects'),
     LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'http', 'verbose', 'debug').default('info'),
   })
   .unknown();
@@ -68,6 +72,12 @@ export default {
     gatewayUrl: envVars.PAYMENT_GATEWAY_URL,
     secretKey: envVars.PAYMENT_SECRET_KEY,
   },
+  payos: {
+    clientId: envVars.PAYOS_CLIENT_ID,
+    apiKey: envVars.PAYOS_API_KEY,
+    checksumKey: envVars.PAYOS_CHECKSUM_KEY,
+  },
+  frontendUrl: envVars.FRONTEND_URL,
   logging: {
     level: envVars.LOG_LEVEL,
   },

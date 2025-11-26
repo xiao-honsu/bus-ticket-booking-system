@@ -5,14 +5,16 @@ import Trip from '../models/trip.model';
 import User from '../models/user.model';
 import ApiError from '../utils/ApiError';
 import emailService from './email.service';
+import seatLockService from './seatlock.service';
 import logger from '../config/logger';
 
 /**
  * Create a booking
  * @param {Object} bookingBody
+ * @param {string} sessionId - Session ID to verify seat locks
  * @returns {Promise<IBooking>}
  */
-const createBooking = async (bookingBody: Partial<IBooking>): Promise<IBooking> => {
+const createBooking = async (bookingBody: Partial<IBooking>, sessionId?: string): Promise<IBooking> => {
   // Verify trip exists and has available seats
   const trip = await Trip.findById(bookingBody.trip);
   if (!trip) {
@@ -20,6 +22,18 @@ const createBooking = async (bookingBody: Partial<IBooking>): Promise<IBooking> 
   }
 
   const requestedSeats = bookingBody.passengers?.map((p) => p.seatNumber) || [];
+  
+  // Check if seats are locked by other users
+  const lockedSeats = await seatLockService.areSeatsLocked(trip._id, requestedSeats);
+  if (lockedSeats && sessionId) {
+    // Verify that this session owns the locks
+    const ownsLock = await seatLockService.doesSessionOwnLock(trip._id, requestedSeats, sessionId);
+    if (!ownsLock) {
+      throw new ApiError(httpStatus.CONFLICT, 'One or more seats are locked by another user');
+    }
+  } else if (lockedSeats) {
+    throw new ApiError(httpStatus.CONFLICT, 'One or more seats are locked by another user');
+  }
   
   // Check if seats are already booked
   const alreadyBookedSeats = requestedSeats.filter((seat) => trip.bookedSeats.includes(seat));
@@ -40,6 +54,11 @@ const createBooking = async (bookingBody: Partial<IBooking>): Promise<IBooking> 
   trip.availableSeats -= requestedSeats.length;
   await trip.save();
 
+  // Release seat locks after successful booking
+  if (sessionId) {
+    await seatLockService.releaseSpecificLocks(trip._id, requestedSeats, sessionId);
+  }
+
   // Send confirmation email
   try {
     if (bookingBody.user) {
@@ -59,9 +78,10 @@ const createBooking = async (bookingBody: Partial<IBooking>): Promise<IBooking> 
 /**
  * Create a guest booking (without authentication)
  * @param {Object} bookingBody
+ * @param {string} sessionId - Session ID to verify seat locks
  * @returns {Promise<IBooking>}
  */
-const createGuestBooking = async (bookingBody: Partial<IBooking>): Promise<IBooking> => {
+const createGuestBooking = async (bookingBody: Partial<IBooking>, sessionId?: string): Promise<IBooking> => {
   // Validate trip exists
   const trip = await Trip.findById(bookingBody.trip);
   if (!trip) {
@@ -69,6 +89,18 @@ const createGuestBooking = async (bookingBody: Partial<IBooking>): Promise<IBook
   }
 
   const requestedSeats = bookingBody.passengers?.map((p) => p.seatNumber) || [];
+
+  // Check if seats are locked by other users
+  const lockedSeats = await seatLockService.areSeatsLocked(trip._id, requestedSeats);
+  if (lockedSeats && sessionId) {
+    // Verify that this session owns the locks
+    const ownsLock = await seatLockService.doesSessionOwnLock(trip._id, requestedSeats, sessionId);
+    if (!ownsLock) {
+      throw new ApiError(httpStatus.CONFLICT, 'One or more seats are locked by another user');
+    }
+  } else if (lockedSeats) {
+    throw new ApiError(httpStatus.CONFLICT, 'One or more seats are locked by another user');
+  }
 
   // Check seat availability - check if seats are already booked
   const alreadyBookedSeats = requestedSeats.filter((seat) => trip.bookedSeats.includes(seat));
@@ -92,6 +124,11 @@ const createGuestBooking = async (bookingBody: Partial<IBooking>): Promise<IBook
   trip.bookedSeats.push(...requestedSeats);
   trip.availableSeats -= requestedSeats.length;
   await trip.save();
+
+  // Release seat locks after successful booking
+  if (sessionId) {
+    await seatLockService.releaseSpecificLocks(trip._id, requestedSeats, sessionId);
+  }
 
   // Send confirmation email to guest
   try {

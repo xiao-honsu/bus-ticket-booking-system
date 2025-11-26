@@ -11,12 +11,14 @@ const createBooking = catchAsync(async (req: Request, res: Response) => {
     ...req.body,
     user: (req.user as any)._id,
   };
-  const booking = await bookingService.createBooking(bookingData);
+  const sessionId = req.body.sessionId || (req.user as any)?._id?.toString();
+  const booking = await bookingService.createBooking(bookingData, sessionId);
   res.status(httpStatus.CREATED).send(booking);
 });
 
 const createGuestBooking = catchAsync(async (req: Request, res: Response) => {
-  const booking = await bookingService.createGuestBooking(req.body);
+  const sessionId = req.body.sessionId;
+  const booking = await bookingService.createGuestBooking(req.body, sessionId);
   res.status(httpStatus.CREATED).send(booking);
 });
 

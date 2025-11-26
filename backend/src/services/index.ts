@@ -6,3 +6,8 @@ export { default as routeService } from './route.service';
 export { default as tripService } from './trip.service';
 export { default as bookingService } from './booking.service';
 export { default as emailService } from './email.service';
+export { default as operatorService } from './operator.service';
+export { default as reviewService } from './review.service';
+export { default as paymentService } from './payment.service';
+export { default as seatLockService } from './seatlock.service';
+export { default as chatbotService } from './chatbot.service';
