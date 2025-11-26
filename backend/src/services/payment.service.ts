@@ -1,4 +1,3 @@
-import PayOS from '@payos/node';
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import config from '../config/config';
@@ -11,11 +10,19 @@ import emailService from './email.service';
 let payOS: any = null;
 
 if (config.payos.clientId && config.payos.apiKey && config.payos.checksumKey) {
-  payOS = new (PayOS as any)(
-    config.payos.clientId,
-    config.payos.apiKey,
-    config.payos.checksumKey
-  );
+  try {
+    // Dynamic import to handle ESM module in tests
+    const PayOS = require('@payos/node');
+    const PayOSConstructor = PayOS.default || PayOS;
+    payOS = new PayOSConstructor(
+      config.payos.clientId,
+      config.payos.apiKey,
+      config.payos.checksumKey
+    );
+  } catch (error) {
+    // Silently fail if PayOS is not available (e.g., in tests)
+    console.warn('PayOS SDK not available:', error);
+  }
 }
 
 /**

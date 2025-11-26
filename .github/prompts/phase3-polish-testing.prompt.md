@@ -22,7 +22,7 @@ The backend now has:
 
 ## Tasks to Complete in This Phase
 
-### Task 3.1: Add Missing Fields & Endpoints (Priority: ⚠️ MEDIUM)
+### Task 3.1: Add Missing Fields & Endpoints (Priority: ⚠️ MEDIUM, Effort: 1-2 hours)
 
 #### Subtask 3.1.1: Add `isActive` to Route Model
 
@@ -154,7 +154,9 @@ const getSearchHistory = catchAsync(async (req, res) => {
 
 ---
 
-### Task 3.2: Comprehensive Testing (Priority: 🚨 CRITICAL)
+### Task 3.2: Comprehensive Testing (Priority: 🚨 CRITICAL, Effort: 2-3 hours)
+
+**Note:** This task covers MANUAL testing with tools like Postman, Thunder Client, or curl. For automated testing with Jest, see Task 3.4.
 
 #### Test Suite 1: Authentication & Authorization
 
@@ -455,7 +457,7 @@ describe('Authorization', () => {
 
 ---
 
-### Task 3.3: Error Handling & Edge Cases
+### Task 3.3: Error Handling & Edge Cases (Priority: ⚠️ HIGH, Effort: 1-2 hours)
 
 **Test Edge Cases:**
 
@@ -488,7 +490,989 @@ describe('Authorization', () => {
 
 ---
 
-### Task 3.4: Performance Testing (Optional but Recommended)
+### Task 3.4: Automated Testing with Jest (Priority: 🚨 CRITICAL)
+
+**Objective:** Write comprehensive unit and integration tests using Jest to ensure code quality and prevent regressions.
+
+**Prerequisites:**
+- Jest already installed in `package.json` ✅
+- TypeScript configuration ready (`ts-jest`)
+- Test scripts available: `npm test`, `npm run test:watch`, `npm run coverage`
+
+---
+
+#### Subtask 3.4.1: Setup Jest Configuration
+
+**Files to Create/Modify:**
+
+1. **Create `Source/backend/jest.config.js`**
+
+```javascript
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/tests'],
+  testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+  transform: {
+    '^.+\\.ts$': 'ts-jest',
+  },
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/index.ts',
+    '!src/app.ts',
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+};
+```
+
+2. **Create `Source/backend/tests/setup.ts`**
+
+```typescript
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
+let mongoServer: MongoMemoryServer;
+
+// Setup: Connect to in-memory MongoDB before all tests
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+  await mongoose.connect(mongoUri);
+});
+
+// Cleanup: Clear database after each test
+afterEach(async () => {
+  const collections = mongoose.connection.collections;
+  for (const key in collections) {
+    await collections[key].deleteMany({});
+  }
+});
+
+// Teardown: Disconnect and stop MongoDB after all tests
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
+});
+```
+
+3. **Install additional test dependencies:**
+
+```bash
+npm install --save-dev mongodb-memory-server @types/jest
+```
+
+**Verification:**
+- [ ] Jest config file created
+- [ ] Test setup file created
+- [ ] Dependencies installed
+- [ ] Can run `npm test` without errors
+
+---
+
+#### Subtask 3.4.2: Unit Tests - Services Layer
+
+**Create `Source/backend/tests/unit/services/auth.service.test.ts`**
+
+```typescript
+import authService from '../../../src/services/auth.service';
+import User from '../../../src/models/user.model';
+import tokenService from '../../../src/services/token.service';
+import { faker } from '@faker-js/faker';
+import bcrypt from 'bcryptjs';
+
+describe('Auth Service - Unit Tests', () => {
+  describe('register', () => {
+    it('should register a new user successfully', async () => {
+      const userData = {
+        email: faker.internet.email().toLowerCase(),
+        password: 'Password123!',
+        name: faker.person.fullName(),
+      };
+
+      const user = await authService.register(userData.email, userData.password, userData.name);
+
+      expect(user).toBeDefined();
+      expect(user.email).toBe(userData.email);
+      expect(user.name).toBe(userData.name);
+      expect(user.role).toBe('user');
+    });
+
+    it('should hash password before saving', async () => {
+      const userData = {
+        email: faker.internet.email().toLowerCase(),
+        password: 'Password123!',
+        name: faker.person.fullName(),
+      };
+
+      const user = await authService.register(userData.email, userData.password, userData.name);
+      
+      expect(user.password).not.toBe(userData.password);
+      const isMatch = await bcrypt.compare(userData.password, user.password);
+      expect(isMatch).toBe(true);
+    });
+
+    it('should throw error if email already exists', async () => {
+      const email = faker.internet.email().toLowerCase();
+      await authService.register(email, 'Password123!', faker.person.fullName());
+
+      await expect(
+        authService.register(email, 'Password123!', faker.person.fullName())
+      ).rejects.toThrow('Email already taken');
+    });
+  });
+
+  describe('loginUserWithEmailAndPassword', () => {
+    it('should login with correct credentials', async () => {
+      const password = 'Password123!';
+      const email = faker.internet.email().toLowerCase();
+      await authService.register(email, password, faker.person.fullName());
+
+      const user = await authService.loginUserWithEmailAndPassword(email, password);
+
+      expect(user).toBeDefined();
+      expect(user.email).toBe(email);
+    });
+
+    it('should throw error with incorrect password', async () => {
+      const email = faker.internet.email().toLowerCase();
+      await authService.register(email, 'Password123!', faker.person.fullName());
+
+      await expect(
+        authService.loginUserWithEmailAndPassword(email, 'WrongPassword')
+      ).rejects.toThrow('Incorrect email or password');
+    });
+
+    it('should throw error with non-existent email', async () => {
+      await expect(
+        authService.loginUserWithEmailAndPassword('nonexistent@example.com', 'Password123!')
+      ).rejects.toThrow('Incorrect email or password');
+    });
+  });
+});
+```
+
+**Create `Source/backend/tests/unit/services/booking.service.test.ts`**
+
+```typescript
+import bookingService from '../../../src/services/booking.service';
+import Booking from '../../../src/models/booking.model';
+import Trip from '../../../src/models/trip.model';
+import { faker } from '@faker-js/faker';
+import mongoose from 'mongoose';
+
+describe('Booking Service - Unit Tests', () => {
+  let mockTrip: any;
+
+  beforeEach(async () => {
+    // Create a mock trip for testing
+    mockTrip = await Trip.create({
+      bus: new mongoose.Types.ObjectId(),
+      route: new mongoose.Types.ObjectId(),
+      departureTime: new Date(Date.now() + 86400000), // Tomorrow
+      arrivalTime: new Date(Date.now() + 90000000),
+      price: 150000,
+      availableSeats: ['A1', 'A2', 'B1', 'B2'],
+    });
+  });
+
+  describe('createBooking', () => {
+    it('should create a booking for authenticated user', async () => {
+      const userId = new mongoose.Types.ObjectId();
+      const bookingData = {
+        trip: mockTrip._id,
+        seats: ['A1'],
+        passengers: [{ name: 'John Doe', age: 30, gender: 'male' }],
+      };
+
+      const booking = await bookingService.createBooking(userId, bookingData);
+
+      expect(booking).toBeDefined();
+      expect(booking.user.toString()).toBe(userId.toString());
+      expect(booking.seats).toEqual(['A1']);
+      expect(booking.status).toBe('pending');
+    });
+
+    it('should create a guest booking without user', async () => {
+      const bookingData = {
+        trip: mockTrip._id,
+        seats: ['A1'],
+        guestEmail: 'guest@example.com',
+        guestPhone: '0123456789',
+        passengers: [{ name: 'Jane Doe', age: 25, gender: 'female' }],
+      };
+
+      const booking = await bookingService.createGuestBooking(bookingData);
+
+      expect(booking).toBeDefined();
+      expect(booking.guestEmail).toBe('guest@example.com');
+      expect(booking.guestPhone).toBe('0123456789');
+      expect(booking.user).toBeUndefined();
+    });
+
+    it('should calculate total price correctly', async () => {
+      const bookingData = {
+        trip: mockTrip._id,
+        seats: ['A1', 'A2'], // 2 seats
+        guestEmail: 'guest@example.com',
+        guestPhone: '0123456789',
+        passengers: [
+          { name: 'John Doe', age: 30, gender: 'male' },
+          { name: 'Jane Doe', age: 25, gender: 'female' },
+        ],
+      };
+
+      const booking = await bookingService.createGuestBooking(bookingData);
+
+      expect(booking.totalPrice).toBe(mockTrip.price * 2);
+    });
+
+    it('should throw error if seats not available', async () => {
+      // Book first
+      await bookingService.createGuestBooking({
+        trip: mockTrip._id,
+        seats: ['A1'],
+        guestEmail: 'guest1@example.com',
+        guestPhone: '0123456789',
+        passengers: [{ name: 'John Doe', age: 30, gender: 'male' }],
+      });
+
+      // Try to book same seat
+      await expect(
+        bookingService.createGuestBooking({
+          trip: mockTrip._id,
+          seats: ['A1'],
+          guestEmail: 'guest2@example.com',
+          guestPhone: '0987654321',
+          passengers: [{ name: 'Jane Doe', age: 25, gender: 'female' }],
+        })
+      ).rejects.toThrow('Seat A1 is not available');
+    });
+  });
+});
+```
+
+**Create `Source/backend/tests/unit/services/seatlock.service.test.ts`**
+
+```typescript
+import seatlockService from '../../../src/services/seatlock.service';
+import SeatLock from '../../../src/models/seatlock.model';
+import mongoose from 'mongoose';
+
+describe('SeatLock Service - Unit Tests', () => {
+  let tripId: mongoose.Types.ObjectId;
+  let sessionId: string;
+
+  beforeEach(() => {
+    tripId = new mongoose.Types.ObjectId();
+    sessionId = 'test-session-123';
+  });
+
+  describe('lockSeats', () => {
+    it('should lock seats successfully', async () => {
+      const seats = ['A1', 'A2'];
+
+      await seatlockService.lockSeats(tripId.toString(), seats, sessionId);
+
+      const locks = await SeatLock.find({ trip: tripId });
+      expect(locks).toHaveLength(2);
+      expect(locks.map(l => l.seatNumber)).toEqual(expect.arrayContaining(seats));
+    });
+
+    it('should throw error if seat already locked by another session', async () => {
+      await seatlockService.lockSeats(tripId.toString(), ['A1'], 'session-1');
+
+      await expect(
+        seatlockService.lockSeats(tripId.toString(), ['A1'], 'session-2')
+      ).rejects.toThrow('Seat A1 is already locked');
+    });
+
+    it('should allow same session to lock already locked seat', async () => {
+      await seatlockService.lockSeats(tripId.toString(), ['A1'], sessionId);
+
+      // Should not throw
+      await expect(
+        seatlockService.lockSeats(tripId.toString(), ['A1'], sessionId)
+      ).resolves.not.toThrow();
+    });
+
+    it('should set expiration time to 10 minutes', async () => {
+      await seatlockService.lockSeats(tripId.toString(), ['A1'], sessionId);
+
+      const lock = await SeatLock.findOne({ trip: tripId, seatNumber: 'A1' });
+      expect(lock).toBeDefined();
+
+      const now = new Date();
+      const expiresAt = new Date(lock!.expiresAt);
+      const diffMinutes = (expiresAt.getTime() - now.getTime()) / 1000 / 60;
+
+      expect(diffMinutes).toBeGreaterThan(9);
+      expect(diffMinutes).toBeLessThanOrEqual(10);
+    });
+  });
+
+  describe('releaseSeats', () => {
+    it('should release locked seats', async () => {
+      await seatlockService.lockSeats(tripId.toString(), ['A1', 'A2'], sessionId);
+
+      await seatlockService.releaseSeats(sessionId);
+
+      const locks = await SeatLock.find({ sessionId });
+      expect(locks).toHaveLength(0);
+    });
+  });
+
+  describe('getLockedSeats', () => {
+    it('should return locked seats for a trip', async () => {
+      await seatlockService.lockSeats(tripId.toString(), ['A1', 'A2'], 'session-1');
+      await seatlockService.lockSeats(tripId.toString(), ['B1'], 'session-2');
+
+      const lockedSeats = await seatlockService.getLockedSeats(tripId.toString());
+
+      expect(lockedSeats).toEqual(expect.arrayContaining(['A1', 'A2', 'B1']));
+      expect(lockedSeats).toHaveLength(3);
+    });
+
+    it('should not return expired locks', async () => {
+      // Create an expired lock manually
+      await SeatLock.create({
+        trip: tripId,
+        seatNumber: 'A1',
+        sessionId,
+        expiresAt: new Date(Date.now() - 1000), // 1 second ago
+      });
+
+      const lockedSeats = await seatlockService.getLockedSeats(tripId.toString());
+
+      expect(lockedSeats).toHaveLength(0);
+    });
+  });
+});
+```
+
+**Verification:**
+- [ ] Auth service tests pass (register, login, validation)
+- [ ] Booking service tests pass (create booking, guest booking, pricing)
+- [ ] Seat lock service tests pass (lock, release, expiration)
+- [ ] Test coverage > 80% for services
+
+---
+
+#### Subtask 3.4.3: Integration Tests - API Endpoints
+
+**Create `Source/backend/tests/integration/auth.test.ts`**
+
+```typescript
+import request from 'supertest';
+import app from '../../src/app';
+import { faker } from '@faker-js/faker';
+
+describe('Auth API - Integration Tests', () => {
+  describe('POST /v1/auth/register', () => {
+    it('should register a new user and return tokens', async () => {
+      const userData = {
+        email: faker.internet.email().toLowerCase(),
+        password: 'Password123!',
+        name: faker.person.fullName(),
+      };
+
+      const res = await request(app)
+        .post('/v1/auth/register')
+        .send(userData)
+        .expect(201);
+
+      expect(res.body.user).toMatchObject({
+        email: userData.email,
+        name: userData.name,
+        role: 'user',
+      });
+      expect(res.body.tokens).toBeDefined();
+      expect(res.body.tokens.access).toBeDefined();
+      expect(res.body.tokens.refresh).toBeDefined();
+    });
+
+    it('should return 400 if email is invalid', async () => {
+      const res = await request(app)
+        .post('/v1/auth/register')
+        .send({
+          email: 'invalid-email',
+          password: 'Password123!',
+          name: 'Test User',
+        })
+        .expect(400);
+
+      expect(res.body.message).toContain('email');
+    });
+
+    it('should return 400 if password is too weak', async () => {
+      const res = await request(app)
+        .post('/v1/auth/register')
+        .send({
+          email: faker.internet.email().toLowerCase(),
+          password: '123', // Too weak
+          name: 'Test User',
+        })
+        .expect(400);
+
+      expect(res.body.message).toContain('password');
+    });
+
+    it('should return 400 if email already exists', async () => {
+      const email = faker.internet.email().toLowerCase();
+      
+      await request(app)
+        .post('/v1/auth/register')
+        .send({ email, password: 'Password123!', name: 'User 1' });
+
+      const res = await request(app)
+        .post('/v1/auth/register')
+        .send({ email, password: 'Password123!', name: 'User 2' })
+        .expect(400);
+
+      expect(res.body.message).toContain('already taken');
+    });
+  });
+
+  describe('POST /v1/auth/login', () => {
+    const userCredentials = {
+      email: faker.internet.email().toLowerCase(),
+      password: 'Password123!',
+      name: 'Test User',
+    };
+
+    beforeEach(async () => {
+      await request(app)
+        .post('/v1/auth/register')
+        .send(userCredentials);
+    });
+
+    it('should login with correct credentials', async () => {
+      const res = await request(app)
+        .post('/v1/auth/login')
+        .send({
+          email: userCredentials.email,
+          password: userCredentials.password,
+        })
+        .expect(200);
+
+      expect(res.body.user.email).toBe(userCredentials.email);
+      expect(res.body.tokens).toBeDefined();
+    });
+
+    it('should return 401 with incorrect password', async () => {
+      const res = await request(app)
+        .post('/v1/auth/login')
+        .send({
+          email: userCredentials.email,
+          password: 'WrongPassword',
+        })
+        .expect(401);
+
+      expect(res.body.message).toContain('Incorrect');
+    });
+
+    it('should return 401 with non-existent email', async () => {
+      const res = await request(app)
+        .post('/v1/auth/login')
+        .send({
+          email: 'nonexistent@example.com',
+          password: 'Password123!',
+        })
+        .expect(401);
+    });
+  });
+
+  describe('POST /v1/auth/refresh-tokens', () => {
+    it('should refresh tokens with valid refresh token', async () => {
+      // Register and login
+      const registerRes = await request(app)
+        .post('/v1/auth/register')
+        .send({
+          email: faker.internet.email().toLowerCase(),
+          password: 'Password123!',
+          name: 'Test User',
+        });
+
+      const refreshToken = registerRes.body.tokens.refresh.token;
+
+      // Refresh tokens
+      const res = await request(app)
+        .post('/v1/auth/refresh-tokens')
+        .send({ refreshToken })
+        .expect(200);
+
+      expect(res.body.access).toBeDefined();
+      expect(res.body.refresh).toBeDefined();
+    });
+
+    it('should return 401 with invalid refresh token', async () => {
+      await request(app)
+        .post('/v1/auth/refresh-tokens')
+        .send({ refreshToken: 'invalid-token' })
+        .expect(401);
+    });
+  });
+});
+```
+
+**Create `Source/backend/tests/integration/booking.test.ts`**
+
+```typescript
+import request from 'supertest';
+import app from '../../src/app';
+import { faker } from '@faker-js/faker';
+import mongoose from 'mongoose';
+import Trip from '../../src/models/trip.model';
+import Route from '../../src/models/route.model';
+import Bus from '../../src/models/bus.model';
+
+describe('Booking API - Integration Tests', () => {
+  let adminToken: string;
+  let userToken: string;
+  let testTrip: any;
+
+  beforeAll(async () => {
+    // Create admin
+    const adminRes = await request(app)
+      .post('/v1/auth/register')
+      .send({
+        email: 'admin@test.com',
+        password: 'Admin123!',
+        name: 'Admin User',
+      });
+    adminToken = adminRes.body.tokens.access.token;
+
+    // Create regular user
+    const userRes = await request(app)
+      .post('/v1/auth/register')
+      .send({
+        email: 'user@test.com',
+        password: 'User123!',
+        name: 'Regular User',
+      });
+    userToken = userRes.body.tokens.access.token;
+
+    // Create test trip
+    const route = await Route.create({
+      origin: 'Hanoi',
+      destination: 'Ho Chi Minh',
+      distance: 1700,
+      duration: 30,
+    });
+
+    const bus = await Bus.create({
+      busNumber: 'BUS001',
+      capacity: 40,
+      type: 'sleeper',
+      operator: new mongoose.Types.ObjectId(),
+    });
+
+    testTrip = await Trip.create({
+      bus: bus._id,
+      route: route._id,
+      departureTime: new Date(Date.now() + 86400000),
+      arrivalTime: new Date(Date.now() + 90000000),
+      price: 200000,
+      availableSeats: ['A1', 'A2', 'A3', 'B1', 'B2'],
+    });
+  });
+
+  describe('POST /v1/bookings/guest', () => {
+    it('should create guest booking without authentication', async () => {
+      const res = await request(app)
+        .post('/v1/bookings/guest')
+        .send({
+          trip: testTrip._id.toString(),
+          seats: ['A1'],
+          guestEmail: 'guest@example.com',
+          guestPhone: '0123456789',
+          passengers: [
+            { name: 'John Doe', age: 30, gender: 'male' },
+          ],
+        })
+        .expect(201);
+
+      expect(res.body.guestEmail).toBe('guest@example.com');
+      expect(res.body.seats).toEqual(['A1']);
+      expect(res.body.status).toBe('pending');
+      expect(res.body.totalPrice).toBe(200000);
+    });
+
+    it('should return 400 if guest email is missing', async () => {
+      const res = await request(app)
+        .post('/v1/bookings/guest')
+        .send({
+          trip: testTrip._id.toString(),
+          seats: ['A2'],
+          guestPhone: '0123456789',
+          passengers: [{ name: 'John Doe', age: 30, gender: 'male' }],
+        })
+        .expect(400);
+
+      expect(res.body.message).toContain('guestEmail');
+    });
+
+    it('should return 400 if trying to book unavailable seat', async () => {
+      // Book seat first
+      await request(app)
+        .post('/v1/bookings/guest')
+        .send({
+          trip: testTrip._id.toString(),
+          seats: ['A3'],
+          guestEmail: 'guest1@example.com',
+          guestPhone: '0123456789',
+          passengers: [{ name: 'User 1', age: 30, gender: 'male' }],
+        });
+
+      // Try to book same seat
+      const res = await request(app)
+        .post('/v1/bookings/guest')
+        .send({
+          trip: testTrip._id.toString(),
+          seats: ['A3'],
+          guestEmail: 'guest2@example.com',
+          guestPhone: '0987654321',
+          passengers: [{ name: 'User 2', age: 25, gender: 'female' }],
+        })
+        .expect(400);
+
+      expect(res.body.message).toContain('not available');
+    });
+  });
+
+  describe('POST /v1/bookings', () => {
+    it('should create booking for authenticated user', async () => {
+      const res = await request(app)
+        .post('/v1/bookings')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          trip: testTrip._id.toString(),
+          seats: ['B1'],
+          passengers: [{ name: 'John Doe', age: 30, gender: 'male' }],
+        })
+        .expect(201);
+
+      expect(res.body.seats).toEqual(['B1']);
+      expect(res.body.user).toBeDefined();
+    });
+
+    it('should return 401 without authentication', async () => {
+      await request(app)
+        .post('/v1/bookings')
+        .send({
+          trip: testTrip._id.toString(),
+          seats: ['B2'],
+          passengers: [{ name: 'John Doe', age: 30, gender: 'male' }],
+        })
+        .expect(401);
+    });
+  });
+
+  describe('GET /v1/bookings', () => {
+    it('should get user\'s own bookings', async () => {
+      // Create a booking first
+      await request(app)
+        .post('/v1/bookings')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          trip: testTrip._id.toString(),
+          seats: ['B2'],
+          passengers: [{ name: 'Test User', age: 30, gender: 'male' }],
+        });
+
+      const res = await request(app)
+        .get('/v1/bookings')
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(200);
+
+      expect(res.body.results).toBeInstanceOf(Array);
+      expect(res.body.results.length).toBeGreaterThan(0);
+    });
+
+    it('should return 401 without authentication', async () => {
+      await request(app)
+        .get('/v1/bookings')
+        .expect(401);
+    });
+  });
+});
+```
+
+**Create `Source/backend/tests/integration/seatlock.test.ts`**
+
+```typescript
+import request from 'supertest';
+import app from '../../src/app';
+import mongoose from 'mongoose';
+import Trip from '../../src/models/trip.model';
+import SeatLock from '../../src/models/seatlock.model';
+
+describe('SeatLock API - Integration Tests', () => {
+  let testTrip: any;
+
+  beforeEach(async () => {
+    testTrip = await Trip.create({
+      bus: new mongoose.Types.ObjectId(),
+      route: new mongoose.Types.ObjectId(),
+      departureTime: new Date(Date.now() + 86400000),
+      arrivalTime: new Date(Date.now() + 90000000),
+      price: 150000,
+      availableSeats: ['A1', 'A2', 'A3'],
+    });
+  });
+
+  describe('POST /v1/seatlock/lock', () => {
+    it('should lock seats successfully', async () => {
+      const res = await request(app)
+        .post('/v1/seatlock/lock')
+        .send({
+          tripId: testTrip._id.toString(),
+          seats: ['A1', 'A2'],
+          sessionId: 'test-session-123',
+        })
+        .expect(200);
+
+      expect(res.body.message).toContain('locked');
+    });
+
+    it('should return 400 if seat already locked', async () => {
+      // Lock first
+      await request(app)
+        .post('/v1/seatlock/lock')
+        .send({
+          tripId: testTrip._id.toString(),
+          seats: ['A1'],
+          sessionId: 'session-1',
+        });
+
+      // Try to lock same seat with different session
+      const res = await request(app)
+        .post('/v1/seatlock/lock')
+        .send({
+          tripId: testTrip._id.toString(),
+          seats: ['A1'],
+          sessionId: 'session-2',
+        })
+        .expect(400);
+
+      expect(res.body.message).toContain('already locked');
+    });
+  });
+
+  describe('GET /v1/seatlock/locked/:tripId', () => {
+    it('should return locked seats for a trip', async () => {
+      await request(app)
+        .post('/v1/seatlock/lock')
+        .send({
+          tripId: testTrip._id.toString(),
+          seats: ['A1', 'A2'],
+          sessionId: 'test-session',
+        });
+
+      const res = await request(app)
+        .get(`/v1/seatlock/locked/${testTrip._id}`)
+        .expect(200);
+
+      expect(res.body.lockedSeats).toEqual(expect.arrayContaining(['A1', 'A2']));
+    });
+
+    it('should not include expired locks', async () => {
+      // Create expired lock
+      await SeatLock.create({
+        trip: testTrip._id,
+        seatNumber: 'A1',
+        sessionId: 'expired-session',
+        expiresAt: new Date(Date.now() - 1000),
+      });
+
+      const res = await request(app)
+        .get(`/v1/seatlock/locked/${testTrip._id}`)
+        .expect(200);
+
+      expect(res.body.lockedSeats).not.toContain('A1');
+    });
+  });
+
+  describe('DELETE /v1/seatlock/release/:sessionId', () => {
+    it('should release locked seats', async () => {
+      const sessionId = 'release-test-session';
+
+      await request(app)
+        .post('/v1/seatlock/lock')
+        .send({
+          tripId: testTrip._id.toString(),
+          seats: ['A1', 'A2'],
+          sessionId,
+        });
+
+      await request(app)
+        .delete(`/v1/seatlock/release/${sessionId}`)
+        .expect(200);
+
+      const locks = await SeatLock.find({ sessionId });
+      expect(locks).toHaveLength(0);
+    });
+  });
+});
+```
+
+**Verification:**
+- [ ] All integration tests pass
+- [ ] Auth endpoints tested (register, login, refresh)
+- [ ] Booking endpoints tested (guest, authenticated)
+- [ ] Seat lock endpoints tested (lock, release, get)
+- [ ] Test coverage > 70% overall
+
+---
+
+#### Subtask 3.4.4: Run Tests and Generate Coverage Report
+
+**Commands:**
+
+1. **Run all tests:**
+   ```bash
+   npm test
+   ```
+
+2. **Run tests in watch mode (during development):**
+   ```bash
+   npm run test:watch
+   ```
+
+3. **Generate coverage report:**
+   ```bash
+   npm run coverage
+   ```
+
+4. **View coverage report:**
+   - Open `coverage/lcov-report/index.html` in browser
+
+**Expected Coverage Targets:**
+- **Overall coverage:** > 70%
+- **Services layer:** > 80%
+- **Controllers layer:** > 60%
+- **Models layer:** > 50%
+
+**Verification:**
+- [ ] All tests pass (`npm test`)
+- [ ] Coverage report generated
+- [ ] Coverage meets minimum targets
+- [ ] No failing tests
+- [ ] CI/CD ready (tests can run in pipeline)
+
+---
+
+#### Subtask 3.4.5: Test Additional Features
+
+**Create tests for remaining features:**
+
+1. **Review System Tests:** `tests/integration/review.test.ts`
+   - Create review
+   - Upvote/downvote review
+   - Prevent duplicate reviews
+   - Only review completed bookings
+
+2. **Payment Integration Tests:** `tests/integration/payment.test.ts`
+   - Create payment link
+   - Handle webhook
+   - Update booking status after payment
+   - Handle payment failures
+
+3. **Operator Management Tests:** `tests/integration/operator.test.ts`
+   - Admin can CRUD operators
+   - Users cannot manage operators
+   - Public can view operators
+
+4. **Email Service Tests:** `tests/unit/services/email.service.test.ts`
+   - Mock nodemailer
+   - Test email template generation
+   - Test email sending
+
+**Example: Review Tests**
+
+```typescript
+describe('Review API - Integration Tests', () => {
+  let userToken: string;
+  let completedBooking: any;
+
+  beforeAll(async () => {
+    // Setup user and completed booking
+    const userRes = await request(app)
+      .post('/v1/auth/register')
+      .send({ email: 'user@test.com', password: 'Pass123!', name: 'User' });
+    userToken = userRes.body.tokens.access.token;
+
+    // Create and complete booking
+    completedBooking = await Booking.create({
+      user: userRes.body.user.id,
+      trip: testTrip._id,
+      seats: ['A1'],
+      status: 'confirmed',
+      totalPrice: 200000,
+      passengers: [{ name: 'Test', age: 30, gender: 'male' }],
+    });
+  });
+
+  it('should create review for completed booking', async () => {
+    const res = await request(app)
+      .post('/v1/reviews')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        booking: completedBooking._id.toString(),
+        trip: testTrip._id.toString(),
+        rating: 5,
+        comment: 'Excellent service!',
+      })
+      .expect(201);
+
+    expect(res.body.rating).toBe(5);
+    expect(res.body.comment).toBe('Excellent service!');
+  });
+
+  it('should prevent duplicate reviews', async () => {
+    // Create first review
+    await request(app)
+      .post('/v1/reviews')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        booking: completedBooking._id.toString(),
+        trip: testTrip._id.toString(),
+        rating: 5,
+        comment: 'Great!',
+      });
+
+    // Try to create second review
+    const res = await request(app)
+      .post('/v1/reviews')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        booking: completedBooking._id.toString(),
+        trip: testTrip._id.toString(),
+        rating: 4,
+        comment: 'Good!',
+      })
+      .expect(400);
+
+    expect(res.body.message).toContain('already reviewed');
+  });
+});
+```
+
+**Verification:**
+- [ ] Review tests pass
+- [ ] Payment tests pass
+- [ ] Operator tests pass
+- [ ] Email tests pass (with mocked SMTP)
+- [ ] All features have test coverage
+
+---
+
+### Task 3.5: Performance Testing (Optional but Recommended)
 
 **Test Scenarios:**
 
@@ -513,7 +1497,7 @@ describe('Authorization', () => {
 
 ---
 
-### Task 3.5: Documentation Updates
+### Task 3.6: Documentation Updates
 
 **Update API Documentation:**
 
@@ -528,6 +1512,71 @@ describe('Authorization', () => {
 2. Document environment variables needed
 3. Add testing instructions
 4. Document payment gateway setup
+
+**Testing Documentation:**
+
+Add to README.md:
+
+```markdown
+## Testing
+
+This project uses Jest for unit and integration testing.
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate coverage report
+npm run coverage
+```
+
+### Test Structure
+
+- `tests/unit/` - Unit tests for services and utilities
+- `tests/integration/` - Integration tests for API endpoints
+- `tests/setup.ts` - Test configuration and database setup
+
+### Coverage Targets
+
+- Overall: > 70%
+- Services: > 80%
+- Controllers: > 60%
+
+### Writing Tests
+
+Example unit test:
+\```typescript
+import myService from '../src/services/myService';
+
+describe('MyService', () => {
+  it('should do something', async () => {
+    const result = await myService.doSomething();
+    expect(result).toBeDefined();
+  });
+});
+\```
+
+Example integration test:
+\```typescript
+import request from 'supertest';
+import app from '../src/app';
+
+describe('GET /v1/endpoint', () => {
+  it('should return 200', async () => {
+    const res = await request(app)
+      .get('/v1/endpoint')
+      .expect(200);
+    
+    expect(res.body).toBeDefined();
+  });
+});
+\```
+```
 
 ---
 
@@ -567,6 +1616,16 @@ describe('Authorization', () => {
 - [ ] All features accessible via API
 - [ ] Documentation complete
 
+### Automated Testing (NEW)
+- [ ] Jest configuration complete
+- [ ] Unit tests written for all services
+- [ ] Integration tests written for all endpoints
+- [ ] Test coverage > 70% overall
+- [ ] Test coverage > 80% for services
+- [ ] All tests pass (`npm test`)
+- [ ] Coverage report generated (`npm run coverage`)
+- [ ] Tests can run in CI/CD pipeline
+
 ---
 
 ## Expected Outcome
@@ -574,10 +1633,14 @@ describe('Authorization', () => {
 After Phase 3 completion:
 - ✅ **All features fully implemented and tested**
 - ✅ **All missing fields added**
-- ✅ **Comprehensive testing completed**
+- ✅ **Comprehensive manual testing completed**
+- ✅ **Automated tests with Jest completed (NEW)**
+  - Unit tests for services
+  - Integration tests for API endpoints
+  - Test coverage > 70%
 - ✅ **System ready for production**
 - ✅ **Can achieve 8.5/10.0 score (Criteria 1)**
-- ✅ **Total effort: ~42 hours completed**
+- ✅ **Total effort: ~48 hours completed** (42h + 6h for Jest tests)
 
 ---
 
@@ -611,6 +1674,10 @@ FRONTEND_URL=http://localhost:3000
 
 ### Pre-Deployment Steps
 1. Run all tests and ensure they pass
+   ```bash
+   npm test
+   npm run coverage  # Ensure > 70% coverage
+   ```
 2. Check all environment variables are set
 3. Verify database indexes created
 4. Test email delivery in production environment
@@ -618,17 +1685,23 @@ FRONTEND_URL=http://localhost:3000
 6. Review security settings
 7. Enable CORS for frontend domain
 8. Set up logging and monitoring
+9. Review test coverage report
+10. Ensure no failing or skipped tests
 
 ---
 
 ## Success Criteria
 
 Phase 3 is complete when:
-- [ ] All test suites pass
+- [ ] All manual test suites pass
+- [ ] All automated Jest tests pass
+- [ ] Test coverage > 70% overall
+- [ ] Test coverage > 80% for services
 - [ ] No critical bugs remain
 - [ ] All features work as specified in proposal
-- [ ] Documentation is complete
+- [ ] Documentation is complete and includes testing guide
 - [ ] Code is clean and well-organized
+- [ ] Coverage report generated and reviewed
 - [ ] Ready for demo/presentation
 
 ---

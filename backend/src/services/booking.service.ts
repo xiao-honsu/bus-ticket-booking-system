@@ -113,11 +113,31 @@ const createGuestBooking = async (bookingBody: Partial<IBooking>, sessionId?: st
     throw new ApiError(httpStatus.BAD_REQUEST, 'Not enough available seats');
   }
 
+  // Calculate total amount and passengers count
+  const totalPassengers = bookingBody.passengers?.length || 0;
+  const totalAmount = bookingBody.passengers?.reduce((sum, p) => sum + (p.seatPrice || trip.pricePerSeat), 0) || 0;
+
+  // Generate unique reference number
+  const referenceNumber = `BKG-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+
+  // Prepare contact information
+  const contactEmail = bookingBody.guestEmail || bookingBody.contactEmail || '';
+  const contactPhone = bookingBody.guestPhone || bookingBody.contactPhone || '';
+
   // Create booking with pending status
   const booking = await Booking.create({
     ...bookingBody,
+    referenceNumber,
+    totalPassengers,
+    totalAmount,
+    contactEmail,
+    contactPhone,
     status: 'pending',
-    paymentStatus: 'pending',
+    payment: {
+      amount: totalAmount,
+      currency: 'VND',
+      status: 'pending',
+    },
   } as Partial<IBooking>);
 
   // Update trip's booked seats and available seats
