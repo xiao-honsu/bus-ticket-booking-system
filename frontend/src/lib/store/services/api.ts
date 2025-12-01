@@ -22,6 +22,13 @@ const baseQuery = fetchBaseQuery({
       token = getCookie('token');
     }
     
+    // Debug logging
+    console.log('🔐 API Request Auth:', {
+      hasTokenInRedux: !!(getState() as RootState).auth.token,
+      hasTokenInCookies: !!token,
+      tokenPreview: token ? token.substring(0, 20) + '...' : 'none'
+    });
+    
     // If we have a token, include it in the headers
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
@@ -38,10 +45,26 @@ const baseQueryWithReauth: BaseQueryFn<
   unknown,
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
+  // Debug logging for API calls
+  const endpoint = typeof args === 'string' ? args : args.url;
+  console.log('🌐 API Call:', {
+    endpoint,
+    method: typeof args === 'string' ? 'GET' : args.method || 'GET',
+    baseUrl: `${BASE_URL}/api/v1`
+  });
+  
   // Wait until the mutex is available without locking it
   await mutex.waitForUnlock();
   
   let result = await baseQuery(args, api, extraOptions);
+  
+  // Log result
+  console.log('📦 API Response:', {
+    endpoint,
+    status: result.error ? `Error ${result.error.status}` : 'Success',
+    hasData: !!result.data,
+    data: result.data
+  });
   
   // If we get a 401 Unauthorized error, try to refresh the token
   if (result.error && result.error.status === 401) {
@@ -142,7 +165,7 @@ const baseQueryWithReauth: BaseQueryFn<
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Auth', 'User', 'Bus', 'Route', 'Trip', 'Booking'],
+  tagTypes: ['Auth', 'User', 'Bus', 'Route', 'Trip', 'Booking', 'Operator'],
   endpoints: (builder) => ({
     // Auth endpoints
     login: builder.mutation({
@@ -266,6 +289,16 @@ export const api = createApi({
         url: '/buses',
         params,
       }),
+      transformResponse: (response: any) => {
+        // Convert mongoose-paginate format to frontend format
+        return {
+          results: response.docs || response.results || [],
+          page: response.page,
+          limit: response.limit,
+          totalPages: response.totalPages,
+          totalResults: response.totalDocs || response.totalResults,
+        };
+      },
       providesTags: ['Bus'],
     }),
     getBus: builder.query({
@@ -302,6 +335,16 @@ export const api = createApi({
         url: '/routes',
         params,
       }),
+      transformResponse: (response: any) => {
+        // Convert mongoose-paginate format to frontend format
+        return {
+          results: response.docs || response.results || [],
+          page: response.page,
+          limit: response.limit,
+          totalPages: response.totalPages,
+          totalResults: response.totalDocs || response.totalResults,
+        };
+      },
       providesTags: ['Route'],
     }),
     getRoute: builder.query({
@@ -330,6 +373,34 @@ export const api = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['Route'],
+    }),
+
+    // Operator endpoints (Admin)
+    getOperators: builder.query({
+      query: (params?: { page?: number; limit?: number }) => ({
+        url: '/operators',
+        params,
+      }),
+      transformResponse: (response: any) => {
+        // Handle both paginated response and direct array
+        if (Array.isArray(response)) {
+          return {
+            results: response,
+            page: 1,
+            limit: response.length,
+            totalPages: 1,
+            totalResults: response.length,
+          };
+        }
+        return {
+          results: response.docs || response.results || [],
+          page: response.page,
+          limit: response.limit,
+          totalPages: response.totalPages,
+          totalResults: response.totalDocs || response.totalResults,
+        };
+      },
+      providesTags: ['Operator'],
     }),
   }),
 });
@@ -361,4 +432,5 @@ export const {
   useCreateRouteMutation,
   useUpdateRouteMutation,
   useDeleteRouteMutation,
+  useGetOperatorsQuery,
 } = api;

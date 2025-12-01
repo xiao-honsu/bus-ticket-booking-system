@@ -4,6 +4,7 @@ import {
   useGetBusesQuery,
   useCreateBusMutation,
   useDeleteBusMutation,
+  useGetOperatorsQuery,
 } from '@/lib/store/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,7 @@ import {
 
 export default function BusManagement() {
   const { data, isLoading, error } = useGetBusesQuery({ page: 1, limit: 20 });
+  const { data: operatorsData, isLoading: isLoadingOperators, error: operatorsError } = useGetOperatorsQuery({ page: 1, limit: 100 });
   const [createBus, { isLoading: isCreating }] = useCreateBusMutation();
   const [deleteBus, { isLoading: isDeleting }] = useDeleteBusMutation();
 
@@ -46,19 +48,58 @@ export default function BusManagement() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBusId, setSelectedBusId] = useState<string | null>(null);
 
+  // Get operators from RTK Query
+  const operators = operatorsData?.results || [];
+
   const [formData, setFormData] = useState({
-    plateNumber: '',
-    type: 'standard',
+    busNumber: '',
+    licensePlate: '',
+    busType: 'standard',
     totalSeats: 40,
     operatorId: '',
+    amenities: '',
+    busModel: '',
+    yearOfManufacture: new Date().getFullYear(),
   });
 
   const handleCreate = async () => {
     try {
-      await createBus(formData).unwrap();
+      // Validation
+      if (!formData.busNumber || !formData.licensePlate) {
+        toast.error('Bus Number and License Plate are required');
+        return;
+      }
+      
+      if (!formData.operatorId) {
+        toast.error('Please select an operator');
+        return;
+      }
+      
+      // Transform data to match backend schema
+      const busData = {
+        busNumber: formData.busNumber,
+        licensePlate: formData.licensePlate,
+        busType: formData.busType,
+        totalSeats: formData.totalSeats,
+        operator: formData.operatorId, // Backend expects 'operator' not 'operatorId'
+        amenities: formData.amenities ? formData.amenities.split(',').map(a => a.trim()) : [],
+        busModel: formData.busModel,
+        yearOfManufacture: formData.yearOfManufacture,
+      };
+      
+      await createBus(busData).unwrap();
       toast.success('Bus created successfully');
       setDialogOpen(false);
-      setFormData({ plateNumber: '', type: 'standard', totalSeats: 40, operatorId: '' });
+      setFormData({ 
+        busNumber: '',
+        licensePlate: '',
+        busType: 'standard',
+        totalSeats: 40,
+        operatorId: '',
+        amenities: '',
+        busModel: '',
+        yearOfManufacture: new Date().getFullYear(),
+      });
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to create bus');
     }
@@ -129,12 +170,12 @@ export default function BusManagement() {
               <TableBody>
                 {buses.map((bus: any) => (
                   <TableRow key={bus.id}>
-                    <TableCell className="font-medium">{bus.plateNumber}</TableCell>
+                    <TableCell className="font-medium">{bus.licensePlate}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{bus.type}</Badge>
+                      <Badge variant="secondary">{bus.busType}</Badge>
                     </TableCell>
                     <TableCell>{bus.totalSeats} seats</TableCell>
-                    <TableCell>{bus.operator?.name || 'N/A'}</TableCell>
+                    <TableCell>{bus.operator?.companyName || 'N/A'}</TableCell>
                     <TableCell>
                       <Button
                         variant="destructive"
@@ -162,38 +203,109 @@ export default function BusManagement() {
             <DialogTitle>Add New Bus</DialogTitle>
             <DialogDescription>Enter bus details to add a new bus to the fleet</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="plateNumber">Plate Number</Label>
-              <Input
-                id="plateNumber"
-                value={formData.plateNumber}
-                onChange={(e) => setFormData({ ...formData, plateNumber: e.target.value })}
-                placeholder="51B-12345"
-              />
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="busNumber" className="mb-1.5 block">Bus Number *</Label>
+                <Input
+                  id="busNumber"
+                  value={formData.busNumber}
+                  onChange={(e) => setFormData({ ...formData, busNumber: e.target.value })}
+                  placeholder="VT-001"
+                />
+              </div>
+              <div>
+                <Label htmlFor="licensePlate" className="mb-1.5 block">License Plate *</Label>
+                <Input
+                  id="licensePlate"
+                  value={formData.licensePlate}
+                  onChange={(e) => setFormData({ ...formData, licensePlate: e.target.value })}
+                  placeholder="51B-12345"
+                />
+              </div>
             </div>
+
             <div>
-              <Label htmlFor="type">Bus Type</Label>
-              <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+              <Label htmlFor="operator" className="mb-1.5 block">Operator *</Label>
+              <Select 
+                value={formData.operatorId} 
+                onValueChange={(value) => setFormData({ ...formData, operatorId: value })}
+              >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select operator" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="standard">Standard</SelectItem>
-                  <SelectItem value="deluxe">Deluxe</SelectItem>
-                  <SelectItem value="sleeper">Sleeper</SelectItem>
-                  <SelectItem value="vip">VIP</SelectItem>
+                  {operators.map((op: any) => (
+                    <SelectItem key={op.id} value={op.id}>
+                      {op.companyName}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="busType" className="mb-1.5 block">Bus Type *</Label>
+                <Select 
+                  value={formData.busType} 
+                  onValueChange={(value) => setFormData({ ...formData, busType: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="limousine">Limousine</SelectItem>
+                    <SelectItem value="sleeper">Sleeper</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="totalSeats" className="mb-1.5 block">Total Seats *</Label>
+                <Input
+                  id="totalSeats"
+                  type="number"
+                  min={10}
+                  max={60}
+                  value={formData.totalSeats}
+                  onChange={(e) => setFormData({ ...formData, totalSeats: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="busModel" className="mb-1.5 block">Bus Model</Label>
+                <Input
+                  id="busModel"
+                  value={formData.busModel}
+                  onChange={(e) => setFormData({ ...formData, busModel: e.target.value })}
+                  placeholder="Hyundai Universe"
+                />
+              </div>
+              <div>
+                <Label htmlFor="year" className="mb-1.5 block">Year of Manufacture</Label>
+                <Input
+                  id="year"
+                  type="number"
+                  min={2000}
+                  max={new Date().getFullYear()}
+                  value={formData.yearOfManufacture}
+                  onChange={(e) => setFormData({ ...formData, yearOfManufacture: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="totalSeats">Total Seats</Label>
+              <Label htmlFor="amenities" className="mb-1.5 block">Amenities (comma-separated)</Label>
               <Input
-                id="totalSeats"
-                type="number"
-                value={formData.totalSeats}
-                onChange={(e) => setFormData({ ...formData, totalSeats: parseInt(e.target.value) })}
+                id="amenities"
+                value={formData.amenities}
+                onChange={(e) => setFormData({ ...formData, amenities: e.target.value })}
+                placeholder="AC, WiFi, USB Charging, Water"
               />
+              <p className="text-xs text-gray-500 mt-1">Example: AC, WiFi, USB Charging</p>
             </div>
           </div>
           <DialogFooter>
