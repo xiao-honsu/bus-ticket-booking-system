@@ -8,3 +8,7 @@ coverage
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+husky/
+.vscode/
+.idea/
+
