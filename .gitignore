@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
-package-lock.json
+
+# Root package-lock (workspaces generate this)
+/package-lock.json
 
 # OS
 .DS_Store
