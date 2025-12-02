@@ -240,11 +240,57 @@ export const api = createApi({
         url: '/trips',
         params,
       }),
+      transformResponse: (response: any) => {
+        // Return full paginated response
+        if (response.docs) {
+          return {
+            results: response.docs,
+            page: response.page,
+            limit: response.limit,
+            totalPages: response.totalPages,
+            totalResults: response.totalDocs,
+          };
+        }
+        if (response.results) {
+          return response;
+        }
+        // Handle plain array response
+        return {
+          results: Array.isArray(response) ? response : [],
+          page: 1,
+          limit: response.length || 0,
+          totalPages: 1,
+          totalResults: response.length || 0,
+        };
+      },
       providesTags: ['Trip'],
     }),
     getTrip: builder.query({
       query: (tripId: string) => `/trips/${tripId}`,
       providesTags: ['Trip'],
+    }),
+    createTrip: builder.mutation({
+      query: (tripData) => ({
+        url: '/trips',
+        method: 'POST',
+        body: tripData,
+      }),
+      invalidatesTags: ['Trip'],
+    }),
+    deleteTrip: builder.mutation({
+      query: (tripId: string) => ({
+        url: `/trips/${tripId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Trip'],
+    }),
+    updateTripSeatPricing: builder.mutation({
+      query: ({ tripId, seatPricing }) => ({
+        url: `/trips/${tripId}/seatpricing`,
+        method: 'PATCH',
+        body: { seatPricing },
+      }),
+      invalidatesTags: ['Trip'],
     }),
 
     // Booking endpoints
@@ -325,6 +371,14 @@ export const api = createApi({
       query: (busId: string) => ({
         url: `/buses/${busId}`,
         method: 'DELETE',
+      }),
+      invalidatesTags: ['Bus'],
+    }),
+    updateBusSeatMap: builder.mutation({
+      query: ({ busId, seatMapData }) => ({
+        url: `/buses/${busId}/seatmap`,
+        method: 'PATCH',
+        body: seatMapData,
       }),
       invalidatesTags: ['Bus'],
     }),
@@ -417,6 +471,9 @@ export const {
   useUpdateUserMutation,
   useSearchTripsQuery,
   useGetTripQuery,
+  useCreateTripMutation,
+  useDeleteTripMutation,
+  useUpdateTripSeatPricingMutation,
   useCreateBookingMutation,
   useGetBookingsQuery,
   useGetBookingQuery,
@@ -427,6 +484,7 @@ export const {
   useCreateBusMutation,
   useUpdateBusMutation,
   useDeleteBusMutation,
+  useUpdateBusSeatMapMutation,
   useGetRoutesQuery,
   useGetRouteQuery,
   useCreateRouteMutation,

@@ -66,10 +66,22 @@ const deleteBus = catchAsync(async (req: Request, res: Response) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+/**
+ * Update bus seat map
+ */
+const updateSeatMap = catchAsync(async (req: Request, res: Response) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.busId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid bus id');
+  }
+  const bus = await busService.updateSeatMap(new mongoose.Types.ObjectId(req.params.busId), req.body);
+  res.send(bus);
+});
+
 export default {
   createBus,
   getBuses,
   getBus,
   updateBus,
   deleteBus,
+  updateSeatMap,
 };

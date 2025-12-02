@@ -37,19 +37,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useRouter } from 'next/navigation';
 
 export default function BusManagement() {
-  const { data, isLoading, error } = useGetBusesQuery({ page: 1, limit: 20 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit] = useState(10);
+  
+  const { data, isLoading, error } = useGetBusesQuery({ page: currentPage, limit });
   const { data: operatorsData, isLoading: isLoadingOperators, error: operatorsError } = useGetOperatorsQuery({ page: 1, limit: 100 });
   const [createBus, { isLoading: isCreating }] = useCreateBusMutation();
   const [deleteBus, { isLoading: isDeleting }] = useDeleteBusMutation();
 
+  const router = useRouter();
+  
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBusId, setSelectedBusId] = useState<string | null>(null);
 
-  // Get operators from RTK Query
+  // Get operators and pagination info from RTK Query
   const operators = operatorsData?.results || [];
+  const buses = data?.results || [];
+  const totalPages = data?.totalPages || 1;
+  const totalResults = data?.totalResults || 0;
 
   const [formData, setFormData] = useState({
     busNumber: '',
@@ -144,8 +153,6 @@ export default function BusManagement() {
     );
   }
 
-  const buses = data?.results || [];
-
   return (
     <>
       <Card>
@@ -177,21 +184,75 @@ export default function BusManagement() {
                     <TableCell>{bus.totalSeats} seats</TableCell>
                     <TableCell>{bus.operator?.companyName || 'N/A'}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedBusId(bus.id);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        Delete
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push(`/admin/buses/${bus.id}/seat-map`)}
+                        >
+                          Configure Seats
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedBusId(bus.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+          )}
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <div className="text-sm text-gray-600">
+                Showing {buses.length} of {totalResults} buses
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    if (totalPages <= 5) return i + 1;
+                    if (currentPage <= 3) return i + 1;
+                    if (currentPage >= totalPages - 2) return totalPages - 4 + i;
+                    return currentPage - 2 + i;
+                  }).map(page => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="min-w-[40px]"
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

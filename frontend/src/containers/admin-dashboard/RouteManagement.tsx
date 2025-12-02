@@ -35,9 +35,16 @@ import {
 import { toast } from 'sonner';
 
 export default function RouteManagement() {
-  const { data, isLoading, error } = useGetRoutesQuery({ page: 1, limit: 20 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit] = useState(10);
+  
+  const { data, isLoading, error } = useGetRoutesQuery({ page: currentPage, limit });
   const [createRoute, { isLoading: isCreating }] = useCreateRouteMutation();
   const [deleteRoute, { isLoading: isDeleting }] = useDeleteRouteMutation();
+  
+  const routes = data?.results || [];
+  const totalPages = data?.totalPages || 1;
+  const totalResults = data?.totalResults || 0;
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -143,8 +150,6 @@ export default function RouteManagement() {
     );
   }
 
-  const routes = data?.results || [];
-
   return (
     <>
       <Card>
@@ -199,6 +204,51 @@ export default function RouteManagement() {
                 ))}
               </TableBody>
             </Table>
+          )}
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <div className="text-sm text-gray-600">
+                Showing {routes.length} of {totalResults} routes
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    if (totalPages <= 5) return i + 1;
+                    if (currentPage <= 3) return i + 1;
+                    if (currentPage >= totalPages - 2) return totalPages - 4 + i;
+                    return currentPage - 2 + i;
+                  }).map(page => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="min-w-[40px]"
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

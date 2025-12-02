@@ -12,4 +12,6 @@ router
   .patch(auth('manageBuses'), busController.updateBus)
   .delete(auth('manageBuses'), busController.deleteBus);
 
+router.route('/:busId/seatmap').patch(auth('manageBuses'), busController.updateSeatMap);
+
 export default router;
