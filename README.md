@@ -27,33 +27,66 @@ A full-stack web application demonstrating secure authentication flows, role-bas
 
 ### Authentication
 - ✅ Email/Password authentication with secure token handling
-- ✅ Google OAuth 2.0 social login integration
-- ✅ Access & Refresh token model with JWT
+- ✅ Google OAuth 2.0 social login via Firebase Authentication
+- ✅ Access & Refresh token model with JWT (httpOnly cookies)
 - ✅ Protected routes with automatic redirect
 - ✅ Token refresh mechanism
 - ✅ Secure password hashing with bcrypt
+- ✅ Guest booking support (no account required)
 
 ### Authorization
 - ✅ Role-based access control (RBAC)
-- ✅ Three user roles: `admin`, `editor`, `user`
+- ✅ Two user roles: `admin`, `user`
 - ✅ Client-side route guards
 - ✅ Server-side middleware protection
 - ✅ Conditional UI rendering based on roles
+
+### Bus Ticket Booking
+- ✅ Trip search with filters (origin, destination, date)
+- ✅ Real-time seat selection with visual bus layout
+- ✅ Seat locking mechanism (10 minute TTL to prevent double booking)
+- ✅ Guest booking flow (book without registration)
+- ✅ Booking history and management
+- ✅ Email notifications for booking confirmation
+
+### Payment Integration
+- ✅ PayOS payment gateway integration
+- ✅ Secure payment links
+- ✅ Webhook handling for payment status
+- ✅ Payment return/cancel URL handling
+
+### Review System
+- ✅ Trip reviews and ratings
+- ✅ Review voting (helpful/not helpful)
+- ✅ Review management
+
+### Chatbot Service
+- ✅ AI-powered customer support chatbot
+- ✅ Trip information queries
+- ✅ Booking assistance
+
+### Admin Features
+- ✅ User management (CRUD operations)
+- ✅ Operator management
+- ✅ Bus fleet management
+- ✅ Route management
+- ✅ Trip scheduling
+- ✅ Booking overview and analytics
 
 ### Design System
 - ✅ Global theme with color tokens
 - ✅ Typography scale (h1-h6, body, caption)
 - ✅ Spacing system
-- ✅ Reusable components (AppShell, Card, Button, FormField)
+- ✅ Reusable components (shadcn/ui based)
 - ✅ Light/Dark theme switcher
 - ✅ Responsive design (mobile-first)
 
 ### Dashboard
 - ✅ Role-based dashboard views
-- ✅ Interactive widgets with real-time data
-- ✅ Summary cards with statistics
-- ✅ Activity feed
-- ✅ User management (admin only)
+- ✅ Summary cards (Total Bookings, Upcoming Trips, Total Spent)
+- ✅ Recent bookings table
+- ✅ Quick actions (Book Trip, View Profile)
+- ✅ Admin statistics panel
 
 ### Developer Experience
 - ✅ ESLint for code quality
@@ -68,22 +101,25 @@ A full-stack web application demonstrating secure authentication flows, role-bas
 ### Frontend
 - **Framework**: Next.js 15 with App Router
 - **Language**: TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui
-- **State Management**: React Context + Hooks
+- **Styling**: TailwindCSS v4 + shadcn/ui
+- **State Management**: Redux Toolkit + RTK Query
 - **Routing**: Next.js App Router
-- **HTTP Client**: Axios
+- **HTTP Client**: RTK Query (with automatic caching)
 - **Forms**: React Hook Form + Zod validation
 - **UI Components**: shadcn/ui component library
-- **OAuth**: NextAuth.js (Google OAuth)
+- **Icons**: Lucide React
+- **OAuth**: Firebase Authentication (Google OAuth)
 
 ### Backend
-- **Runtime**: Node.js with Express
-- **Language**: TypeScript
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: Passport.js (Local + Google OAuth)
-- **Tokens**: JWT (jsonwebtoken)
+- **Runtime**: Node.js 18+ with Express.js 5.1.0
+- **Language**: TypeScript 5.9
+- **Database**: MongoDB with Mongoose 9.0 ODM
+- **Authentication**: Passport.js (JWT + Google OAuth 2.0)
+- **Tokens**: JWT (passport-jwt)
 - **Validation**: Joi
-- **Security**: helmet, cors, express-rate-limit
+- **Email**: Nodemailer (SMTP)
+- **Payment**: PayOS Integration
+- **Security**: helmet, cors, express-rate-limit, express-mongo-sanitize
 
 ### DevOps & Tooling
 - **Linting**: ESLint (per workspace)
@@ -100,78 +136,85 @@ A full-stack web application demonstrating secure authentication flows, role-bas
 .
 ├── frontend/
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── layout/
-│   │   │   │   ├── AppShell.tsx
-│   │   │   │   ├── Header.tsx
-│   │   │   │   ├── Sidebar.tsx
-│   │   │   │   └── Footer.tsx
-│   │   │   ├── ui/
-│   │   │   │   ├── Button.tsx
-│   │   │   │   ├── Card.tsx
-│   │   │   │   ├── FormField.tsx
-│   │   │   │   └── ThemeToggle.tsx
-│   │   │   └── dashboard/
-│   │   │       ├── SummaryCards.tsx
-│   │   │       ├── ActivityList.tsx
-│   │   │       └── UserManagement.tsx
-│   │   ├── features/
-│   │   │   ├── auth/
-│   │   │   │   ├── Login.tsx
-│   │   │   │   ├── Register.tsx
-│   │   │   │   ├── GoogleLogin.tsx
-│   │   │   │   └── AuthContext.tsx
-│   │   │   └── dashboard/
-│   │   │       └── DashboardPage.tsx
-│   │   ├── hooks/
-│   │   │   ├── useAuth.ts
-│   │   │   └── useTheme.ts
-│   │   ├── services/
-│   │   │   ├── api.ts
-│   │   │   └── auth.service.ts
-│   │   ├── guards/
-│   │   │   └── ProtectedRoute.tsx
-│   │   ├── theme/
-│   │   │   ├── theme.ts
-│   │   │   └── ThemeProvider.tsx
-│   │   ├── types/
-│   │   │   └── index.ts
-│   │   └── utils/
-│   │       └── storage.ts
+│   │   ├── app/                      # Next.js App Router
+│   │   │   ├── layout.tsx           # Root layout with Redux Provider
+│   │   │   ├── page.tsx             # Landing page
+│   │   │   ├── providers.tsx        # Client-side Redux Provider
+│   │   │   └── globals.css          # Global styles
+│   │   ├── components/              # Shared UI components
+│   │   │   └── ui/                  # shadcn/ui components
+│   │   ├── containers/              # Page-based component organization
+│   │   │   ├── landing-page/        # Landing page components
+│   │   │   ├── trip-search-results/ # Search results components
+│   │   │   ├── seat-selection/      # Seat selection components
+│   │   │   ├── checkout-page/       # Checkout flow components
+│   │   │   ├── user-dashboard/      # User dashboard components
+│   │   │   ├── admin-dashboard/     # Admin panel components
+│   │   │   └── auth/                # Authentication components
+│   │   └── lib/
+│   │       ├── store.ts             # Redux store configuration
+│   │       ├── hooks.ts             # Typed Redux hooks
+│   │       ├── utils.ts             # Shadcn utilities
+│   │       ├── types/               # TypeScript type definitions
+│   │       └── store/
+│   │           ├── features/        # Redux slices (auth, booking, trip, bus, route)
+│   │           └── services/
+│   │               └── api.ts       # RTK Query API definitions
 │   ├── public/
 │   ├── .env.local
-│   ├── .eslintrc.json
-│   ├── .prettierrc.json
 │   ├── package.json
-│   └── vite.config.ts
+│   └── tsconfig.json
 ├── backend/
 │   ├── src/
 │   │   ├── config/
-│   │   │   ├── database.ts
-│   │   │   └── passport.ts
-│   │   ├── middleware/
-│   │   │   ├── auth.middleware.ts
-│   │   │   ├── role.middleware.ts
-│   │   │   └── error.middleware.ts
+│   │   │   ├── config.ts
+│   │   │   ├── logger.ts
+│   │   │   ├── passport.ts
+│   │   │   ├── roles.ts
+│   │   │   └── tokens.ts
+│   │   ├── middlewares/
+│   │   │   ├── auth.ts
+│   │   │   ├── error.ts
+│   │   │   ├── rateLimiter.ts
+│   │   │   └── validate.ts
 │   │   ├── routes/
-│   │   │   ├── auth.routes.ts
-│   │   │   ├── user.routes.ts
-│   │   │   └── dashboard.routes.ts
+│   │   │   └── v1/
+│   │   │       ├── auth.route.ts
+│   │   │       ├── user.route.ts
+│   │   │       ├── booking.route.ts
+│   │   │       ├── trip.route.ts
+│   │   │       ├── operator.route.ts
+│   │   │       ├── payment.route.ts
+│   │   │       ├── review.route.ts
+│   │   │       ├── seatlock.route.ts
+│   │   │       └── chatbot.route.ts
 │   │   ├── controllers/
 │   │   │   ├── auth.controller.ts
-│   │   │   └── dashboard.controller.ts
+│   │   │   ├── booking.controller.ts
+│   │   │   ├── trip.controller.ts
+│   │   │   ├── operator.controller.ts
+│   │   │   ├── payment.controller.ts
+│   │   │   ├── review.controller.ts
+│   │   │   └── chatbot.controller.ts
 │   │   ├── services/
 │   │   │   ├── auth.service.ts
-│   │   │   └── token.service.ts
+│   │   │   ├── token.service.ts
+│   │   │   ├── booking.service.ts
+│   │   │   └── email.service.ts
 │   │   ├── models/
-│   │   │   └── user.model.ts
+│   │   │   ├── user.model.ts
+│   │   │   ├── booking.model.ts
+│   │   │   ├── trip.model.ts
+│   │   │   ├── bus.model.ts
+│   │   │   ├── route.model.ts
+│   │   │   ├── operator.model.ts
+│   │   │   ├── review.model.ts
+│   │   │   └── seatlock.model.ts
+│   │   ├── validations/
 │   │   └── types/
 │   │       └── index.ts
-│   ├── prisma/
-│   │   └── schema.prisma
+│   ├── tests/
 │   ├── .env
-│   ├── .eslintrc.json
-│   ├── .prettierrc.json
 │   ├── package.json
 │   └── tsconfig.json
 ├── design/
@@ -298,7 +341,7 @@ npm run seed:data    # Seed sample data
 #### Backend (.env)
 ```env
 # Server
-PORT=5000
+PORT=4000
 NODE_ENV=development
 
 # Database
@@ -316,12 +359,17 @@ JWT_VERIFY_EMAIL_EXPIRATION_MINUTES=10
 # Google OAuth
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_CALLBACK_URL=http://localhost:4000/api/v1/auth/google/callback
+GOOGLE_CALLBACK_URL=http://localhost:4000/v1/auth/google/callback
 
 # CORS
 FRONTEND_URL=http://localhost:3000
 
-# Email (Optional)
+# PayOS Payment Integration
+PAYOS_CLIENT_ID=your-payos-client-id
+PAYOS_API_KEY=your-payos-api-key
+PAYOS_CHECKSUM_KEY=your-payos-checksum-key
+
+# Email (SMTP)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
@@ -331,10 +379,17 @@ EMAIL_FROM=noreply@busbooking.com
 
 #### Frontend (.env.local)
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-nextauth-secret-min-32-chars
+NEXT_PUBLIC_API_URL=http://localhost:4000/v1
+NEXT_PUBLIC_APP_NAME=Bus Ticket Booking System
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Firebase Authentication
+NEXT_PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 ```
 
 ### Running the Application
@@ -428,14 +483,12 @@ This application implements a **dual-token JWT authentication** system:
 
 ### Authorization (Role-Based Access Control)
 
-**Four Roles:**
+**Two Roles:**
 
 | Role | Permissions |
 |------|------------|
-| `user` | View own dashboard, book tickets, view bookings, write reviews |
-| `operator` | Manage own routes, trips, buses, view bookings |
-| `admin` | All permissions + user management, operator management, system settings |
-| `superadmin` | Full system access + admin management |
+| `user` | Book tickets, manage own bookings, view trips/buses/routes, create reviews, manage own reviews, view search history |
+| `admin` | All user permissions + manage users, buses, routes, trips, bookings, operators, reviews, view analytics |
 
 **Implementation:**
 
@@ -528,35 +581,39 @@ See mockup in [design/dashboard-mockup.png](design/dashboard-mockup.png).
 ### Widgets
 
 1. **Summary Cards**
-   - Total users count
-   - Active sessions
-   - System status
-   - Recent activity count
+   - Total Bookings (count of all user bookings)
+   - Upcoming Trips (trips with future departure date)
+   - Total Spent (sum of all booking prices)
 
-2. **Activity List**
-   - Recent user actions
-   - Timestamps
-   - User avatars
-   - Action types
+2. **Recent Bookings Table**
+   - Last 5 bookings
+   - Columns: Trip (origin → destination), Date, Status, Price
+   - Interactive rows for booking details
 
-3. **User Management** (Admin only)
-   - User list with roles
-   - Edit/Delete actions
-   - Role assignment
+3. **Quick Actions**
+   - Book New Trip - Navigate to search
+   - View Profile - Navigate to profile settings
+
+4. **Admin Statistics** (Admin only)
+   - System-wide statistics
+   - All users' bookings overview
+   - User management actions
 
 ### Role-based Differences
 
-| Widget | User | Editor | Admin |
-|--------|------|--------|-------|
-| Summary Cards | Own stats | Team stats | Global stats |
-| Activity List | Own activity | Team activity | All activity |
-| User Management | ❌ Hidden | ❌ Hidden | ✅ Visible |
+| Widget | User | Admin |
+|--------|------|-------|
+| Summary Cards | Own stats | Global stats |
+| Recent Bookings | Own bookings | All bookings |
+| Admin Statistics | ❌ Hidden | ✅ Visible |
 
 ## 📡 API Documentation
 
+**Base URL:** `/v1`
+
 ### Authentication Endpoints
 
-**POST /api/auth/register**
+**POST /v1/auth/register**
 ```json
 {
   "email": "user@example.com",
@@ -565,7 +622,7 @@ See mockup in [design/dashboard-mockup.png](design/dashboard-mockup.png).
 }
 ```
 
-**POST /api/auth/login**
+**POST /v1/auth/login**
 ```json
 {
   "email": "user@example.com",
@@ -573,33 +630,56 @@ See mockup in [design/dashboard-mockup.png](design/dashboard-mockup.png).
 }
 ```
 
-**POST /api/auth/google**
+**POST /v1/auth/google**
 ```json
 {
   "credential": "google-id-token"
 }
 ```
 
-**POST /api/auth/refresh**
-- No body required
-- Refresh token sent via cookie
+**POST /v1/auth/refresh-tokens**
+- Refresh token sent via cookie/body
 
-**POST /api/auth/logout**
+**POST /v1/auth/logout**
 - Requires authentication
 
-### Dashboard Endpoints
+### Core API Endpoints
 
-**GET /api/dashboard/stats**
-- Requires authentication
-- Returns role-specific statistics
+**Trips:**
+- `GET /v1/trips` - Search trips
+- `GET /v1/trips/:id` - Get trip details
 
-**GET /api/dashboard/activities**
-- Requires authentication
-- Returns activity feed
+**Bookings:**
+- `POST /v1/bookings` - Create booking (supports guest booking)
+- `GET /v1/bookings` - Get user bookings
+- `GET /v1/bookings/:id` - Get booking details
+- `PATCH /v1/bookings/:id/cancel` - Cancel booking
 
-**GET /api/admin/users** (Admin only)
-- Requires admin role
-- Returns all users
+**Seat Locks:**
+- `POST /v1/seat-locks` - Lock seats (10 min TTL)
+- `DELETE /v1/seat-locks/:id` - Release seat lock
+
+**Payments (PayOS):**
+- `POST /v1/payments/create` - Create payment link
+- `POST /v1/payments/webhook` - PayOS webhook handler
+- `GET /v1/payments/return` - Payment return URL
+
+**Reviews:**
+- `POST /v1/reviews` - Create review
+- `GET /v1/reviews` - Get reviews
+
+**Users (Admin):**
+- `GET /v1/users` - Get all users
+- `POST /v1/users` - Create user
+- `PATCH /v1/users/:id` - Update user
+- `DELETE /v1/users/:id` - Delete user
+
+**Operators (Admin):**
+- `GET /v1/operators` - Get all operators
+- `POST /v1/operators` - Create operator
+
+**Chatbot:**
+- `POST /v1/chatbot/message` - Send message to chatbot
 
 See [backend/CHATBOT-API.md](backend/CHATBOT-API.md) for complete API documentation.
 
