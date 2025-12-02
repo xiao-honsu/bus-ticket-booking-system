@@ -7,32 +7,35 @@ import { MapPin, DollarSign } from 'lucide-react';
 
 export default function PopularRoutes() {
   const [isClient, setIsClient] = useState(false);
+  const [popularRoutes, setPopularRoutes] = useState<typeof mockTripList>([]);
 
   useEffect(() => {
     setIsClient(true);
+    
+    // Get unique routes from mock trips and sort by available seats (highest first)
+    const routeMap = new Map<string, typeof mockTripList[0]>();
+    mockTripList.forEach((trip) => {
+      const routeKey = `${trip.route.origin.city}_${trip.route.destination.city}`;
+      if (!routeMap.has(routeKey)) {
+        routeMap.set(routeKey, trip);
+      } else {
+        // Update if current trip has more available seats
+        const existing = routeMap.get(routeKey)!;
+        if (trip.availableSeats > existing.availableSeats) {
+          routeMap.set(routeKey, trip);
+        }
+      }
+    });
+
+    // Get top 4 routes sorted by available seats
+    const routes = Array.from(routeMap.values())
+      .sort((a, b) => b.availableSeats - a.availableSeats)
+      .slice(0, 4);
+    
+    setPopularRoutes(routes);
   }, []);
 
-  // Get unique routes from mock trips and sort by available seats (highest first)
-  const routeMap = new Map<string, typeof mockTripList[0]>();
-  mockTripList.forEach((trip) => {
-    const routeKey = `${trip.route.origin.city}_${trip.route.destination.city}`;
-    if (!routeMap.has(routeKey)) {
-      routeMap.set(routeKey, trip);
-    } else {
-      // Update if current trip has more available seats
-      const existing = routeMap.get(routeKey)!;
-      if (trip.availableSeats > existing.availableSeats) {
-        routeMap.set(routeKey, trip);
-      }
-    }
-  });
-
-  // Get top 4 routes sorted by available seats
-  const popularRoutes = Array.from(routeMap.values())
-    .sort((a, b) => b.availableSeats - a.availableSeats)
-    .slice(0, 4);
-
-  if (popularRoutes.length === 0) {
+  if (!isClient || popularRoutes.length === 0) {
     return null;
   }
 
@@ -67,7 +70,7 @@ export default function PopularRoutes() {
                   </div>
                   <div className="bg-blue-50 rounded px-2 py-1">
                     <span className="text-xs font-semibold text-blue-700">
-                      {isClient ? `${trip.availableSeats} seats` : '-- seats'}
+                      {`${trip.availableSeats} seats`}
                     </span>
                   </div>
                 </div>

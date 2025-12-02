@@ -254,7 +254,8 @@ const generateMockTrips = (): MockTrip[] => {
     arrivalTime.setMinutes(arrivalTime.getMinutes() + durationMinutes);
 
     const operatorData = operators[i % operators.length];
-    const availableSeats = Math.floor(Math.random() * 25) + 8; // 8-32 seats
+    // Use deterministic calculation based on index instead of Math.random()
+    const availableSeats = ((i * 7) % 25) + 8; // 8-32 seats, deterministic
 
     trips.push({
       ...mockTripData,
@@ -264,7 +265,7 @@ const generateMockTrips = (): MockTrip[] => {
       arrivalTime: arrivalTime.toISOString(),
       pricePerSeat: prices[i % prices.length],
       availableSeats: availableSeats,
-      bookedSeats: Array.from({ length: Math.floor(Math.random() * 10) }, (_, idx) =>
+      bookedSeats: Array.from({ length: (i % 3) + 2 }, (_, idx) =>
         String.fromCharCode(65 + Math.floor(idx / 6)) + (idx % 6 + 1)
       ),
       route: {
