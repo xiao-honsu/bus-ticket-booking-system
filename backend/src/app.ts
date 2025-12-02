@@ -13,6 +13,7 @@ import { errorConverter, errorHandler as customErrorHandler } from './middleware
 import ApiError from './utils/ApiError';
 import routes from './routes/v1';
 
+// add example comment to test commit hook
 const app: Express = express();
 
 // set security HTTP headers
