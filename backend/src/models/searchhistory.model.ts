@@ -32,7 +32,6 @@ const searchHistorySchema = new mongoose.Schema<ISearchHistory>(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
       index: true,
     },
     originCity: {
@@ -104,9 +103,6 @@ searchHistorySchema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 *
 
 searchHistorySchema.plugin(mongoosePaginate);
 
-const SearchHistory = mongoose.model<ISearchHistory, ISearchHistoryModel>(
-  'SearchHistory',
-  searchHistorySchema
-);
+const SearchHistory = mongoose.model<ISearchHistory, ISearchHistoryModel>('SearchHistory', searchHistorySchema);
 
 export default SearchHistory;

@@ -1,20 +1,24 @@
 import express from 'express';
 import auth from '../../middlewares/auth';
+import validate from '../../middlewares/validate';
 import tripController from '../../controllers/trip.controller';
+import tripValidation from '../../validations/trip.validation';
 
 const router = express.Router();
 
 router
   .route('/')
-  .post(auth('manageTrips'), tripController.createTrip)
-  .get(auth('getTrips'), tripController.getTrips);
+  .post(auth('manageTrips'), validate(tripValidation.createTrip), tripController.createTrip)
+  .get(auth('getTrips'), validate(tripValidation.getTrips), tripController.getTrips);
 
-router.route('/search').get(tripController.searchTrips);
+router.route('/search').get(validate(tripValidation.searchTrips), tripController.searchTrips);
 
 router
   .route('/:tripId')
-  .get(auth('getTrips'), tripController.getTrip)
-  .patch(auth('manageTrips'), tripController.updateTrip)
-  .delete(auth('manageTrips'), tripController.deleteTrip);
+  .get(validate(tripValidation.getTrip), tripController.getTrip)
+  .patch(auth('manageTrips'), validate(tripValidation.updateTrip), tripController.updateTrip)
+  .delete(auth('manageTrips'), validate(tripValidation.deleteTrip), tripController.deleteTrip);
+
+router.route('/:tripId/details').get(validate(tripValidation.getTrip), tripController.getTripDetails);
 
 export default router;

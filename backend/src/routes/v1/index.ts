@@ -10,6 +10,7 @@ import reviewRoute from './review.route';
 import paymentRoute from './payment.route';
 import seatLockRoute from './seatlock.route';
 import chatbotRoute from './chatbot.route';
+import locationRoute from './location.route';
 
 const router = express.Router();
 
@@ -57,6 +58,10 @@ const defaultRoutes = [
   {
     path: '/chatbot',
     route: chatbotRoute,
+  },
+  {
+    path: '/locations',
+    route: locationRoute,
   },
 ];
 

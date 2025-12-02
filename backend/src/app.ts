@@ -5,7 +5,9 @@ import passport from 'passport';
 import httpStatus from 'http-status';
 import compression from 'compression';
 import mongoSanitize from '@exortek/express-mongo-sanitize';
+import swaggerUi from 'swagger-ui-express';
 import config from './config/config';
+import { swaggerSpec } from './config/swagger';
 import { successHandler, errorHandler } from './config/morgan';
 import { jwtStrategy, googleStrategy } from './config/passport';
 import { generalLimiter } from './middlewares/rateLimiter';
@@ -63,6 +65,23 @@ app.get('/health', (_req, res) => {
     uptime: process.uptime(),
     environment: config.env,
   });
+});
+
+// Swagger API documentation
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Bus Ticket Booking API Docs',
+  })
+);
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (_req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
 });
 
 // v1 api routes

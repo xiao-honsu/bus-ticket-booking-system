@@ -3,9 +3,9 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import catchAsync from '../utils/catchAsync';
 import tripService from '../services/trip.service';
+import searchHistoryService from '../services/searchhistory.service';
 import pick from '../utils/pick';
 import ApiError from '../utils/ApiError';
-import SearchHistory from '../models/searchhistory.model';
 
 const createTrip = catchAsync(async (req: Request, res: Response) => {
   const trip = await tripService.createTrip(req.body);
@@ -15,46 +15,84 @@ const createTrip = catchAsync(async (req: Request, res: Response) => {
 const getTrips = catchAsync(async (req: Request, res: Response) => {
   const filter = pick(req.query, ['route', 'status', 'bus']);
   const options: any = pick(req.query, ['sortBy', 'limit', 'page', 'populate']);
-  
+
   // Set defaults
   options.limit = options.limit ? parseInt(options.limit as string) : 10;
   options.page = options.page ? parseInt(options.page as string) : 1;
   options.populate = options.populate || 'bus,route';
-  
+
   const result = await tripService.queryTrips(filter, options);
   res.send(result);
 });
 
 const searchTrips = catchAsync(async (req: Request, res: Response) => {
-  const { routeId, date, originCity, destinationCity, passengers } = req.query;
-  
-  if (!routeId || !date) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Route ID and date are required');
+  const {
+    origin,
+    destination,
+    departureDate,
+    minPrice,
+    maxPrice,
+    departureTimeFrom,
+    departureTimeTo,
+    busType,
+    amenities,
+    operatorId,
+    sortBy,
+    sortOrder,
+    page,
+    limit,
+  } = req.query;
+
+  const options = {
+    origin: origin as string,
+    destination: destination as string,
+    departureDate: departureDate ? new Date(departureDate as string) : undefined,
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    departureTimeFrom: departureTimeFrom as string,
+    departureTimeTo: departureTimeTo as string,
+    busType: busType as string,
+    amenities: amenities as string | string[],
+    operatorId: operatorId as string,
+    sortBy: sortBy as any,
+    sortOrder: sortOrder as 'asc' | 'desc',
+    page: page ? Number(page) : 1,
+    limit: limit ? Number(limit) : 10,
+  };
+
+  const results = await tripService.searchTrips(options);
+
+  // Log search asynchronously (don't block response)
+  if (origin && destination) {
+    searchHistoryService.logSearchAsync({
+      userId: (req.user as any)?._id?.toString(),
+      sessionId: req.headers['x-session-id'] as string,
+      originCity: origin as string,
+      destinationCity: destination as string,
+      travelDate: departureDate ? new Date(departureDate as string) : undefined,
+      filters: {
+        busType: busType ? [busType as string] : undefined,
+        priceRange:
+          minPrice || maxPrice
+            ? {
+                min: Number(minPrice) || 0,
+                max: Number(maxPrice) || 0,
+              }
+            : undefined,
+        departureTimeRange:
+          departureTimeFrom || departureTimeTo
+            ? {
+                start: (departureTimeFrom as string) || '',
+                end: (departureTimeTo as string) || '',
+              }
+            : undefined,
+        amenities: amenities ? ((Array.isArray(amenities) ? amenities : [amenities]) as string[]) : undefined,
+      },
+      resultsCount: results.totalResults,
+    });
   }
-  
-  const trips = await tripService.searchTrips(
-    new mongoose.Types.ObjectId(routeId as string),
-    new Date(date as string)
-  );
-  
-  // Log search history for authenticated users
-  if (req.user && originCity && destinationCity) {
-    try {
-      await SearchHistory.create({
-        user: (req.user as any)._id,
-        originCity: originCity as string,
-        destinationCity: destinationCity as string,
-        travelDate: new Date(date as string),
-        passengers: passengers ? parseInt(passengers as string) : 1,
-        resultsCount: trips.length,
-      });
-    } catch (error) {
-      // Don't fail the search if history logging fails
-      console.error('Failed to log search history:', error);
-    }
-  }
-  
-  res.send(trips);
+
+  res.send(results);
 });
 
 const getTrip = catchAsync(async (req: Request, res: Response) => {
@@ -62,6 +100,11 @@ const getTrip = catchAsync(async (req: Request, res: Response) => {
   if (!trip) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Trip not found');
   }
+  res.send(trip);
+});
+
+const getTripDetails = catchAsync(async (req: Request, res: Response) => {
+  const trip = await tripService.getTripDetails(new mongoose.Types.ObjectId(req.params.tripId));
   res.send(trip);
 });
 
@@ -80,6 +123,7 @@ export default {
   getTrips,
   searchTrips,
   getTrip,
+  getTripDetails,
   updateTrip,
   deleteTrip,
 };

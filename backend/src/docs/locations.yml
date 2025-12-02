@@ -1,0 +1,189 @@
+paths:
+  # ============================================
+  # LOCATIONS API - City Autocomplete & Popular
+  # ============================================
+  
+  /v1/locations/search:
+    get:
+      summary: Search locations for autocomplete
+      description: |
+        **Use Case: City Autocomplete in Search Form**
+        
+        Frontend should call this API when the user types in the origin or destination input field.
+        Implement debouncing (300ms recommended) to avoid excessive API calls.
+        
+        **Frontend Implementation Tips:**
+        - Call when user types >= 1 character
+        - Use `type` parameter based on which field user is typing in
+        - Display results in a dropdown below the input
+        - Show location type indicator (origin/destination/both)
+        
+        **Example Flow:**
+        1. User types "Hồ" in origin field
+        2. Frontend calls: `GET /v1/locations/search?q=Hồ&type=origin`
+        3. Display matching cities in dropdown
+        4. User selects "Hồ Chí Minh"
+      tags:
+        - Locations
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query string (city name or partial name)
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+          example: "Hồ Chí"
+        - name: type
+          in: query
+          required: false
+          description: |
+            Filter by location type:
+            - `origin`: Only cities that are trip starting points
+            - `destination`: Only cities that are trip destinations
+            - `all`: Both origins and destinations (default)
+          schema:
+            type: string
+            enum: [origin, destination, all]
+            default: all
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of suggestions to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 10
+      responses:
+        '200':
+          description: List of matching locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LocationSuggestion'
+              example:
+                - name: "Hồ Chí Minh"
+                  type: "both"
+                - name: "Hội An"
+                  type: "destination"
+                - name: "Hòa Bình"
+                  type: "origin"
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 400
+                message: "\"q\" is required"
+
+  /v1/locations/popular:
+    get:
+      summary: Get popular locations
+      description: |
+        **Use Case: Show Popular Destinations on Homepage/Search Page**
+        
+        Display popular cities based on user search patterns.
+        Use this to show "Popular destinations" section or quick search buttons.
+        
+        **Frontend Implementation Tips:**
+        - Cache results for 5-10 minutes (data changes infrequently)
+        - Display as chips/buttons for quick selection
+        - Show search count as indicator of popularity
+        
+        **Example Display:**
+        ```
+        Popular Destinations:
+        [Hồ Chí Minh 🔥] [Đà Lạt ⭐] [Nha Trang] [Hà Nội]
+        ```
+      tags:
+        - Locations
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of popular locations to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 10
+      responses:
+        '200':
+          description: List of popular locations with search counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PopularLocation'
+              example:
+                - name: "Hồ Chí Minh"
+                  searchCount: 12500
+                - name: "Đà Lạt"
+                  searchCount: 8200
+                - name: "Nha Trang"
+                  searchCount: 6100
+                - name: "Hà Nội"
+                  searchCount: 5800
+
+  /v1/locations/popular-routes:
+    get:
+      summary: Get popular routes
+      description: |
+        **Use Case: Show Popular Routes for Quick Booking**
+        
+        Display frequently booked routes with origin-destination pairs.
+        Perfect for "Popular routes" carousel or quick booking section.
+        
+        **Frontend Implementation Tips:**
+        - Display as cards with route name and booking count
+        - Make clickable to pre-fill search form
+        - Show booking count as social proof
+        
+        **Example Display:**
+        ```
+        Popular Routes:
+        ┌─────────────────────────────────┐
+        │ Sài Gòn → Đà Lạt               │
+        │ 5,000+ bookings this month     │
+        │ [Search Now]                    │
+        └─────────────────────────────────┘
+        ```
+      tags:
+        - Locations
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of popular routes to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 10
+      responses:
+        '200':
+          description: List of popular routes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PopularRoute'
+              example:
+                - id: "507f1f77bcf86cd799439011"
+                  routeName: "Sài Gòn - Đà Lạt"
+                  origin: "Hồ Chí Minh"
+                  destination: "Đà Lạt"
+                  totalBookings: 5000
+                - id: "507f1f77bcf86cd799439012"
+                  routeName: "Hà Nội - Sapa"
+                  origin: "Hà Nội"
+                  destination: "Sapa"
+                  totalBookings: 3200

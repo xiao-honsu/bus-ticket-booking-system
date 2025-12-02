@@ -1,8 +1,55 @@
 import httpStatus from 'http-status';
-import mongoose, { PaginateOptions } from 'mongoose';
+import mongoose, { PaginateOptions, PipelineStage } from 'mongoose';
 import Trip, { ITrip } from '../models/trip.model';
 import Bus from '../models/bus.model';
+import SeatLock from '../models/seatlock.model';
 import ApiError from '../utils/ApiError';
+
+// Types for search options
+interface SearchTripsOptions {
+  origin?: string;
+  destination?: string;
+  departureDate?: Date;
+  minPrice?: number;
+  maxPrice?: number;
+  departureTimeFrom?: string;
+  departureTimeTo?: string;
+  busType?: string;
+  amenities?: string | string[];
+  operatorId?: string;
+  sortBy?: 'price' | 'departureTime' | 'duration' | 'availableSeats';
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+interface SearchResult {
+  results: any[];
+  page: number;
+  limit: number;
+  totalPages: number;
+  totalResults: number;
+}
+
+// Helper to convert time string (HH:mm) to minutes from midnight
+const timeToMinutes = (time: string): number => {
+  const [hour, minute] = time.split(':').map(Number);
+  return hour * 60 + minute;
+};
+
+// Helper to build time filter expressions
+const buildTimeFilterExpr = (from?: string, to?: string): object[] => {
+  const expressions: object[] = [];
+  const minutesExpr = { $add: [{ $multiply: [{ $hour: '$departureTime' }, 60] }, { $minute: '$departureTime' }] };
+
+  if (from) {
+    expressions.push({ $gte: [minutesExpr, timeToMinutes(from)] });
+  }
+  if (to) {
+    expressions.push({ $lte: [minutesExpr, timeToMinutes(to)] });
+  }
+  return expressions;
+};
 
 /**
  * Create a trip
@@ -50,10 +97,7 @@ const getTripById = async (id: mongoose.Types.ObjectId): Promise<ITrip | null> =
  * @param {Object} updateBody
  * @returns {Promise<ITrip | null>}
  */
-const updateTripById = async (
-  tripId: mongoose.Types.ObjectId,
-  updateBody: Partial<ITrip>
-): Promise<ITrip | null> => {
+const updateTripById = async (tripId: mongoose.Types.ObjectId, updateBody: Partial<ITrip>): Promise<ITrip | null> => {
   const trip = await getTripById(tripId);
   if (!trip) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Trip not found');
@@ -83,7 +127,7 @@ const deleteTripById = async (tripId: mongoose.Types.ObjectId): Promise<ITrip | 
  * @param {Date} departureDate
  * @returns {Promise<ITrip[]>}
  */
-const searchTrips = async (routeId: mongoose.Types.ObjectId, departureDate: Date) => {
+const searchTripsByRoute = async (routeId: mongoose.Types.ObjectId, departureDate: Date) => {
   const startOfDay = new Date(departureDate);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(departureDate);
@@ -100,6 +144,256 @@ const searchTrips = async (routeId: mongoose.Types.ObjectId, departureDate: Date
   return trips;
 };
 
+/**
+ * Advanced trip search with filtering, sorting, and pagination
+ * @param options - Search options including filters, sorting, and pagination
+ */
+const searchTrips = async (options: SearchTripsOptions): Promise<SearchResult> => {
+  const {
+    origin,
+    destination,
+    departureDate,
+    minPrice,
+    maxPrice,
+    departureTimeFrom,
+    departureTimeTo,
+    busType,
+    amenities,
+    operatorId,
+    sortBy = 'departureTime',
+    sortOrder = 'asc',
+    page = 1,
+    limit = 10,
+  } = options;
+
+  const pipeline: PipelineStage[] = [];
+
+  // Stage 1: Initial match for scheduled trips and date filtering
+  const matchStage: any = { status: 'scheduled' };
+
+  if (departureDate) {
+    const startOfDay = new Date(departureDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(departureDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    matchStage.departureTime = { $gte: startOfDay, $lte: endOfDay };
+  }
+
+  // Price range filter
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    matchStage.pricePerSeat = {};
+    if (minPrice !== undefined) matchStage.pricePerSeat.$gte = minPrice;
+    if (maxPrice !== undefined) matchStage.pricePerSeat.$lte = maxPrice;
+  }
+
+  // Operator filter
+  if (operatorId) {
+    matchStage.operator = new mongoose.Types.ObjectId(operatorId);
+  }
+
+  pipeline.push({ $match: matchStage });
+
+  // Stage 2: Time range filter (within the day)
+  const timeFilters = buildTimeFilterExpr(departureTimeFrom, departureTimeTo);
+  if (timeFilters.length > 0) {
+    pipeline.push({ $match: { $expr: { $and: timeFilters } } });
+  }
+
+  // Stage 3: Lookup route for origin/destination filtering
+  pipeline.push({
+    $lookup: {
+      from: 'routes',
+      localField: 'route',
+      foreignField: '_id',
+      as: 'routeInfo',
+    },
+  });
+  pipeline.push({ $unwind: '$routeInfo' });
+
+  // Filter by origin/destination
+  if (origin || destination) {
+    const routeMatch: any = {};
+    if (origin) routeMatch['routeInfo.origin.city'] = { $regex: origin, $options: 'i' };
+    if (destination) routeMatch['routeInfo.destination.city'] = { $regex: destination, $options: 'i' };
+    pipeline.push({ $match: routeMatch });
+  }
+
+  // Stage 4: Lookup bus for type/amenities filtering
+  pipeline.push({
+    $lookup: {
+      from: 'buses',
+      localField: 'bus',
+      foreignField: '_id',
+      as: 'busInfo',
+    },
+  });
+  pipeline.push({ $unwind: '$busInfo' });
+
+  // Filter by bus type
+  if (busType) {
+    pipeline.push({ $match: { 'busInfo.busType': busType } });
+  }
+
+  // Filter by amenities
+  if (amenities) {
+    const amenityList = Array.isArray(amenities) ? amenities : [amenities];
+    pipeline.push({ $match: { 'busInfo.amenities': { $all: amenityList } } });
+  }
+
+  // Stage 5: Lookup operator
+  pipeline.push({
+    $lookup: {
+      from: 'operators',
+      localField: 'operator',
+      foreignField: '_id',
+      as: 'operatorInfo',
+    },
+  });
+  pipeline.push({ $unwind: '$operatorInfo' });
+
+  // Stage 6: Add computed fields
+  pipeline.push({
+    $addFields: {
+      availableSeatsCount: {
+        $subtract: ['$busInfo.totalSeats', { $size: { $ifNull: ['$bookedSeats', []] } }],
+      },
+      duration: '$routeInfo.estimatedDuration',
+    },
+  });
+
+  // Stage 7: Sort
+  const sortMap: Record<string, string> = {
+    price: 'pricePerSeat',
+    departureTime: 'departureTime',
+    duration: 'duration',
+    availableSeats: 'availableSeatsCount',
+  };
+  const sortField = sortMap[sortBy] || 'departureTime';
+  pipeline.push({ $sort: { [sortField]: sortOrder === 'asc' ? 1 : -1 } });
+
+  // Stage 8: Facet for pagination and count
+  pipeline.push({
+    $facet: {
+      results: [
+        { $skip: (page - 1) * limit },
+        { $limit: limit },
+        {
+          $project: {
+            _id: 1,
+            departureTime: 1,
+            arrivalTime: 1,
+            pricePerSeat: 1,
+            availableSeats: 1,
+            status: 1,
+            availableSeatsCount: 1,
+            route: {
+              id: '$routeInfo._id',
+              routeName: '$routeInfo.routeName',
+              origin: '$routeInfo.origin',
+              destination: '$routeInfo.destination',
+              distance: '$routeInfo.distance',
+              estimatedDuration: '$routeInfo.estimatedDuration',
+            },
+            bus: {
+              id: '$busInfo._id',
+              busNumber: '$busInfo.busNumber',
+              busType: '$busInfo.busType',
+              amenities: '$busInfo.amenities',
+              totalSeats: '$busInfo.totalSeats',
+            },
+            operator: {
+              id: '$operatorInfo._id',
+              companyName: '$operatorInfo.companyName',
+              logoUrl: '$operatorInfo.logoUrl',
+              rating: '$operatorInfo.rating',
+            },
+          },
+        },
+      ],
+      totalCount: [{ $count: 'count' }],
+    },
+  });
+
+  const [result] = await Trip.aggregate(pipeline);
+
+  const totalResults = result.totalCount[0]?.count || 0;
+  const totalPages = Math.ceil(totalResults / limit);
+
+  return {
+    results: result.results,
+    page,
+    limit,
+    totalPages,
+    totalResults,
+  };
+};
+
+/**
+ * Get trip by ID with full details including seat availability
+ */
+const getTripDetails = async (tripId: mongoose.Types.ObjectId) => {
+  const trip = await Trip.findById(tripId)
+    .populate({
+      path: 'route',
+      select: 'routeName origin destination stops distance estimatedDuration',
+    })
+    .populate({
+      path: 'bus',
+      select: 'busNumber busType totalSeats amenities seatMap images',
+    })
+    .populate({
+      path: 'operator',
+      select: 'companyName logoUrl rating description',
+    })
+    .lean();
+
+  if (!trip) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Trip not found');
+  }
+
+  // Get locked seats
+  const lockedSeats = await SeatLock.find({
+    trip: tripId,
+    expiresAt: { $gt: new Date() },
+  }).select('seatNumbers');
+
+  const lockedSeatNumbers = lockedSeats.flatMap((lock) => lock.seatNumbers);
+
+  // Build seat availability map
+  const seatAvailability: Record<string, any> = {};
+  const bus = trip.bus as any;
+
+  if (bus?.seatMap?.seats) {
+    bus.seatMap.seats.forEach((seat: any) => {
+      const isBooked = trip.bookedSeats?.includes(seat.seatNumber);
+      const isLocked = lockedSeatNumbers.includes(seat.seatNumber);
+
+      seatAvailability[seat.seatNumber] = {
+        ...seat,
+        status: isBooked ? 'booked' : isLocked ? 'locked' : 'available',
+        price: trip.pricePerSeat + (seat.priceModifier || 0),
+      };
+    });
+  }
+
+  // Calculate stats
+  const bookedCount = trip.bookedSeats?.length || 0;
+  const totalSeats = bus?.totalSeats || 0;
+  const availableSeats = totalSeats - bookedCount - lockedSeatNumbers.length;
+
+  return {
+    ...trip,
+    id: trip._id,
+    availableSeats,
+    seatAvailability,
+    policies: {
+      cancellation: 'Free cancellation up to 24 hours before departure',
+      modification: 'Free modification up to 12 hours before departure',
+      refund: 'Full refund for cancellations made 24+ hours before departure',
+    },
+  };
+};
+
 export default {
   createTrip,
   queryTrips,
@@ -107,4 +401,6 @@ export default {
   updateTripById,
   deleteTripById,
   searchTrips,
+  searchTripsByRoute,
+  getTripDetails,
 };
