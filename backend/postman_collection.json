@@ -7,7 +7,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:5000/v1",
+      "value": "http://localhost:4000/v1",
       "type": "string"
     },
     {
@@ -140,11 +140,7 @@
             {
               "listen": "test",
               "script": {
-                "exec": [
-                  "pm.test('Status code is 401', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});"
-                ]
+                "exec": ["pm.test('Status code is 401', function () {", "    pm.response.to.have.status(401);", "});"]
               }
             }
           ],

@@ -86,9 +86,10 @@ A full-stack web application demonstrating secure authentication flows, role-bas
 - **Security**: helmet, cors, express-rate-limit
 
 ### DevOps & Tooling
-- **Linting**: ESLint
-- **Formatting**: Prettier
-- **Git Hooks**: Husky + lint-staged
+- **Linting**: ESLint (per workspace)
+- **Formatting**: Prettier (per workspace)
+- **Git Hooks**: Husky v9 + lint-staged (root level)
+- **Commit Linting**: Commitlint (conventional commits)
 - **Testing**: Jest + React Testing Library
 - **Deployment**: Vercel (Frontend) + Render (Backend)
 - **Process Manager**: PM2 (Backend)
@@ -184,43 +185,113 @@ A full-stack web application demonstrating secure authentication flows, role-bas
 ### Prerequisites
 
 - Node.js >= 18.0.0
-- npm or yarn
+- npm (v9+)
 - MongoDB database (local or MongoDB Atlas)
 - Google OAuth 2.0 credentials
 
-### Installation
+### Quick Start (5 minutes)
 
-1. **Clone the repository**
-   ```bash
-   git clone https://gitlab.com/nguyenbaan662004/bus-ticket-booking-system.git
-   cd bus-ticket-booking-system
-   ```
+```bash
+# 1. Clone repository
+git clone https://gitlab.com/nguyenbaan662004/bus-ticket-booking-system.git
+cd bus-ticket-booking-system
 
-2. **Backend Setup**
-   ```bash
-   cd backend
-   npm install
-   
-   # Copy environment variables
-   cp .env.example .env
-   # Edit .env with your configuration
-   
-   # Seed database with admin user (optional)
-   npm run seed:admin
-   
-   # Or seed with sample data
-   npm run seed
-   ```
+# 2. Install ALL dependencies (root + frontend + backend)
+npm install
 
-3. **Frontend Setup**
-   ```bash
-   cd frontend
-   npm install
-   
-   # Copy environment variables
-   cp .env.example .env.local
-   # Edit .env.local with your configuration
-   ```
+# 3. Setup environment files
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
+# Edit both .env files with your configuration
+
+# 4. Run development servers
+# Terminal 1 - Backend
+cd backend && npm run dev
+
+# Terminal 2 - Frontend  
+cd frontend && npm run dev
+```
+
+**URLs:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:4000
+- API Docs: http://localhost:4000/api-docs
+
+### Project Structure (Monorepo)
+
+```
+project-root/
+├── .husky/              # Git hooks (commit-msg, pre-commit)
+├── package.json         # Root package (workspaces + husky)
+├── commitlint.config.mjs # Commit message rules
+├── frontend/            # Next.js app
+├── backend/             # Express API
+├── docs/                # Documentation
+└── README.md
+```
+
+### Development Workflow
+
+#### Git Commit Convention
+
+```bash
+# Format: type(scope): message
+
+# Examples:
+git commit -m "feat(frontend): add login page"
+git commit -m "fix(backend): resolve auth token issue"
+git commit -m "docs(root): update README"
+git commit -m "chore(deps): update dependencies"
+```
+
+**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `revert`, `build`, `ci`
+
+**Scopes:** `frontend`, `backend`, `root`, `deps`, `config`, `docs`
+
+#### Pre-commit Hooks
+
+Husky automatically runs when you commit:
+1. **Commitlint** - Validates commit message format
+2. **Lint-staged** - Runs ESLint + Prettier on staged files
+
+```bash
+# If pre-commit fails, fix issues and retry
+npm run lint:fix   # In frontend/ or backend/
+git add .
+git commit -m "fix(frontend): resolve lint errors"
+```
+
+### NPM Scripts
+
+#### Root (project-root/)
+```bash
+npm install          # Install all dependencies (root + workspaces)
+```
+
+#### Frontend (frontend/)
+```bash
+npm run dev          # Start dev server (localhost:3000)
+npm run build        # Production build
+npm run lint         # Check lint errors
+npm run lint:fix     # Auto-fix lint errors
+npm run format       # Format code (Prettier + ESLint)
+npm run test         # Run tests
+```
+
+#### Backend (backend/)
+```bash
+npm run dev          # Start dev server (localhost:4000)
+npm run build        # Compile TypeScript
+npm run start        # Run production build
+npm run lint         # Check lint errors
+npm run lint:fix     # Auto-fix lint errors
+npm run format       # Format code
+npm run test         # Run tests
+npm run seed:admin   # Create admin user
+npm run seed:data    # Seed sample data
+```
+
+### Installation (Detailed)
 
 ### Environment Variables
 
@@ -245,7 +316,7 @@ JWT_VERIFY_EMAIL_EXPIRATION_MINUTES=10
 # Google OAuth
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_CALLBACK_URL=http://localhost:5000/api/v1/auth/google/callback
+GOOGLE_CALLBACK_URL=http://localhost:4000/api/v1/auth/google/callback
 
 # CORS
 FRONTEND_URL=http://localhost:3000
@@ -260,7 +331,7 @@ EMAIL_FROM=noreply@busbooking.com
 
 #### Frontend (.env.local)
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-nextauth-secret-min-32-chars
@@ -274,7 +345,7 @@ NEXTAUTH_SECRET=your-nextauth-secret-min-32-chars
 ```bash
 cd backend
 npm run dev
-# Server runs on http://localhost:5000
+# Server runs on http://localhost:4000
 ```
 
 **Frontend:**

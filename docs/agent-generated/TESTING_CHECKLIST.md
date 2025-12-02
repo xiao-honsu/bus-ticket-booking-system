@@ -34,7 +34,7 @@ cd Source/backend
 # Start backend server
 npm run dev
 
-# Server should be running on http://localhost:5000
+# Server should be running on http://localhost:4000
 ```
 
 ### 2. Import Postman Collection
@@ -47,7 +47,7 @@ npm run dev
 ### 3. Set Environment Variables in Postman
 
 Create a new environment or use collection variables:
-- `baseUrl`: `http://localhost:5000/v1`
+- `baseUrl`: `http://localhost:4000/v1`
 - `userToken`: (will be auto-filled after login)
 - `adminToken`: (set manually after admin login)
 - `tripId`: (will be auto-filled from search)

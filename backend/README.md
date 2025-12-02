@@ -5,6 +5,7 @@ Backend API cho hệ thống đặt vé xe buýt được xây dựng với Expr
 ## 🚀 Features
 
 ### Core Features
+
 - ✅ **Authentication & Authorization**: JWT-based auth với refresh tokens
 - ✅ **User Management**: CRUD operations với role-based access (user/admin)
 - ✅ **Trip Search**: Tìm kiếm chuyến xe theo điểm đi, điểm đến, ngày giờ
@@ -17,6 +18,7 @@ Backend API cho hệ thống đặt vé xe buýt được xây dựng với Expr
 - ✅ **Chatbot**: AI chatbot hỗ trợ tìm chuyến, đặt vé
 
 ### Admin Features
+
 - ✅ **Bus Management**: Quản lý xe buýt (loại xe, số ghế, tiện nghi)
 - ✅ **Route Management**: Quản lý tuyến đường (điểm đi/đến, điểm dừng)
 - ✅ **Trip Management**: Quản lý lịch trình chuyến xe
@@ -24,6 +26,7 @@ Backend API cho hệ thống đặt vé xe buýt được xây dựng với Expr
 - ✅ **Booking Overview**: Xem tất cả booking, thống kê
 
 ### Security & Performance
+
 - 🔒 **Security**: Helmet, rate limiting, data sanitization, password hashing
 - 📊 **Logging**: Winston logger với Morgan HTTP logger
 - ⚡ **Performance**: Response compression, MongoDB indexing
@@ -78,7 +81,7 @@ JWT_RESET_PASSWORD_EXPIRATION_MINUTES=10
 JWT_VERIFY_EMAIL_EXPIRATION_MINUTES=10
 
 # SMTP Email Configuration
-# For Gmail: 
+# For Gmail:
 #   1. Enable 2-factor authentication
 #   2. Generate an "App Password" at https://myaccount.google.com/apppasswords
 SMTP_HOST=smtp.gmail.com
@@ -135,6 +138,7 @@ npm run seed:admin
 Creates a complete dataset for testing all dashboard features with **real data**:
 
 **Created Data:**
+
 - **2 Users**: Admin (admin@busticket.com) & Test User (user@busticket.com)
 - **2 Operators**: FUTA Bus Lines, Hoang Long Bus
 - **3 Buses**: Mix of sleeper & seater buses with different capacities
@@ -143,6 +147,7 @@ Creates a complete dataset for testing all dashboard features with **real data**
 - **9 Bookings**: Various statuses (completed, confirmed, pending, cancelled)
 
 **Features:**
+
 - ✅ **Idempotent**: Safe to run multiple times - checks if data exists before creating
 - ✅ **Realistic Data**: Vietnamese city names, proper locations, realistic prices
 - ✅ **Time-based Trips**: Past (completed), today (ongoing), future (upcoming)
@@ -150,6 +155,7 @@ Creates a complete dataset for testing all dashboard features with **real data**
 - ✅ **Payment States**: Completed payments, pending, refunded statuses
 
 **Login Credentials:**
+
 ```
 Admin:
   Email: admin@busticket.com
@@ -161,6 +167,7 @@ Test User:
 ```
 
 **What You Can Test After Seeding:**
+
 - ✅ Dashboard widgets with real booking data
 - ✅ Trip search with actual routes and schedules
 - ✅ Booking flow with available seats
@@ -169,6 +176,7 @@ Test User:
 - ✅ Payment integration testing
 
 **Example Output:**
+
 ```
 ✅ Connected to MongoDB
 📋 Step 1: Seeding Users...
@@ -184,138 +192,143 @@ Test User:
 ### Admin Seed Script (`npm run seed:admin`)
 
 Creates only the admin user if you just need admin access:
+
 - Email: admin@busticket.com
 - Password: Admin@123456
 - Role: admin
 
 # Lint và format code
+
 npm run lint
 npm run format
+
 ```
 
 ## 🏗️ Project Structure
 
 ```
+
 Source/backend/
 ├── src/
-│   ├── config/              # Configuration files
-│   │   ├── config.ts        # Environment config với Joi validation
-│   │   ├── logger.ts        # Winston logger setup
-│   │   ├── morgan.ts        # Morgan HTTP logger config
-│   │   ├── passport.ts      # Passport JWT strategy
-│   │   ├── roles.ts         # Role-based access control (user/admin)
-│   │   └── tokens.ts        # JWT token generation & verification
-│   ├── controllers/         # Route controllers (controller layer)
-│   │   ├── auth.controller.ts
-│   │   ├── booking.controller.ts
-│   │   ├── bus.controller.ts
-│   │   ├── chatbot.controller.ts
-│   │   ├── operator.controller.ts
-│   │   ├── payment.controller.ts
-│   │   ├── review.controller.ts
-│   │   ├── route.controller.ts
-│   │   ├── seatlock.controller.ts
-│   │   ├── trip.controller.ts
-│   │   └── user.controller.ts
-│   ├── middlewares/         # Custom express middlewares
-│   │   ├── auth.ts          # Authentication & authorization
-│   │   ├── error.ts         # Error converter & handler
-│   │   ├── rateLimiter.ts   # Rate limiting (general + auth)
-│   │   └── validate.ts      # Request validation với Joi
-│   ├── models/              # Mongoose models (data layer)
-│   │   ├── auditlog.model.ts       # Audit logging
-│   │   ├── booking.model.ts        # Booking management
-│   │   ├── bus.model.ts            # Bus information
-│   │   ├── chatsession.model.ts    # Chatbot sessions
-│   │   ├── notification.model.ts   # User notifications
-│   │   ├── operator.model.ts       # Bus operators
-│   │   ├── passwordreset.model.ts  # Password reset tokens
-│   │   ├── review.model.ts         # Trip reviews
-│   │   ├── reviewvote.model.ts     # Review voting
-│   │   ├── route.model.ts          # Bus routes
-│   │   ├── searchhistory.model.ts  # Search history
-│   │   ├── seatlock.model.ts       # Seat locking (10-min TTL)
-│   │   ├── token.model.ts          # Auth tokens
-│   │   ├── trip.model.ts           # Trip schedules
-│   │   └── user.model.ts           # User accounts
-│   ├── routes/              # API routes
-│   │   └── v1/              # Version 1 API routes
-│   │       ├── auth.route.ts      # Authentication routes
-│   │       ├── booking.route.ts   # Booking routes
-│   │       ├── bus.route.ts       # Bus routes
-│   │       ├── chatbot.route.ts   # Chatbot routes
-│   │       ├── operator.route.ts  # Operator routes
-│   │       ├── payment.route.ts   # Payment routes
-│   │       ├── review.route.ts    # Review routes
-│   │       ├── route.route.ts     # Route routes
-│   │       ├── seatlock.route.ts  # Seat locking routes
-│   │       ├── trip.route.ts      # Trip routes
-│   │       ├── user.route.ts      # User routes
-│   │       └── index.ts           # Route aggregator
-│   ├── services/            # Business logic (service layer)
-│   │   ├── auth.service.ts
-│   │   ├── booking.service.ts     # Includes seat locking logic
-│   │   ├── bus.service.ts
-│   │   ├── chatbot.service.ts     # AI chatbot service
-│   │   ├── email.service.ts       # Nodemailer service
-│   │   ├── operator.service.ts
-│   │   ├── payment.service.ts     # PayOS integration
-│   │   ├── review.service.ts
-│   │   ├── route.service.ts
-│   │   ├── seatlock.service.ts    # Seat locking mechanism
-│   │   ├── token.service.ts
-│   │   ├── trip.service.ts
-│   │   └── user.service.ts
-│   ├── types/               # TypeScript custom types
-│   │   └── express.d.ts     # Express type extensions
-│   ├── utils/               # Utility functions
-│   │   ├── ApiError.ts      # Custom error class
-│   │   ├── catchAsync.ts    # Async error wrapper
-│   │   └── pick.ts          # Object property picker
-│   ├── validations/         # Joi validation schemas
-│   │   ├── auth.validation.ts
-│   │   ├── booking.validation.ts
-│   │   ├── bus.validation.ts
-│   │   ├── chatbot.validation.ts
-│   │   ├── custom.validation.ts
-│   │   ├── operator.validation.ts
-│   │   ├── payment.validation.ts
-│   │   ├── review.validation.ts
-│   │   ├── route.validation.ts
-│   │   ├── trip.validation.ts
-│   │   └── user.validation.ts
-│   ├── app.ts               # Express app setup với middlewares
-│   └── index.ts             # Entry point - server start
-├── tests/                   # Test files
-│   ├── setup.ts             # Test configuration & in-memory MongoDB
-│   ├── helpers/
-│   │   └── faker.helper.ts  # Test data generation
-│   ├── unit/                # Unit tests (29 tests)
-│   │   └── services/
-│   │       ├── auth.service.test.ts
-│   │       ├── booking.service.test.ts
-│   │       └── seatlock.service.test.ts
-│   └── integration/         # Integration tests (45 tests)
-│       ├── auth.test.ts
-│       ├── booking.test.ts
-│       └── seatlock.test.ts
-├── .env                     # Environment variables (not in repo)
-├── .env.example             # Example environment file
-├── ecosystem.config.js      # PM2 configuration (cluster mode)
-├── jest.config.js           # Jest test configuration
-├── nodemon.json             # Nodemon configuration
-├── package.json             # Dependencies và scripts
-├── tsconfig.json            # TypeScript configuration với path aliases
-├── CHATBOT-API.md           # Chatbot API documentation
-├── SEAT-LOCKING-API.md      # Seat locking API documentation
+│ ├── config/ # Configuration files
+│ │ ├── config.ts # Environment config với Joi validation
+│ │ ├── logger.ts # Winston logger setup
+│ │ ├── morgan.ts # Morgan HTTP logger config
+│ │ ├── passport.ts # Passport JWT strategy
+│ │ ├── roles.ts # Role-based access control (user/admin)
+│ │ └── tokens.ts # JWT token generation & verification
+│ ├── controllers/ # Route controllers (controller layer)
+│ │ ├── auth.controller.ts
+│ │ ├── booking.controller.ts
+│ │ ├── bus.controller.ts
+│ │ ├── chatbot.controller.ts
+│ │ ├── operator.controller.ts
+│ │ ├── payment.controller.ts
+│ │ ├── review.controller.ts
+│ │ ├── route.controller.ts
+│ │ ├── seatlock.controller.ts
+│ │ ├── trip.controller.ts
+│ │ └── user.controller.ts
+│ ├── middlewares/ # Custom express middlewares
+│ │ ├── auth.ts # Authentication & authorization
+│ │ ├── error.ts # Error converter & handler
+│ │ ├── rateLimiter.ts # Rate limiting (general + auth)
+│ │ └── validate.ts # Request validation với Joi
+│ ├── models/ # Mongoose models (data layer)
+│ │ ├── auditlog.model.ts # Audit logging
+│ │ ├── booking.model.ts # Booking management
+│ │ ├── bus.model.ts # Bus information
+│ │ ├── chatsession.model.ts # Chatbot sessions
+│ │ ├── notification.model.ts # User notifications
+│ │ ├── operator.model.ts # Bus operators
+│ │ ├── passwordreset.model.ts # Password reset tokens
+│ │ ├── review.model.ts # Trip reviews
+│ │ ├── reviewvote.model.ts # Review voting
+│ │ ├── route.model.ts # Bus routes
+│ │ ├── searchhistory.model.ts # Search history
+│ │ ├── seatlock.model.ts # Seat locking (10-min TTL)
+│ │ ├── token.model.ts # Auth tokens
+│ │ ├── trip.model.ts # Trip schedules
+│ │ └── user.model.ts # User accounts
+│ ├── routes/ # API routes
+│ │ └── v1/ # Version 1 API routes
+│ │ ├── auth.route.ts # Authentication routes
+│ │ ├── booking.route.ts # Booking routes
+│ │ ├── bus.route.ts # Bus routes
+│ │ ├── chatbot.route.ts # Chatbot routes
+│ │ ├── operator.route.ts # Operator routes
+│ │ ├── payment.route.ts # Payment routes
+│ │ ├── review.route.ts # Review routes
+│ │ ├── route.route.ts # Route routes
+│ │ ├── seatlock.route.ts # Seat locking routes
+│ │ ├── trip.route.ts # Trip routes
+│ │ ├── user.route.ts # User routes
+│ │ └── index.ts # Route aggregator
+│ ├── services/ # Business logic (service layer)
+│ │ ├── auth.service.ts
+│ │ ├── booking.service.ts # Includes seat locking logic
+│ │ ├── bus.service.ts
+│ │ ├── chatbot.service.ts # AI chatbot service
+│ │ ├── email.service.ts # Nodemailer service
+│ │ ├── operator.service.ts
+│ │ ├── payment.service.ts # PayOS integration
+│ │ ├── review.service.ts
+│ │ ├── route.service.ts
+│ │ ├── seatlock.service.ts # Seat locking mechanism
+│ │ ├── token.service.ts
+│ │ ├── trip.service.ts
+│ │ └── user.service.ts
+│ ├── types/ # TypeScript custom types
+│ │ └── express.d.ts # Express type extensions
+│ ├── utils/ # Utility functions
+│ │ ├── ApiError.ts # Custom error class
+│ │ ├── catchAsync.ts # Async error wrapper
+│ │ └── pick.ts # Object property picker
+│ ├── validations/ # Joi validation schemas
+│ │ ├── auth.validation.ts
+│ │ ├── booking.validation.ts
+│ │ ├── bus.validation.ts
+│ │ ├── chatbot.validation.ts
+│ │ ├── custom.validation.ts
+│ │ ├── operator.validation.ts
+│ │ ├── payment.validation.ts
+│ │ ├── review.validation.ts
+│ │ ├── route.validation.ts
+│ │ ├── trip.validation.ts
+│ │ └── user.validation.ts
+│ ├── app.ts # Express app setup với middlewares
+│ └── index.ts # Entry point - server start
+├── tests/ # Test files
+│ ├── setup.ts # Test configuration & in-memory MongoDB
+│ ├── helpers/
+│ │ └── faker.helper.ts # Test data generation
+│ ├── unit/ # Unit tests (29 tests)
+│ │ └── services/
+│ │ ├── auth.service.test.ts
+│ │ ├── booking.service.test.ts
+│ │ └── seatlock.service.test.ts
+│ └── integration/ # Integration tests (45 tests)
+│ ├── auth.test.ts
+│ ├── booking.test.ts
+│ └── seatlock.test.ts
+├── .env # Environment variables (not in repo)
+├── .env.example # Example environment file
+├── ecosystem.config.js # PM2 configuration (cluster mode)
+├── jest.config.js # Jest test configuration
+├── nodemon.json # Nodemon configuration
+├── package.json # Dependencies và scripts
+├── tsconfig.json # TypeScript configuration với path aliases
+├── CHATBOT-API.md # Chatbot API documentation
+├── SEAT-LOCKING-API.md # Seat locking API documentation
 ├── TESTING_DOCUMENTATION.md # Complete testing guide
-├── TESTING_QUICKSTART.md    # Quick testing guide
-└── README.md                # This file
-```
+├── TESTING_QUICKSTART.md # Quick testing guide
+└── README.md # This file
+
+````
 
 ## 🔐 API Endpoints
 
-Base URL: `http://localhost:5000/v1`
+Base URL: `http://localhost:4000/v1`
 
 ### Authentication
 - `POST /v1/auth/register` - Đăng ký user mới
@@ -429,7 +442,7 @@ npm run coverage
 
 # View HTML coverage report
 # Open: coverage/lcov-report/index.html
-```
+````
 
 ### Test Files
 
@@ -452,6 +465,7 @@ tests/
 ### Documentation
 
 Xem chi tiết:
+
 - **Complete Testing Guide:** [`TESTING_DOCUMENTATION.md`](./TESTING_DOCUMENTATION.md)
 - **Quick Start Guide:** [`TESTING_QUICKSTART.md`](./TESTING_QUICKSTART.md)
 - **Implementation Summary:** [`TASK_3.4_SUMMARY.md`](./TASK_3.4_SUMMARY.md)
@@ -467,7 +481,7 @@ Xem chi tiết:
 
 - ✅ **Password Hashing**: bcryptjs với salt rounds = 10
 - ✅ **JWT Authentication**: Access + Refresh tokens
-- ✅ **Rate Limiting**: 
+- ✅ **Rate Limiting**:
   - General: 100 requests/15 minutes
   - Auth: 20 requests/15 minutes
 - ✅ **Data Sanitization**: MongoDB injection prevention
@@ -479,7 +493,9 @@ Xem chi tiết:
 ## 🚀 Key Features Explained
 
 ### 1. Guest Booking Flow
+
 Người dùng có thể đặt vé mà không cần đăng ký tài khoản:
+
 ```bash
 POST /v1/bookings/guest
 {
@@ -492,7 +508,9 @@ POST /v1/bookings/guest
 ```
 
 ### 2. Seat Locking Mechanism
+
 Ghế sẽ bị lock trong 10 phút khi user chọn:
+
 ```bash
 # Lock seat
 POST /v1/seatlock/lock
@@ -506,6 +524,7 @@ POST /v1/seatlock/lock
 ```
 
 ### 3. Payment Integration (PayOS)
+
 ```bash
 # 1. Create payment link
 POST /v1/payments/:bookingId/create
@@ -519,7 +538,9 @@ POST /v1/payments/webhook
 ```
 
 ### 4. Email Notifications
+
 Tự động gửi email khi:
+
 - ✅ Đăng ký tài khoản thành công
 - ✅ Đặt vé thành công (booking confirmation)
 - ✅ Thanh toán thành công
@@ -527,7 +548,9 @@ Tự động gửi email khi:
 - ✅ Nhắc lịch trước chuyến đi (scheduled job)
 
 ### 5. Chatbot Service
+
 AI chatbot hỗ trợ:
+
 - 🔍 Tìm chuyến xe
 - 💺 Kiểm tra ghế trống
 - 📋 Xem booking history
@@ -545,6 +568,7 @@ POST /v1/chatbot/messages
 ## 🔄 How It Works
 
 ### Booking Flow
+
 ```
 1. User search trips → GET /v1/trips/search
 2. User select trip → GET /v1/trips/:tripId/available-seats
@@ -560,6 +584,7 @@ POST /v1/chatbot/messages
 ```
 
 ### Authentication Flow
+
 ```
 1. Register → POST /v1/auth/register
 2. Get access token (30 min) + refresh token (30 days)
@@ -572,6 +597,7 @@ POST /v1/chatbot/messages
 ## 📊 Database Models
 
 13 MongoDB collections:
+
 - `users` - User accounts (role: user/admin)
 - `tokens` - Refresh tokens
 - `buses` - Bus information (type, seats, amenities)
@@ -589,6 +615,7 @@ POST /v1/chatbot/messages
 ## 🚢 Deployment
 
 ### Production Build
+
 ```bash
 # Build TypeScript
 npm run build
@@ -601,24 +628,29 @@ npm run start:pm2
 ```
 
 ### PM2 Cluster Mode
+
 ```javascript
 // ecosystem.config.js
 module.exports = {
-  apps: [{
-    name: 'bus-booking-api',
-    script: './dist/index.js',
-    instances: 'max',  // Use all CPU cores
-    exec_mode: 'cluster',
-    env_production: {
-      NODE_ENV: 'production',
-      PORT: 5000
-    }
-  }]
+  apps: [
+    {
+      name: 'bus-booking-api',
+      script: './dist/index.js',
+      instances: 'max', // Use all CPU cores
+      exec_mode: 'cluster',
+      env_production: {
+        NODE_ENV: 'production',
+        PORT: 5000,
+      },
+    },
+  ],
 };
 ```
 
 ### Environment Checklist
+
 Trước khi deploy, đảm bảo:
+
 - ✅ MongoDB URL (production database)
 - ✅ JWT_SECRET (strong random string)
 - ✅ SMTP credentials (for emails)
@@ -631,6 +663,7 @@ Trước khi deploy, đảm bảo:
 ### Common Issues
 
 **1. MongoDB Connection Failed**
+
 ```bash
 # Check MongoDB is running
 mongod --version
@@ -641,6 +674,7 @@ mongod --dbpath /data/db    # Linux/Mac
 ```
 
 **2. Email Not Sending**
+
 ```bash
 # For Gmail:
 # 1. Enable 2FA on Google Account
@@ -649,6 +683,7 @@ mongod --dbpath /data/db    # Linux/Mac
 ```
 
 **3. PayOS Payment Failed**
+
 ```bash
 # Check credentials in .env
 PAYOS_CLIENT_ID=...
@@ -660,6 +695,7 @@ PAYOS_CHECKSUM_KEY=...
 ```
 
 **4. Tests Failing**
+
 ```bash
 # Clear Jest cache
 npm run test -- --clearCache

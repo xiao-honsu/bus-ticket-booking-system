@@ -194,14 +194,14 @@ mongod --dbpath C:\data\db
 cd Source/backend
 npm run dev
 
-# Verify server running at http://localhost:5000
+# Verify server running at http://localhost:4000
 ```
 
 ### Step 2: Import Postman Collection
 1. Open Postman
 2. Import `postman_collection.json`
 3. Set environment variables:
-   - baseUrl: `http://localhost:5000/v1`
+   - baseUrl: `http://localhost:4000/v1`
    - Get admin token by logging in as admin
 
 ### Step 3: Create Test Data
