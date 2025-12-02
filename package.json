@@ -6,7 +6,7 @@
     "backend"
   ],
   "scripts": {
-    "prepare": "husky",
+    "prepare": "husky || true",
     "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
   },
   "devDependencies": {
