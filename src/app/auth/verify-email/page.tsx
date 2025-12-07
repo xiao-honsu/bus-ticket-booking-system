@@ -118,7 +118,6 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-<<<<<<< HEAD
     <main className="container mx-auto px-4 py-16">
       <Suspense
         fallback={
@@ -136,10 +135,5 @@ export default function VerifyEmailPage() {
         <VerifyEmailContent />
       </Suspense>
     </main>
-=======
-    <Suspense fallback={<div className="text-center">Loading...</div>}>
-      <VerifyEmailContent />
-    </Suspense>
->>>>>>> efcc8aa (feat(frontend): Add admin dashboard pages and format code)
   );
 }
