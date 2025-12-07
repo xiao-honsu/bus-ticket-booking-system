@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { format } from 'date-fns';
 import {
   AlertCircle,
   Clock,
@@ -41,30 +42,25 @@ const amenitiesIconMap: Record<string, React.ReactNode> = {
 export default function TripDetailView({ trip = mockTripData }: TripDetailViewProps) {
   const router = useRouter();
   const [expandedPolicy, setExpandedPolicy] = useState<string | null>(null);
-  // Use a ref-based check for client-side rendering instead of state
-  const isClient = typeof window !== 'undefined';
 
   const departureDate = new Date(trip.departureTime);
   const arrivalDate = new Date(trip.arrivalTime);
   const durationHours = trip.route.estimatedDuration / 60;
 
-  // Use fixed format to avoid locale mismatch between server/client
+  // Use date-fns for consistent formatting on server and client
   const formatTime = (date: Date) => {
-    if (!isClient) return '--:--';
-    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    return format(date, 'HH:mm');
   };
 
   const formatDate = (date: Date) => {
-    if (!isClient) return '---';
-    return date.toLocaleDateString('vi-VN', { weekday: 'short', month: 'short', day: 'numeric' });
+    return format(date, 'EEE, MMM d');
   };
 
   const formatPrice = (price: number) => {
-    if (!isClient) return 'Đ---';
-    return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
-  const occupancyPercentage = isClient ? ((trip.bus.totalSeats - trip.availableSeats) / trip.bus.totalSeats) * 100 : 0;
+  const occupancyPercentage = ((trip.bus.totalSeats - trip.availableSeats) / trip.bus.totalSeats) * 100;
 
   const handleBookNow = () => {
     router.push(`/booking/${trip.id}`);
@@ -228,11 +224,11 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Available seats:</span>
-                  <span className="font-medium">{isClient ? trip.availableSeats : '--'}</span>
+                  <span className="font-medium">{trip.availableSeats}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Booked seats:</span>
-                  <span className="font-medium">{isClient ? trip.bus.totalSeats - trip.availableSeats : '--'}</span>
+                  <span className="font-medium">{trip.bus.totalSeats - trip.availableSeats}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Occupancy:</span>
@@ -250,20 +246,14 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
 
               <Button
                 onClick={handleBookNow}
-                disabled={!isClient || trip.availableSeats === 0 || trip.status !== 'scheduled'}
+                disabled={trip.availableSeats === 0 || trip.status !== 'scheduled'}
                 className="w-full"
                 size="lg"
               >
-                {!isClient
-                  ? 'Loading...'
-                  : trip.availableSeats === 0
-                    ? 'Fully Booked'
-                    : trip.status !== 'scheduled'
-                      ? 'Unavailable'
-                      : 'Book Now'}
+                {trip.availableSeats === 0 ? 'Fully Booked' : trip.status !== 'scheduled' ? 'Unavailable' : 'Book Now'}
               </Button>
 
-              {isClient && trip.availableSeats === 0 && (
+              {trip.availableSeats === 0 && (
                 <p className="text-xs text-red-600 text-center">No seats available for this trip</p>
               )}
             </CardContent>
@@ -371,12 +361,8 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
 
       {/* Footer CTA */}
       <div className="flex gap-4 justify-center py-4">
-        <Button
-          size="lg"
-          onClick={handleBookNow}
-          disabled={!isClient || trip.availableSeats === 0 || trip.status !== 'scheduled'}
-        >
-          {!isClient ? 'Loading...' : trip.availableSeats === 0 ? 'Fully Booked' : 'Book This Trip'}
+        <Button size="lg" onClick={handleBookNow} disabled={trip.availableSeats === 0 || trip.status !== 'scheduled'}>
+          {trip.availableSeats === 0 ? 'Fully Booked' : 'Book This Trip'}
         </Button>
         <Button size="lg" variant="outline">
           Share Trip
