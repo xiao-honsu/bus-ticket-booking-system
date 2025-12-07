@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
+  // Middleware runs on server-side, can only check httpOnly cookies
+  // We use refreshToken presence to determine if user is authenticated
+  const refreshToken = request.cookies.get('refreshToken')?.value;
   const userRole = request.cookies.get('userRole')?.value;
   const pathname = request.nextUrl.pathname;
 
@@ -17,22 +19,22 @@ export function middleware(request: NextRequest) {
   // Admin routes that require admin role
   const isAdminRoute = pathname.startsWith('/admin');
 
-  // Redirect to login if accessing protected route without token
-  if (isProtectedRoute && !token) {
+  // Redirect to login if accessing protected route without refreshToken
+  if (isProtectedRoute && !refreshToken) {
     const loginUrl = new URL('/auth/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect to login if accessing admin route without token
-  if (isAdminRoute && !token) {
+  // Redirect to login if accessing admin route without refreshToken
+  if (isAdminRoute && !refreshToken) {
     const loginUrl = new URL('/auth/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // Redirect to home if accessing admin route without admin role
-  if (isAdminRoute && token && userRole !== 'admin' && userRole !== 'operator') {
+  if (isAdminRoute && refreshToken && userRole !== 'admin' && userRole !== 'operator') {
     return NextResponse.redirect(new URL('/', request.url));
   }
 

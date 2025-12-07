@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 import { useLoginMutation } from '@/lib/store/services/api';
 import { useAppDispatch } from '@/lib/hooks';
 import { setCredentials } from '@/lib/store/features/auth/authSlice';
@@ -13,10 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { setAuthCookies } from '@/lib/utils/cookies';
+import { setUserRoleCookie } from '@/lib/utils/cookies';
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
@@ -24,40 +26,123 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const router = useRouter();
+  const params = useSearchParams();
   const dispatch = useAppDispatch();
   const [login, { isLoading }] = useLoginMutation();
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      email: params.get('email') || '',
       password: '',
     },
   });
 
+  const emailValue = form.watch('email');
+
   const onSubmit = async (data: LoginFormValues) => {
     try {
       const result = await login(data).unwrap();
+
+      console.log('Login result:', result);
+
+      // Login successful
+      // - refreshToken is set in httpOnly cookie by backend
+      // - accessToken is stored in Redux state (memory)
       dispatch(
         setCredentials({
-          user: result.user,
-          tokens: result.tokens,
+          user: result.data.user,
+          accessToken: result.data.tokens.access.token,
         })
       );
 
-      // Save tokens to cookies for middleware and automatic refresh
-      setAuthCookies(result.tokens, result.user.role);
+      // Save user role to client-side cookie for middleware
+      setUserRoleCookie(result.data.user.role);
 
-      toast.success('Login successful!');
+      toast.success(result.message || 'Login successful!');
 
       // Redirect based on role
-      if (result.user.role === 'admin') {
+      if (result.data.user.role === 'admin') {
         router.push('/admin');
       } else {
         router.push('/dashboard');
       }
     } catch (error: any) {
-      toast.error(error?.data?.message || 'Login failed. Please check your credentials.');
+      console.log('Login error:', error);
+
+      // Handle different error scenarios
+      if (error?.data?.emailNotVerified) {
+        // Email not verified - special handling
+        const toastId = toast.error(error.data.message || 'Please verify your email before logging in.', {
+          duration: Infinity, // Keep toast open until user dismisses or action completes
+          action: {
+            label: 'Resend Email',
+            onClick: async (event) => {
+              // Prevent default toast dismiss behavior
+              event.preventDefault();
+
+              // Show loading state in a new toast
+              const loadingToast = toast.loading('Sending verification email...');
+
+              try {
+                // Call resend verification email API
+                const response = await fetch(
+                  `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/resend-verification-email`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: error.data.email || data.email }),
+                  }
+                );
+
+                // Dismiss loading toast
+                toast.dismiss(loadingToast);
+
+                if (response.ok) {
+                  // Dismiss the original error toast
+                  toast.dismiss(toastId);
+                  // Show success message
+                  toast.success('Verification email sent! Please check your inbox.', {
+                    duration: 5000,
+                  });
+                } else {
+                  toast.error('Failed to resend email. Please try again.', {
+                    duration: 5000,
+                  });
+                }
+              } catch (err) {
+                // Dismiss loading toast
+                toast.dismiss(loadingToast);
+                toast.error('Failed to resend email. Please try again.', {
+                  duration: 5000,
+                });
+              }
+            },
+          },
+          cancel: {
+            label: 'Dismiss',
+            onClick: () => {
+              toast.dismiss(toastId);
+            },
+          },
+        });
+      } else if (error?.message) {
+        // Backend returned specific error message
+        toast.error(error.message, { duration: 5000 });
+      } else if (error?.code === 401) {
+        // Unauthorized - wrong credentials
+        toast.error('Invalid email or password. Please try again.');
+      } else if (error?.code === 403) {
+        // Forbidden - account locked or suspended
+        toast.error(error?.message || 'Account is locked or suspended. Please contact support.');
+      } else if (error?.code === 500) {
+        // Server error
+        toast.error('Server error. Please try again later.');
+      } else {
+        // Generic error
+        toast.error('Login failed. Please check your credentials.');
+      }
     }
   };
 
@@ -95,7 +180,22 @@ export default function LoginForm() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        {...field}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -138,8 +238,19 @@ export default function LoginForm() {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex justify-center">
-        <p className="text-sm text-muted-foreground">
+      <CardFooter className="flex flex-col space-y-2">
+        <div className="text-center">
+          <Link
+            href={{
+              pathname: '/auth/forgot-password',
+              query: emailValue ? { email: emailValue } : undefined,
+            }}
+            className="text-sm text-primary hover:underline"
+          >
+            Forgot Password?
+          </Link>
+        </div>
+        <p className="text-sm text-muted-foreground text-center">
           Don&apos;t have an account?{' '}
           <Link href="/auth/register" className="text-primary hover:underline">
             Register

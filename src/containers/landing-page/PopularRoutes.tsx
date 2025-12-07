@@ -6,9 +6,6 @@ import { mockTripList } from '@/mock/tripData';
 import { MapPin, DollarSign } from 'lucide-react';
 
 export default function PopularRoutes() {
-  // Use typeof window check for client detection
-  const isClient = typeof window !== 'undefined';
-
   // Compute popular routes using useMemo
   const popularRoutes = useMemo(() => {
     // Get unique routes from mock trips and sort by available seats (highest first)
@@ -32,7 +29,7 @@ export default function PopularRoutes() {
       .slice(0, 4);
   }, []);
 
-  if (!isClient || popularRoutes.length === 0) {
+  if (popularRoutes.length === 0) {
     return null;
   }
 

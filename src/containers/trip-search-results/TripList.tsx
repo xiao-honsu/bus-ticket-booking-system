@@ -17,13 +17,17 @@ interface TripListProps {
 export default function TripList({ origin: _origin, destination: _destination, date: _date }: TripListProps) {
   const [sortBy, setSortBy] = useState('departure');
   const [currentPage, setCurrentPage] = useState(1);
-  // Use typeof window check for client detection
-  const isClient = typeof window !== 'undefined';
+  const [mounted, setMounted] = useState(false);
   const itemsPerPage = 8;
+
+  // Set mounted to true after first client-side render
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Helper function to load filters from sessionStorage
   const loadFiltersFromStorage = useCallback((): SearchFilters => {
-    if (!isClient) return {};
+    if (typeof window === 'undefined') return {};
 
     const appliedFilters: SearchFilters = {};
 
@@ -62,7 +66,7 @@ export default function TripList({ origin: _origin, destination: _destination, d
     }
 
     return appliedFilters;
-  }, [isClient]);
+  }, []);
 
   // Initialize filters with lazy initialization to avoid unnecessary re-renders
   const [filters, setFilters] = useState<SearchFilters>(() => {
@@ -91,7 +95,7 @@ export default function TripList({ origin: _origin, destination: _destination, d
 
   // Watch for filter changes from sessionStorage (other tabs/windows or same tab)
   useEffect(() => {
-    if (!isClient) return;
+    if (!mounted) return;
 
     // Set up listener for storage changes (from other tabs/windows)
     const handleStorageChange = () => {
@@ -119,13 +123,13 @@ export default function TripList({ origin: _origin, destination: _destination, d
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, [isClient, loadFiltersFromStorage]);
+  }, [mounted, loadFiltersFromStorage]);
 
   // Update search results when filters or page changes
   useEffect(() => {
-    if (!isClient) return;
+    if (!mounted) return;
     updateResults(filters, currentPage);
-  }, [currentPage, isClient, filters, updateResults]);
+  }, [currentPage, mounted, filters, updateResults]);
 
   // Sort trips based on selection
   const sortedTrips = [...searchResults.results];
@@ -146,7 +150,8 @@ export default function TripList({ origin: _origin, destination: _destination, d
     }
   });
 
-  if (!isClient) {
+  // Show loading skeleton during SSR and initial client render
+  if (!mounted) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-12 w-full" />

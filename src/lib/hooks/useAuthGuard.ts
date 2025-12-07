@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/lib/hooks';
 import { logout } from '@/lib/store/features/auth/authSlice';
+import { useLogoutMutation } from '@/lib/store/services/api';
 import { toast } from 'sonner';
 import { clearAuthCookies } from '@/lib/utils/cookies';
 
@@ -18,6 +19,7 @@ export function useAuthGuard(options: UseAuthGuardOptions = {}) {
   const dispatch = useAppDispatch();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [logoutApi] = useLogoutMutation();
 
   useEffect(() => {
     if (redirectIfAuthenticated && isAuthenticated) {
@@ -26,11 +28,19 @@ export function useAuthGuard(options: UseAuthGuardOptions = {}) {
     }
   }, [redirectIfAuthenticated, isAuthenticated]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Call logout API to clear httpOnly cookies on backend
+      await logoutApi({}).unwrap();
+    } catch (error) {
+      // Continue logout even if API call fails
+      console.error('Logout API error:', error);
+    }
+
     // Clear Redux state
     dispatch(logout());
 
-    // Clear auth cookies
+    // Clear client-side cookies
     clearAuthCookies();
 
     // Clear localStorage
