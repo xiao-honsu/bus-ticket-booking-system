@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/lib/hooks';
 import { logout } from '@/lib/store/features/auth/authSlice';
+import { useLogoutMutation } from '@/lib/store/services/api';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,19 +15,29 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { clearAuthCookies } from '@/lib/utils/cookies';
 
 export default function Navbar() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user, isLoading } = useAppSelector((state) => state.auth);
+  const [logoutApi] = useLogoutMutation();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Call logout API to clear httpOnly cookies on backend
+      await logoutApi({}).unwrap();
+    } catch (error) {
+      // Continue logout even if API call fails
+      console.error('Logout API error:', error);
+    }
+
     // Clear Redux state
     dispatch(logout());
 
-    // Clear auth cookies
+    // Clear client-side cookies
     clearAuthCookies();
 
     // Clear localStorage and sessionStorage
@@ -54,7 +65,16 @@ export default function Navbar() {
             <Link href="/search" className="text-gray-700 hover:text-blue-600">
               Search
             </Link>
-            {isAuthenticated ? (
+            {isLoading ? (
+              // Show skeleton loader during session restore
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="flex flex-col gap-1">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-2 w-32" />
+                </div>
+              </div>
+            ) : isAuthenticated ? (
               <>
                 {(user?.role === 'admin' || user?.role === 'operator') && (
                   <Link href="/admin" className="text-gray-700 hover:text-blue-600">

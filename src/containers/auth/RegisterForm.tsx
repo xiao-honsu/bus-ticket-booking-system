@@ -1,26 +1,29 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 import { useRegisterMutation } from '@/lib/store/services/api';
 import { useAppDispatch } from '@/lib/hooks';
-import { setCredentials } from '@/lib/store/features/auth/authSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { setAuthCookies } from '@/lib/utils/cookies';
 
 const registerSchema = z
   .object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Invalid email address'),
+    email: z.email('Invalid email address'),
     phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/(?=.*[a-zA-Z])(?=.*\d)/, 'Password must contain at least 1 letter and 1 number'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -34,6 +37,8 @@ export default function RegisterForm() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [register, { isLoading }] = useRegisterMutation();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -50,20 +55,51 @@ export default function RegisterForm() {
     try {
       const { confirmPassword, ...registerData } = data;
       const result = await register(registerData).unwrap();
-      dispatch(
-        setCredentials({
-          user: result.user,
-          tokens: result.tokens,
-        })
-      );
 
-      // Save tokens to cookies for middleware and automatic refresh
-      setAuthCookies(result.tokens, result.user.role);
+      console.log('Registration result:', result);
 
-      toast.success('Registration successful! Welcome aboard!');
-      router.push('/dashboard');
+      // Registration success - but user needs to verify email first
+      // No tokens are returned, user cannot login until email is verified
+
+      // Show success message with email verification instruction
+      toast.success(result.message || 'Registration successful! Please check your email to verify your account.', {
+        duration: 8000, // Show longer for important message
+      });
+
+      // Optionally show additional info toast
+      toast.info(`A verification email has been sent to ${registerData.email}. Please verify within 10 minutes.`, {
+        duration: 8000,
+      });
+
+      // Redirect to login page with a message parameter
+      // User will need to verify email before they can login
+      router.push(`/auth/login?registered=true&email=${encodeURIComponent(registerData.email)}`);
     } catch (error: any) {
-      toast.error(error?.data?.message || 'Registration failed. Please try again.');
+      console.log('Registration error:', error);
+
+      // Handle different error scenarios
+      if (error?.data?.message) {
+        // Backend returned specific error message
+        toast.error(error.data.message, { duration: 5000 });
+      } else if (error?.status === 400) {
+        // Bad request - validation error
+        toast.error('Invalid registration data. Please check your information.');
+      } else if (error?.status === 409 || error?.data?.message?.includes('already')) {
+        // Conflict - email already exists
+        toast.error('This email is already registered. Please login instead.', {
+          duration: 5000,
+          action: {
+            label: 'Login',
+            onClick: () => router.push('/auth/login'),
+          },
+        });
+      } else if (error?.status === 500) {
+        // Server error
+        toast.error('Server error. Please try again later.');
+      } else {
+        // Generic error
+        toast.error('Registration failed. Please try again.');
+      }
     }
   };
 
@@ -127,7 +163,22 @@ export default function RegisterForm() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        {...field}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -140,7 +191,22 @@ export default function RegisterForm() {
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        {...field}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                        tabIndex={-1}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

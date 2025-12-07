@@ -2,9 +2,9 @@
 
 import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
 import type { RootState } from '@/lib/store';
-import { setCredentials, logout as logoutAction } from '../features/auth/authSlice';
+import { setCredentials, setAccessToken, logout as logoutAction } from '../features/auth/authSlice';
 import { Mutex } from 'async-mutex';
-import { clearAuthCookies, setAuthCookies, getCookie } from '@/lib/utils/cookies';
+import { clearAuthCookies } from '@/lib/utils/cookies';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -13,23 +13,17 @@ const mutex = new Mutex();
 
 const baseQuery = fetchBaseQuery({
   baseUrl: `${BASE_URL}/api/v1`,
+  credentials: 'include', // Send refreshToken cookie automatically
   prepareHeaders: (headers, { getState }) => {
-    // Get token from auth state first
-    let token = (getState() as RootState).auth.token;
+    // Get accessToken from Redux state (memory)
+    const token = (getState() as RootState).auth.accessToken;
 
-    // If no token in Redux state, try to get from cookies
-    if (!token && typeof document !== 'undefined') {
-      token = getCookie('token');
-    }
-
-    // If we have a token, include it in the headers
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
     }
 
     return headers;
   },
-  credentials: 'include', // Include cookies in requests
 });
 
 // Enhanced base query with automatic token refresh on 401 errors
@@ -43,85 +37,60 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 
   let result = await baseQuery(args, api, extraOptions);
 
+  // Determine the endpoint URL
+  const url = typeof args === 'string' ? args : args.url;
+
+  // List of auth endpoints that should NOT trigger auto-refresh
+  const publicAuthEndpoints = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    '/auth/verify-email',
+    '/auth/resend-verification-email',
+  ];
+
+  // Check if this is a public auth endpoint
+  const isPublicAuthEndpoint = publicAuthEndpoints.some((endpoint) => url.includes(endpoint));
+  console.log('isPublicAuthEndpoint:', isPublicAuthEndpoint);
   // If we get a 401 Unauthorized error, try to refresh the token
-  if (result.error && result.error.status === 401) {
+  // BUT skip auto-refresh for public auth endpoints (login, register, etc.)
+  if (result.error && result.error.status === 401 && !isPublicAuthEndpoint) {
     // Check if another request is already refreshing the token
     if (!mutex.isLocked()) {
       const release = await mutex.acquire();
 
       try {
-        const state = api.getState() as RootState;
-        const refreshToken = state.auth.refreshToken;
-
-        if (!refreshToken) {
-          // No refresh token available, logout user
-          api.dispatch(logoutAction());
-
-          // Clear cookies
-          if (typeof document !== 'undefined') {
-            clearAuthCookies();
-          }
-
-          // Redirect to login
-          if (typeof window !== 'undefined') {
-            window.location.href = '/login';
-          }
-
-          return result;
-        }
-
         // Attempt to refresh the access token
-        const refreshResult = await baseQuery(
+        // refreshToken cookie will be sent automatically
+        const refreshResult: any = await baseQuery(
           {
             url: '/auth/refresh-tokens',
             method: 'POST',
-            body: { refreshToken },
           },
           api,
           extraOptions
         );
 
         if (refreshResult.data) {
-          const data = refreshResult.data as {
-            access: { token: string; expires: string };
-            refresh: { token: string; expires: string };
-          };
+          // Token refresh successful - update accessToken in Redux
+          const newAccessToken = refreshResult.data.data.tokens.access.token;
+          api.dispatch(setAccessToken(newAccessToken));
 
-          const state = api.getState() as RootState;
-          const user = state.auth.user;
-
-          if (user) {
-            // Update tokens in Redux store
-            api.dispatch(
-              setCredentials({
-                user,
-                tokens: {
-                  access: data.access,
-                  refresh: data.refresh,
-                },
-              })
-            );
-
-            // Update cookies with new tokens
-            if (typeof document !== 'undefined') {
-              setAuthCookies({ access: data.access, refresh: data.refresh }, user.role);
-            }
-
-            // Retry the original request with the new access token
-            result = await baseQuery(args, api, extraOptions);
-          }
+          // Retry the original request with new token
+          result = await baseQuery(args, api, extraOptions);
         } else {
           // Refresh token is invalid or expired, logout user
           api.dispatch(logoutAction());
 
-          // Clear cookies
+          // Clear client-side cookies
           if (typeof document !== 'undefined') {
             clearAuthCookies();
           }
 
           // Redirect to login with session expired message
           if (typeof window !== 'undefined') {
-            window.location.href = '/login?session_expired=true';
+            window.location.href = '/auth/login?session_expired=true';
           }
         }
       } finally {
@@ -151,6 +120,10 @@ export const api = createApi({
         method: 'POST',
         body: credentials,
       }),
+      transformErrorResponse: (response: FetchBaseQueryError) => {
+        // Customize error message handling if needed
+        return response.data;
+      },
       invalidatesTags: ['Auth'],
     }),
     register: builder.mutation({
@@ -159,21 +132,22 @@ export const api = createApi({
         method: 'POST',
         body: userData,
       }),
+      // transformResponse: (response: { user: any; message?: string }) => response.user,
       invalidatesTags: ['Auth'],
     }),
     logout: builder.mutation({
-      query: (refreshToken: string) => ({
+      query: () => ({
         url: '/auth/logout',
         method: 'POST',
-        body: { refreshToken },
+        // No body needed - refreshToken is in httpOnly cookie
       }),
       invalidatesTags: ['Auth'],
     }),
     refreshTokens: builder.mutation({
-      query: (refreshToken: string) => ({
+      query: () => ({
         url: '/auth/refresh-tokens',
         method: 'POST',
-        body: { refreshToken },
+        // No body needed - refreshToken is in httpOnly cookie
       }),
     }),
     forgotPassword: builder.mutation({
@@ -185,9 +159,15 @@ export const api = createApi({
     }),
     resetPassword: builder.mutation({
       query: (data: { token: string; password: string }) => ({
-        url: '/auth/reset-password',
+        url: `/auth/reset-password?token=${data.token}`,
         method: 'POST',
-        body: data,
+        body: { password: data.password },
+      }),
+    }),
+    verifyEmail: builder.mutation({
+      query: (token: string) => ({
+        url: `/auth/verify-email?token=${token}`,
+        method: 'POST',
       }),
     }),
 

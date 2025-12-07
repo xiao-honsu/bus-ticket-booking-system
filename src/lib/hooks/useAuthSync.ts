@@ -5,38 +5,29 @@ import { useAppSelector, useAppDispatch } from '@/lib/hooks';
 import { setUser } from '@/lib/store/features/auth/authSlice';
 
 /**
- * Hook to sync user data when we have tokens but no user data
- * This happens after page reload when we restore tokens from cookies
+ * Hook to sync user data when we have accessToken but no user data
+ * This happens after page reload when we restore token from refresh
  */
 export function useAuthSync() {
-  const { isAuthenticated, token, user } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, accessToken, user } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    // If authenticated with token but no user data, fetch it
-    if (isAuthenticated && token && !user) {
+    // If authenticated with accessToken but no user data, fetch it
+    if (isAuthenticated && accessToken && !user) {
       const fetchUser = async () => {
         try {
-          // Decode JWT to get user ID
-          const tokenParts = token.split('.');
-          if (tokenParts.length === 3) {
-            const payload = JSON.parse(atob(tokenParts[1]));
-            const userId = payload.sub;
+          // Fetch user data using /auth/me endpoint
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/v1/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            credentials: 'include',
+          });
 
-            // Fetch user data
-            const response = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/v1/users/${userId}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
-
-            if (response.ok) {
-              const userData = await response.json();
-              dispatch(setUser(userData));
-            }
+          if (response.ok) {
+            const result = await response.json();
+            dispatch(setUser(result.data.user));
           }
         } catch (error) {
           console.error('Failed to fetch user data:', error);
@@ -45,5 +36,5 @@ export function useAuthSync() {
 
       fetchUser();
     }
-  }, [isAuthenticated, token, user, dispatch]);
+  }, [isAuthenticated, accessToken, user, dispatch]);
 }

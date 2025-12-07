@@ -11,42 +11,50 @@ function AuthCallbackContent() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    const success = searchParams.get('success');
     const token = searchParams.get('token');
-    const refreshToken = searchParams.get('refreshToken');
+    const error = searchParams.get('error');
 
-    if (token && refreshToken) {
-      try {
-        // Store tokens in cookies
-        document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
-        document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
+    if (error) {
+      console.error('OAuth error:', error);
+      router.push(`/auth/login?error=${error}`);
+      return;
+    }
 
-        // Decode token to get user info (simple base64 decode of JWT payload)
-        const payload = JSON.parse(atob(token.split('.')[1]));
-
-        // Extract user role and store it in cookies for middleware
-        const userRole = payload.role || 'user';
-        document.cookie = `userRole=${userRole}; path=/; max-age=${60 * 60 * 24 * 7}`;
-
-        // Update Redux state
-        dispatch(
-          setCredentials({
-            user: payload.user || { id: payload.sub, role: userRole },
-            tokens: {
-              access: { token },
-              refresh: { token: refreshToken },
+    if (success === 'true' && token) {
+      // refreshToken is already set in httpOnly cookie by backend
+      // accessToken is passed in URL and will be stored in memory
+      const fetchUserData = async () => {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
             },
-          })
-        );
+            credentials: 'include',
+          });
 
-        // Redirect to dashboard
-        router.push('/dashboard');
-      } catch (error) {
-        console.error('Error processing OAuth callback:', error);
-        router.push('/auth/login?error=authentication_failed');
-      }
+          if (response.ok) {
+            const data = await response.json();
+            dispatch(
+              setCredentials({
+                user: data.data.user,
+                accessToken: token,
+              })
+            );
+            router.push('/dashboard');
+          } else {
+            throw new Error('Failed to fetch user data');
+          }
+        } catch (err) {
+          console.error('Error fetching user data:', err);
+          router.push('/auth/login?error=auth_failed');
+        }
+      };
+
+      fetchUserData();
     } else {
-      // Redirect to login on error
-      router.push('/auth/login?error=authentication_failed');
+      // No success parameter, redirect to login
+      router.push('/auth/login?error=invalid_callback');
     }
   }, [searchParams, dispatch, router]);
 

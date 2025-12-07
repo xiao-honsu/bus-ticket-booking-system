@@ -1,15 +1,11 @@
 /**
  * Cookie utilities for authentication
+ * NOTE: This file is now minimal since we use httpOnly cookies set by the backend.
+ * These utilities are only for reading non-httpOnly cookies like userRole.
  */
 
-export interface AuthCookies {
-  token: string | null;
-  refreshToken: string | null;
-  userRole: string | null;
-}
-
 /**
- * Get a cookie value by name
+ * Get a cookie value by name (only works for non-httpOnly cookies)
  */
 export function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -26,15 +22,15 @@ export function getCookie(name: string): string | null {
 }
 
 /**
- * Set a cookie
+ * Set a non-httpOnly cookie (for client-side accessible data only like userRole)
  */
 export function setCookie(name: string, value: string, maxAge: number) {
   if (typeof document === 'undefined') return;
-  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}`;
+  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Strict`;
 }
 
 /**
- * Delete a cookie
+ * Delete a non-httpOnly cookie
  */
 export function deleteCookie(name: string) {
   if (typeof document === 'undefined') return;
@@ -42,33 +38,23 @@ export function deleteCookie(name: string) {
 }
 
 /**
- * Get all auth-related cookies
+ * Set user role cookie (for middleware access control)
  */
-export function getAuthCookies(): AuthCookies {
-  return {
-    token: getCookie('token'),
-    refreshToken: getCookie('refreshToken'),
-    userRole: getCookie('userRole'),
-  };
+export function setUserRoleCookie(role: string) {
+  setCookie('userRole', role, 60 * 60 * 24 * 30); // 30 days
 }
 
 /**
- * Set all auth cookies
+ * Get user role from cookie
  */
-export function setAuthCookies(tokens: { access: { token: string }; refresh: { token: string } }, userRole: string) {
-  // Access token - 30 minutes
-  setCookie('token', tokens.access.token, 60 * 30);
-  // Refresh token - 30 days
-  setCookie('refreshToken', tokens.refresh.token, 60 * 60 * 24 * 30);
-  // User role - 30 days
-  setCookie('userRole', userRole, 60 * 60 * 24 * 30);
+export function getUserRoleCookie(): string | null {
+  return getCookie('userRole');
 }
 
 /**
- * Clear all auth cookies
+ * Clear all client-accessible auth cookies
+ * Note: httpOnly cookies (accessToken, refreshToken) are cleared by backend
  */
 export function clearAuthCookies() {
-  deleteCookie('token');
-  deleteCookie('refreshToken');
   deleteCookie('userRole');
 }
