@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Loader2, Mail } from 'lucide-react';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -113,5 +113,27 @@ export default function VerifyEmailPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <main className="container mx-auto px-4 py-16">
+      <Suspense
+        fallback={
+          <Card className="max-w-md mx-auto">
+            <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <Loader2 className="h-16 w-16 text-blue-600 animate-spin" />
+              </div>
+              <CardTitle>Verifying Email...</CardTitle>
+              <CardDescription>Please wait while we verify your email address</CardDescription>
+            </CardHeader>
+          </Card>
+        }
+      >
+        <VerifyEmailContent />
+      </Suspense>
+    </main>
   );
 }
