@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import { useGetRoutesQuery, useCreateRouteMutation, useDeleteRouteMutation } from '@/lib/store/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,10 +24,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 
 export default function RouteManagement() {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
 
-  const { data, isLoading, error } = useGetRoutesQuery({ page: currentPage, limit });
+  const { data, isLoading, error } = useGetRoutesQuery({
+    page: currentPage,
+    limit,
+  });
   const [createRoute, { isLoading: isCreating }] = useCreateRouteMutation();
   const [deleteRoute, { isLoading: isDeleting }] = useDeleteRouteMutation();
 
@@ -139,9 +145,19 @@ export default function RouteManagement() {
 
   return (
     <>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold mb-1">Route Management</h2>
+          <p className="text-gray-600">Manage travel routes and stops</p>
+        </div>
+        <Button variant="outline" onClick={() => router.push('/admin')} className="gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </Button>
+      </div>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Route Management</CardTitle>
+          <CardTitle>Routes ({totalResults})</CardTitle>
           <Button onClick={() => setDialogOpen(true)}>+ Add Route</Button>
         </CardHeader>
         <CardContent>
@@ -337,7 +353,10 @@ export default function RouteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        destination: { ...formData.destination, city: e.target.value },
+                        destination: {
+                          ...formData.destination,
+                          city: e.target.value,
+                        },
                       })
                     }
                     placeholder="Ho Chi Minh"
@@ -353,7 +372,10 @@ export default function RouteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        destination: { ...formData.destination, state: e.target.value },
+                        destination: {
+                          ...formData.destination,
+                          state: e.target.value,
+                        },
                       })
                     }
                     placeholder="Ho Chi Minh City"
@@ -370,7 +392,10 @@ export default function RouteManagement() {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      destination: { ...formData.destination, landmark: e.target.value },
+                      destination: {
+                        ...formData.destination,
+                        landmark: e.target.value,
+                      },
                     })
                   }
                   placeholder="Mien Dong Bus Station"
@@ -391,7 +416,12 @@ export default function RouteManagement() {
                   type="number"
                   min={0}
                   value={formData.distance}
-                  onChange={(e) => setFormData({ ...formData, distance: parseFloat(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      distance: parseFloat(e.target.value),
+                    })
+                  }
                   placeholder="1700"
                 />
               </div>
@@ -404,7 +434,12 @@ export default function RouteManagement() {
                   type="number"
                   min={0}
                   value={formData.estimatedDuration}
-                  onChange={(e) => setFormData({ ...formData, estimatedDuration: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      estimatedDuration: parseInt(e.target.value),
+                    })
+                  }
                   placeholder="1800"
                 />
                 <p className="text-xs text-gray-500 mt-1">1800 minutes = 30 hours</p>

@@ -25,12 +25,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 
 export default function BusManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
 
-  const { data, isLoading, error } = useGetBusesQuery({ page: currentPage, limit });
+  const { data, isLoading, error } = useGetBusesQuery({
+    page: currentPage,
+    limit,
+  });
   const {
     data: operatorsData,
     isLoading: _isLoadingOperators,
@@ -146,9 +150,19 @@ export default function BusManagement() {
 
   return (
     <>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold mb-1">Bus Management</h2>
+          <p className="text-gray-600">Manage your fleet of buses</p>
+        </div>
+        <Button variant="outline" onClick={() => router.push('/admin')} className="gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </Button>
+      </div>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Bus Management</CardTitle>
+          <CardTitle>Buses ({totalResults})</CardTitle>
           <Button onClick={() => setDialogOpen(true)}>+ Add Bus</Button>
         </CardHeader>
         <CardContent>
@@ -331,7 +345,12 @@ export default function BusManagement() {
                   min={10}
                   max={60}
                   value={formData.totalSeats}
-                  onChange={(e) => setFormData({ ...formData, totalSeats: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      totalSeats: parseInt(e.target.value),
+                    })
+                  }
                 />
               </div>
             </div>
@@ -358,7 +377,12 @@ export default function BusManagement() {
                   min={2000}
                   max={new Date().getFullYear()}
                   value={formData.yearOfManufacture}
-                  onChange={(e) => setFormData({ ...formData, yearOfManufacture: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      yearOfManufacture: parseInt(e.target.value),
+                    })
+                  }
                 />
               </div>
             </div>

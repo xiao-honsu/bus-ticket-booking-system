@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import {
   useGetRoutesQuery,
   useGetBusesQuery,
@@ -11,6 +12,7 @@ import {
 } from '@/lib/store/services/api';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -31,7 +33,10 @@ export default function TripManagement() {
 
   const { data: routesData } = useGetRoutesQuery({ page: 1, limit: 100 });
   const { data: busesData } = useGetBusesQuery({ page: 1, limit: 100 });
-  const { data: tripsData, isLoading: isLoadingTrips } = useSearchTripsQuery({ page: currentPage, limit });
+  const { data: tripsData, isLoading: isLoadingTrips } = useSearchTripsQuery({
+    page: currentPage,
+    limit,
+  });
   const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
   const [deleteTrip, { isLoading: isDeleting }] = useDeleteTripMutation();
 
@@ -155,99 +160,111 @@ export default function TripManagement() {
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Trip Management</h2>
-          <Button onClick={() => setDialogOpen(true)}>+ Add Trip</Button>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold mb-1">Trip Management</h2>
+          <p className="text-gray-600">Manage trips and schedules</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left">Route</th>
-                <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-left">Time</th>
-                <th className="px-4 py-3 text-left">Available Seats</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoadingTrips ? (
+        <Button variant="outline" onClick={() => router.push('/admin')} className="gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </Button>
+      </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Trips ({totalResults})</CardTitle>
+          <Button onClick={() => setDialogOpen(true)}>+ Add Trip</Button>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                    Loading trips...
-                  </td>
+                  <th className="px-4 py-3 text-left">Route</th>
+                  <th className="px-4 py-3 text-left">Date</th>
+                  <th className="px-4 py-3 text-left">Time</th>
+                  <th className="px-4 py-3 text-left">Available Seats</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Actions</th>
                 </tr>
-              ) : trips.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                    No trips scheduled yet. Create your first trip!
-                  </td>
-                </tr>
-              ) : (
-                trips.map((trip: any) => (
-                  <tr key={trip.id} className="border-t">
-                    <td className="px-4 py-3">{trip.route?.routeName || 'N/A'}</td>
-                    <td className="px-4 py-3">
-                      {new Date(trip.departureTime).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </td>
-                    <td className="px-4 py-3">
-                      {new Date(trip.departureTime).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </td>
-                    <td className="px-4 py-3">
-                      {trip.availableSeats}/{trip.bus?.totalSeats || 0}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-sm ${
-                          trip.status === 'scheduled'
-                            ? 'bg-green-100 text-green-800'
-                            : trip.status === 'ongoing'
-                              ? 'bg-blue-100 text-blue-800'
-                              : trip.status === 'completed'
-                                ? 'bg-gray-100 text-gray-800'
-                                : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => router.push(`/admin/trips/${trip.id}/seat-pricing`)}
-                        >
-                          Set Prices
-                        </Button>
-                        <button
-                          onClick={() => handleDeleteTrip(trip.id)}
-                          disabled={isDeleting}
-                          className="text-red-600 hover:text-red-800 disabled:opacity-50"
-                        >
-                          {isDeleting ? 'Deleting...' : 'Delete'}
-                        </button>
-                      </div>
+              </thead>
+              <tbody>
+                {isLoadingTrips ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                      Loading trips...
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : trips.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                      No trips scheduled yet. Create your first trip!
+                    </td>
+                  </tr>
+                ) : (
+                  trips.map((trip: any) => (
+                    <tr key={trip.id} className="border-t">
+                      <td className="px-4 py-3">{trip.route?.routeName || 'N/A'}</td>
+                      <td className="px-4 py-3">
+                        {new Date(trip.departureTime).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </td>
+                      <td className="px-4 py-3">
+                        {new Date(trip.departureTime).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                      <td className="px-4 py-3">
+                        {trip.availableSeats}/{trip.bus?.totalSeats || 0}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-2 py-1 rounded-full text-sm ${
+                            trip.status === 'scheduled'
+                              ? 'bg-green-100 text-green-800'
+                              : trip.status === 'ongoing'
+                                ? 'bg-blue-100 text-blue-800'
+                                : trip.status === 'completed'
+                                  ? 'bg-gray-100 text-gray-800'
+                                  : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push(`/admin/trips/${trip.id}/seat-pricing`)}
+                          >
+                            Set Prices
+                          </Button>
+                          <button
+                            onClick={() => handleDeleteTrip(trip.id)}
+                            disabled={isDeleting}
+                            className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                          >
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+          <div className="flex items-center justify-between px-6 pb-6">
             <div className="text-sm text-gray-600">
               Showing {trips.length} of {totalResults} trips
             </div>
@@ -284,7 +301,7 @@ export default function TripManagement() {
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Create Trip Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -362,7 +379,12 @@ export default function TripManagement() {
                     id="depDate"
                     type="date"
                     value={formData.departureDate}
-                    onChange={(e) => setFormData({ ...formData, departureDate: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        departureDate: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div>
@@ -373,7 +395,12 @@ export default function TripManagement() {
                     id="depTime"
                     type="time"
                     value={formData.departureTime}
-                    onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        departureTime: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -420,7 +447,12 @@ export default function TripManagement() {
                 type="number"
                 min={0}
                 value={formData.pricePerSeat}
-                onChange={(e) => setFormData({ ...formData, pricePerSeat: parseFloat(e.target.value) })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    pricePerSeat: parseFloat(e.target.value),
+                  })
+                }
                 placeholder="500000"
               />
               <p className="text-xs text-gray-500 mt-1">Base price, modifiers will apply based on seat type</p>
@@ -472,7 +504,10 @@ export default function TripManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        driver: { ...formData.driver, licenseNumber: e.target.value },
+                        driver: {
+                          ...formData.driver,
+                          licenseNumber: e.target.value,
+                        },
                       })
                     }
                     placeholder="B2-123456"

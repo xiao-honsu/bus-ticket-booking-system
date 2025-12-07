@@ -6,7 +6,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Receipt, Calendar, DollarSign } from 'lucide-react';
 
 export default function SummaryCards() {
-  const { data: bookingsData, isLoading } = useGetBookingsQuery({ page: 1, limit: 100 });
+  const { data: bookingsData, isLoading } = useGetBookingsQuery({
+    page: 1,
+    limit: 100,
+  });
 
   if (isLoading) {
     return (

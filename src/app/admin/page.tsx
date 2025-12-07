@@ -1,86 +1,197 @@
 'use client';
 
-import BookingOverview from '@/containers/admin-dashboard/BookingOverview';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { useGetBookingsQuery, useGetBusesQuery, useGetRoutesQuery } from '@/lib/store/services/api';
+import { Users, TrendingUp, Bus, MapPin, Navigation, UserCheck, LogOut, BarChart3 } from 'lucide-react';
+import {
+  useGetBookingsQuery,
+  useGetBusesQuery,
+  useGetRoutesQuery,
+  useGetOperatorsQuery,
+} from '@/lib/store/services/api';
 
 export default function AdminPage() {
+  const router = useRouter();
   const { data: bookingsData } = useGetBookingsQuery({ page: 1, limit: 1 });
   const { data: busesData } = useGetBusesQuery({ page: 1, limit: 1 });
   const { data: routesData } = useGetRoutesQuery({ page: 1, limit: 1 });
+  const { data: operatorsData } = useGetOperatorsQuery({ page: 1, limit: 1 });
 
-  const stats = [
+  const menuItems = [
     {
-      title: 'Total Bookings',
-      value: bookingsData?.totalResults || 0,
-      link: '/admin',
-      color: 'text-blue-600',
+      icon: <TrendingUp className="w-6 h-6" />,
+      title: 'Analytics & Revenue',
+      description: 'View system revenue, traffic metrics, performance',
+      href: '/admin/dashboard/analytics',
+      color: 'from-blue-50 to-blue-100',
+      borderColor: 'border-blue-300',
     },
     {
-      title: 'Total Buses',
-      value: busesData?.totalResults || 0,
-      link: '/admin/buses',
-      color: 'text-green-600',
+      icon: <Users className="w-6 h-6" />,
+      title: 'User Management',
+      description: 'Manage users, admins, and control account access',
+      href: '/admin/dashboard/users',
+      color: 'from-purple-50 to-purple-100',
+      borderColor: 'border-purple-300',
     },
     {
-      title: 'Total Routes',
-      value: routesData?.totalResults || 0,
-      link: '/admin/routes',
-      color: 'text-purple-600',
+      icon: <Bus className="w-6 h-6" />,
+      title: 'Bus Management',
+      description: 'CRUD buses, manage fleet, configure seat maps',
+      href: '/admin/buses',
+      color: 'from-orange-50 to-orange-100',
+      borderColor: 'border-orange-300',
+    },
+    {
+      icon: <MapPin className="w-6 h-6" />,
+      title: 'Route Management',
+      description: 'Create and manage travel routes and stops',
+      href: '/admin/routes',
+      color: 'from-green-50 to-green-100',
+      borderColor: 'border-green-300',
+    },
+    {
+      icon: <Navigation className="w-6 h-6" />,
+      title: 'Trip Management',
+      description: 'Schedule trips, set prices, manage departures',
+      href: '/admin/trips',
+      color: 'from-cyan-50 to-cyan-100',
+      borderColor: 'border-cyan-300',
+    },
+    {
+      icon: <UserCheck className="w-6 h-6" />,
+      title: 'Operator Management',
+      description: 'Manage bus operators and approve applications',
+      href: '/admin/operators',
+      color: 'from-indigo-50 to-indigo-100',
+      borderColor: 'border-indigo-300',
+    },
+    {
+      icon: <BarChart3 className="w-6 h-6" />,
+      title: 'Booking Monitoring',
+      description: 'View all bookings, handle fraud reports',
+      href: '/admin/dashboard/bookings',
+      color: 'from-rose-50 to-rose-100',
+      borderColor: 'border-rose-300',
     },
   ];
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-1">Manage your bus booking system</p>
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-20">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-sm text-gray-600 mt-1">Bus Ticket Booking System Management</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-gray-600">{stat.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${stat.color}`}>{stat.value}</div>
-              <Link href={stat.link}>
-                <Button variant="link" className="p-0 h-auto mt-2">
-                  View Details →
-                </Button>
-              </Link>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <TrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 mb-1">Total Bookings</p>
+                <p className="text-2xl font-bold">{bookingsData?.totalResults || 0}</p>
+              </div>
             </CardContent>
           </Card>
-        ))}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Bus className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 mb-1">Total Buses</p>
+                <p className="text-2xl font-bold">{busesData?.totalResults || 0}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <MapPin className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 mb-1">Total Routes</p>
+                <p className="text-2xl font-bold">{routesData?.totalResults || 0}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <UserCheck className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 mb-1">Total Operators</p>
+                <p className="text-2xl font-bold">{operatorsData?.totalResults || 0}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Menu Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {menuItems.map((item, index) => (
+            <Card
+              key={index}
+              className={`border-l-4 ${item.borderColor} hover:shadow-lg transition-all cursor-pointer group`}
+              onClick={() => router.push(item.href)}
+            >
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div
+                    className={`p-3 rounded-lg bg-gradient-to-br ${item.color} group-hover:scale-110 transition-transform`}
+                  >
+                    {item.icon}
+                  </div>
+                </div>
+                <CardTitle className="mt-4">{item.title}</CardTitle>
+                <CardDescription>{item.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  size="sm"
+                  className="w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(item.href);
+                  }}
+                >
+                  Open →
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Footer Info */}
+        <div className="mt-12 p-6 bg-white rounded-lg border shadow-sm">
+          <h3 className="font-semibold text-gray-900 mb-2">System Information</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <p className="font-medium text-gray-900">API Status</p>
+              <p>🟢 Online</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">Database</p>
+              <p>🟢 Connected</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">Last Updated</p>
+              <p>2 minutes ago</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">Version</p>
+              <p>1.0.0</p>
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* Quick Actions */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-4">
-          <Link href="/admin/buses">
-            <Button>Manage Buses</Button>
-          </Link>
-          <Link href="/admin/routes">
-            <Button variant="outline">Manage Routes</Button>
-          </Link>
-          <Link href="/admin/trips">
-            <Button variant="outline">Manage Trips</Button>
-          </Link>
-          <Link href="/admin/operators">
-            <Button variant="outline">Manage Operators</Button>
-          </Link>
-        </CardContent>
-      </Card>
-
-      {/* Recent Bookings */}
-      <BookingOverview />
     </main>
   );
 }

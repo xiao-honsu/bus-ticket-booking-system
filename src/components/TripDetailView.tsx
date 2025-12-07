@@ -57,7 +57,10 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(price);
   };
 
   const occupancyPercentage = ((trip.bus.totalSeats - trip.availableSeats) / trip.bus.totalSeats) * 100;
@@ -67,11 +70,31 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
   };
 
   const policyItems = [
-    { key: 'cancellation', label: 'Cancellation Policy', icon: <AlertTriangle className="w-4 h-4" /> },
-    { key: 'refund', label: 'Refund Policy', icon: <CheckCircle2 className="w-4 h-4" /> },
-    { key: 'rescheduling', label: 'Rescheduling', icon: <Clock className="w-4 h-4" /> },
-    { key: 'baggage', label: 'Baggage Policy', icon: <Package className="w-4 h-4" /> },
-    { key: 'petPolicy', label: 'Pet Policy', icon: <AlertCircle className="w-4 h-4" /> },
+    {
+      key: 'cancellation',
+      label: 'Cancellation Policy',
+      icon: <AlertTriangle className="w-4 h-4" />,
+    },
+    {
+      key: 'refund',
+      label: 'Refund Policy',
+      icon: <CheckCircle2 className="w-4 h-4" />,
+    },
+    {
+      key: 'rescheduling',
+      label: 'Rescheduling',
+      icon: <Clock className="w-4 h-4" />,
+    },
+    {
+      key: 'baggage',
+      label: 'Baggage Policy',
+      icon: <Package className="w-4 h-4" />,
+    },
+    {
+      key: 'petPolicy',
+      label: 'Pet Policy',
+      icon: <AlertCircle className="w-4 h-4" />,
+    },
   ];
 
   return (

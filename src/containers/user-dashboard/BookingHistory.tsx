@@ -17,7 +17,10 @@ import {
 } from '@/components/ui/dialog';
 
 export default function BookingHistory() {
-  const { data, isLoading, error } = useGetBookingsQuery({ page: 1, limit: 10 });
+  const { data, isLoading, error } = useGetBookingsQuery({
+    page: 1,
+    limit: 10,
+  });
   const [cancelBooking, { isLoading: isCancelling }] = useCancelBookingMutation();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
@@ -48,7 +51,10 @@ export default function BookingHistory() {
       completed: { variant: 'outline', label: 'Completed' },
     };
 
-    const config = statusConfig[status] || { variant: 'secondary', label: status };
+    const config = statusConfig[status] || {
+      variant: 'secondary',
+      label: status,
+    };
     return <Badge variant={config.variant as any}>{config.label}</Badge>;
   };
 

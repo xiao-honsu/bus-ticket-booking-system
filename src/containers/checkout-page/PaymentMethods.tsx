@@ -20,11 +20,31 @@ export default function PaymentMethods() {
   const selectedSeats = useAppSelector((state) => state.booking.selectedSeats);
 
   const methods: PaymentMethod[] = [
-    { id: 'momo', name: 'MoMo', icon: '💳', description: 'Pay with MoMo e-wallet' },
-    { id: 'zalopay', name: 'ZaloPay', icon: '💰', description: 'Pay with ZaloPay' },
+    {
+      id: 'momo',
+      name: 'MoMo',
+      icon: '💳',
+      description: 'Pay with MoMo e-wallet',
+    },
+    {
+      id: 'zalopay',
+      name: 'ZaloPay',
+      icon: '💰',
+      description: 'Pay with ZaloPay',
+    },
     { id: 'payos', name: 'PayOS', icon: '💳', description: 'Pay with PayOS' },
-    { id: 'card', name: 'Credit/Debit Card', icon: '💳', description: 'Visa, Mastercard, etc.' },
-    { id: 'bank_transfer', name: 'Bank Transfer', icon: '🏦', description: 'Direct bank transfer' },
+    {
+      id: 'card',
+      name: 'Credit/Debit Card',
+      icon: '💳',
+      description: 'Visa, Mastercard, etc.',
+    },
+    {
+      id: 'bank_transfer',
+      name: 'Bank Transfer',
+      icon: '🏦',
+      description: 'Direct bank transfer',
+    },
   ];
 
   const handlePaymentChange = (methodId: string) => {

@@ -1,3 +1,5 @@
+'use client';
+
 import RouteManagement from '@/containers/admin-dashboard/RouteManagement';
 
 export default function AdminRoutesPage() {

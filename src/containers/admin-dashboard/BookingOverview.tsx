@@ -7,7 +7,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function BookingOverview() {
-  const { data, isLoading, error } = useGetBookingsQuery({ page: 1, limit: 10 });
+  const { data, isLoading, error } = useGetBookingsQuery({
+    page: 1,
+    limit: 10,
+  });
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { variant: any; label: string }> = {
@@ -17,7 +20,10 @@ export default function BookingOverview() {
       completed: { variant: 'outline', label: 'Completed' },
     };
 
-    const config = statusConfig[status] || { variant: 'secondary', label: status };
+    const config = statusConfig[status] || {
+      variant: 'secondary',
+      label: status,
+    };
     return <Badge variant={config.variant as any}>{config.label}</Badge>;
   };
 

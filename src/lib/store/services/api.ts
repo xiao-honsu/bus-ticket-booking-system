@@ -407,6 +407,32 @@ export const api = createApi({
       },
       providesTags: ['Operator'],
     }),
+
+    createOperator: builder.mutation({
+      query: (operatorData: any) => ({
+        url: '/operators',
+        method: 'POST',
+        body: operatorData,
+      }),
+      invalidatesTags: ['Operator'],
+    }),
+
+    updateOperator: builder.mutation({
+      query: ({ id, ...operatorData }: any) => ({
+        url: `/operators/${id}`,
+        method: 'PATCH',
+        body: operatorData,
+      }),
+      invalidatesTags: ['Operator'],
+    }),
+
+    deleteOperator: builder.mutation({
+      query: (id: string) => ({
+        url: `/operators/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Operator'],
+    }),
   }),
 });
 
@@ -442,4 +468,7 @@ export const {
   useUpdateRouteMutation,
   useDeleteRouteMutation,
   useGetOperatorsQuery,
+  useCreateOperatorMutation,
+  useUpdateOperatorMutation,
+  useDeleteOperatorMutation,
 } = api;

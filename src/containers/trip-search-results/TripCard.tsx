@@ -41,7 +41,10 @@ export default function TripCard({ trip }: TripCardProps) {
                   <span>{trip.route.origin.city}</span>
                 </div>
                 <div className="text-2xl font-bold">
-                  {departureTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                  {departureTime.toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </div>
               </div>
 
@@ -58,7 +61,10 @@ export default function TripCard({ trip }: TripCardProps) {
                   <span>{trip.route.destination.city}</span>
                 </div>
                 <div className="text-2xl font-bold">
-                  {arrivalTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                  {arrivalTime.toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </div>
               </div>
             </div>
@@ -88,7 +94,10 @@ export default function TripCard({ trip }: TripCardProps) {
             <div className="text-right">
               <div className="text-sm text-gray-600">{trip.operator.companyName}</div>
               <div className="text-3xl font-bold text-blue-600">
-                {trip.pricePerSeat.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                {trip.pricePerSeat.toLocaleString('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND',
+                })}
               </div>
               <div className="text-xs text-gray-500">per seat</div>
             </div>

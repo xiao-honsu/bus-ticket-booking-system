@@ -71,7 +71,8 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
         ))}
       </div>
       <div className="mt-4 text-sm text-gray-600">
-        Selected: {selectedSeats.length} seat{selectedSeats.length !== 1 ? 's' : ''}
+        Selected: {selectedSeats.length} seat
+        {selectedSeats.length !== 1 ? 's' : ''}
       </div>
     </div>
   );
