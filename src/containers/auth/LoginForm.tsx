@@ -52,18 +52,18 @@ export default function LoginForm() {
       // - accessToken is stored in Redux state (memory)
       dispatch(
         setCredentials({
-          user: result.data.user,
-          accessToken: result.data.tokens.access.token,
+          user: result.user,
+          accessToken: result.tokens.access.token,
         })
       );
 
       // Save user role to client-side cookie for middleware
-      setUserRoleCookie(result.data.user.role);
+      setUserRoleCookie(result.user.role);
 
-      toast.success(result.message || 'Login successful!');
+      toast.success('Login successful!');
 
       // Redirect based on role
-      if (result.data.user.role === 'admin') {
+      if (result.user.role === 'admin') {
         router.push('/admin');
       } else {
         router.push('/dashboard');
@@ -71,40 +71,37 @@ export default function LoginForm() {
     } catch (error: any) {
       console.log('Login error:', error);
 
+      // RTK Query error format: { status: number, data: { message, emailNotVerified?, ... } }
+      const errorMessage = error?.data?.message || error?.message || 'Login failed';
+      const errorStatus = error?.status;
+
       // Handle different error scenarios
       if (error?.data?.emailNotVerified) {
         // Email not verified - special handling
         const toastId = toast.error(error.data.message || 'Please verify your email before logging in.', {
-          duration: Infinity, // Keep toast open until user dismisses or action completes
+          duration: Infinity,
           action: {
             label: 'Resend Email',
             onClick: async (event) => {
-              // Prevent default toast dismiss behavior
               event.preventDefault();
-
-              // Show loading state in a new toast
               const loadingToast = toast.loading('Sending verification email...');
 
               try {
-                // Call resend verification email API
                 const response = await fetch(
                   `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/resend-verification-email`,
                   {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      email: error.data.email || data.email,
+                      email: data.email,
                     }),
                   }
                 );
 
-                // Dismiss loading toast
                 toast.dismiss(loadingToast);
 
                 if (response.ok) {
-                  // Dismiss the original error toast
                   toast.dismiss(toastId);
-                  // Show success message
                   toast.success('Verification email sent! Please check your inbox.', {
                     duration: 5000,
                   });
@@ -114,7 +111,6 @@ export default function LoginForm() {
                   });
                 }
               } catch (err) {
-                // Dismiss loading toast
                 toast.dismiss(loadingToast);
                 toast.error('Failed to resend email. Please try again.', {
                   duration: 5000,
@@ -129,18 +125,18 @@ export default function LoginForm() {
             },
           },
         });
-      } else if (error?.message) {
-        // Backend returned specific error message
-        toast.error(error.message, { duration: 5000 });
-      } else if (error?.code === 401) {
+      } else if (errorStatus === 401) {
         // Unauthorized - wrong credentials
         toast.error('Invalid email or password. Please try again.');
-      } else if (error?.code === 403) {
+      } else if (errorStatus === 403) {
         // Forbidden - account locked or suspended
-        toast.error(error?.message || 'Account is locked or suspended. Please contact support.');
-      } else if (error?.code === 500) {
+        toast.error(errorMessage || 'Account is locked or suspended. Please contact support.');
+      } else if (errorStatus === 500) {
         // Server error
         toast.error('Server error. Please try again later.');
+      } else if (errorMessage) {
+        // Backend returned specific error message
+        toast.error(errorMessage, { duration: 5000 });
       } else {
         // Generic error
         toast.error('Login failed. Please check your credentials.');
