@@ -172,6 +172,32 @@ export const api = createApi({
     }),
 
     // User endpoints
+    getUsers: builder.query({
+      query: (params?: { page?: number; limit?: number }) => ({
+        url: '/users',
+        params,
+      }),
+      transformResponse: (response: any) => {
+        // Handle both paginated response and direct array
+        if (Array.isArray(response)) {
+          return {
+            results: response,
+            page: 1,
+            limit: response.length,
+            totalPages: 1,
+            totalResults: response.length,
+          };
+        }
+        return {
+          results: response.docs || response.results || [],
+          page: response.page,
+          limit: response.limit,
+          totalPages: response.totalPages,
+          totalResults: response.totalDocs || response.totalResults,
+        };
+      },
+      providesTags: ['User'],
+    }),
     getUser: builder.query({
       query: (userId: string) => `/users/${userId}`,
       providesTags: ['User'],
@@ -181,6 +207,21 @@ export const api = createApi({
         url: `/users/${userId}`,
         method: 'PATCH',
         body: data,
+      }),
+      invalidatesTags: ['User'],
+    }),
+    resetUserPassword: builder.mutation({
+      query: ({ userId, password }) => ({
+        url: `/users/${userId}/reset-password`,
+        method: 'PATCH',
+        body: { password },
+      }),
+      invalidatesTags: ['User'],
+    }),
+    blockUser: builder.mutation({
+      query: (userId: string) => ({
+        url: `/users/${userId}/block`,
+        method: 'PATCH',
       }),
       invalidatesTags: ['User'],
     }),
@@ -258,6 +299,25 @@ export const api = createApi({
         url: '/bookings',
         params,
       }),
+      transformResponse: (response: any) => {
+        // Handle both paginated response and direct array
+        if (Array.isArray(response)) {
+          return {
+            results: response,
+            page: 1,
+            limit: response.length,
+            totalPages: 1,
+            totalResults: response.length,
+          };
+        }
+        return {
+          results: response.docs || response.results || [],
+          page: response.page,
+          limit: response.limit,
+          totalPages: response.totalPages,
+          totalResults: response.totalDocs || response.totalResults,
+        };
+      },
       providesTags: ['Booking'],
     }),
     getBooking: builder.query({
@@ -444,8 +504,11 @@ export const {
   useRefreshTokensMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useGetUsersQuery,
   useGetUserQuery,
   useUpdateUserMutation,
+  useResetUserPasswordMutation,
+  useBlockUserMutation,
   useSearchTripsQuery,
   useGetTripQuery,
   useCreateTripMutation,
