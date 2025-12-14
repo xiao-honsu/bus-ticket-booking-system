@@ -303,9 +303,9 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
                   {trip.operator.rating && (
                     <div className="flex items-center gap-1 mt-1">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-bold text-sm">{trip.operator.rating.toFixed(1)}</span>
-                      {trip.operator.totalReviews && (
-                        <span className="text-xs text-gray-600">({trip.operator.totalReviews} reviews)</span>
+                      <span className="font-bold text-sm">{trip.operator.rating.overall.toFixed(1)}</span>
+                      {trip.operator.rating.totalReviews && (
+                        <span className="text-xs text-gray-600">({trip.operator.rating.totalReviews} reviews)</span>
                       )}
                     </div>
                   )}
@@ -330,16 +330,16 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
             <div className="text-center p-6 bg-gray-50 rounded-lg">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <Star className="w-8 h-8 fill-yellow-400 text-yellow-400" />
-                <span className="text-4xl font-bold">{trip.operator.rating.toFixed(1)}</span>
+                <span className="text-4xl font-bold">{trip.operator.rating.overall.toFixed(1)}</span>
                 <span className="text-gray-600">/ 5.0</span>
               </div>
-              {trip.operator.totalReviews && (
-                <p className="text-sm text-gray-600">Based on {trip.operator.totalReviews} reviews</p>
+              {trip.operator.rating.totalReviews && (
+                <p className="text-sm text-gray-600">Based on {trip.operator.rating.totalReviews} reviews</p>
               )}
               <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
                 <div
                   className="bg-yellow-400 h-2 rounded-full"
-                  style={{ width: `${(trip.operator.rating / 5) * 100}%` }}
+                  style={{ width: `${(trip.operator.rating.overall / 5) * 100}%` }}
                 />
               </div>
             </div>
