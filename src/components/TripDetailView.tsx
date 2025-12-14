@@ -66,7 +66,7 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
   const occupancyPercentage = ((trip.bus.totalSeats - trip.availableSeats) / trip.bus.totalSeats) * 100;
 
   const handleBookNow = () => {
-    router.push(`/booking/${trip.id}`);
+    router.push(`/booking/${trip._id || trip.id}`);
   };
 
   const policyItems = [
@@ -300,11 +300,15 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
                 )}
                 <div className="flex-1">
                   <p className="font-semibold text-sm">{trip.operator.companyName}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-bold text-sm">{trip.operator.rating.overall.toFixed(1)}</span>
-                    <span className="text-xs text-gray-600">({trip.operator.rating.totalReviews} reviews)</span>
-                  </div>
+                  {trip.operator.rating && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-bold text-sm">{trip.operator.rating.toFixed(1)}</span>
+                      {trip.operator.totalReviews && (
+                        <span className="text-xs text-gray-600">({trip.operator.totalReviews} reviews)</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2 text-sm">
@@ -317,70 +321,69 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
       </div>
 
       {/* Rating Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Operator Ratings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {[
-              { label: 'Overall', value: trip.operator.rating.overall },
-              { label: 'Cleanliness', value: trip.operator.rating.cleanliness },
-              { label: 'Punctuality', value: trip.operator.rating.punctuality },
-              { label: 'Staff', value: trip.operator.rating.staff },
-              { label: 'Comfort', value: trip.operator.rating.comfort },
-              { label: 'Value', value: trip.operator.rating.value },
-            ].map((rating, idx) => (
-              <div key={idx} className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-600 mb-2">{rating.label}</p>
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-lg font-bold">{rating.value.toFixed(1)}</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-1">
-                  <div className="bg-yellow-400 h-1 rounded-full" style={{ width: `${(rating.value / 5) * 100}%` }} />
-                </div>
+      {trip.operator.rating && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Operator Rating</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center p-6 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Star className="w-8 h-8 fill-yellow-400 text-yellow-400" />
+                <span className="text-4xl font-bold">{trip.operator.rating.toFixed(1)}</span>
+                <span className="text-gray-600">/ 5.0</span>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              {trip.operator.totalReviews && (
+                <p className="text-sm text-gray-600">Based on {trip.operator.totalReviews} reviews</p>
+              )}
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
+                <div
+                  className="bg-yellow-400 h-2 rounded-full"
+                  style={{ width: `${(trip.operator.rating / 5) * 100}%` }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Policies Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Trip Policies & Terms</CardTitle>
-          <CardDescription>Important information about this trip</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {policyItems.map((policy) => (
-            <button
-              key={policy.key}
-              onClick={() => setExpandedPolicy(expandedPolicy === policy.key ? null : policy.key)}
-              className="w-full text-left"
-            >
-              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="text-blue-600">{policy.icon}</div>
-                  <span className="font-medium">{policy.label}</span>
+      {trip.policies && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Trip Policies & Terms</CardTitle>
+            <CardDescription>Important information about this trip</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {policyItems.map((policy) => (
+              <button
+                key={policy.key}
+                onClick={() => setExpandedPolicy(expandedPolicy === policy.key ? null : policy.key)}
+                className="w-full text-left"
+              >
+                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="text-blue-600">{policy.icon}</div>
+                    <span className="font-medium">{policy.label}</span>
+                  </div>
+                  {expandedPolicy === policy.key ? (
+                    <ChevronUp className="w-4 h-4 text-gray-600" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-600" />
+                  )}
                 </div>
-                {expandedPolicy === policy.key ? (
-                  <ChevronUp className="w-4 h-4 text-gray-600" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-600" />
+                {expandedPolicy === policy.key && (
+                  <div className="p-4 bg-gray-50 border border-t-0 rounded-b-lg">
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {trip.policies[policy.key as keyof typeof trip.policies]}
+                    </p>
+                  </div>
                 )}
-              </div>
-              {expandedPolicy === policy.key && (
-                <div className="p-4 bg-gray-50 border border-t-0 rounded-b-lg">
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    {trip.policies[policy.key as keyof typeof trip.policies]}
-                  </p>
-                </div>
-              )}
-            </button>
-          ))}
-        </CardContent>
-      </Card>
+              </button>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Footer CTA */}
       <div className="flex gap-4 justify-center py-4">

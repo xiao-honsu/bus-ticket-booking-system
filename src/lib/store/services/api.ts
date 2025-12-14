@@ -111,7 +111,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Auth', 'User', 'Bus', 'Route', 'Trip', 'Booking', 'Operator'],
+  tagTypes: ['Auth', 'User', 'Bus', 'Route', 'Trip', 'Booking', 'Operator', 'SeatLock'],
   endpoints: (builder) => ({
     // Auth endpoints
     login: builder.mutation({
@@ -228,8 +228,23 @@ export const api = createApi({
 
     // Trip endpoints
     searchTrips: builder.query({
-      query: (params: { origin?: string; destination?: string; date?: string; page?: number; limit?: number }) => ({
-        url: '/trips',
+      query: (params: {
+        origin?: string;
+        destination?: string;
+        departureDate?: string;
+        minPrice?: number;
+        maxPrice?: number;
+        departureTimeFrom?: string;
+        departureTimeTo?: string;
+        busType?: string;
+        amenities?: string;
+        minAvailableSeats?: number;
+        sortBy?: string;
+        sortOrder?: 'asc' | 'desc';
+        page?: number;
+        limit?: number;
+      }) => ({
+        url: '/trips/search',
         params,
       }),
       transformResponse: (response: any) => {
@@ -493,6 +508,60 @@ export const api = createApi({
       }),
       invalidatesTags: ['Operator'],
     }),
+
+    // Location endpoints
+    searchLocations: builder.query({
+      query: (searchQuery: string) => ({
+        url: '/locations/search',
+        params: { q: searchQuery },
+      }),
+    }),
+
+    // Seat Lock endpoints
+    lockSeats: builder.mutation({
+      query: (data: { tripId: string; seatNumbers: string[]; sessionId?: string; metadata?: any }) => ({
+        url: '/seat-locks/lock',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['SeatLock', 'Trip'],
+    }),
+
+    checkSeatAvailability: builder.mutation({
+      query: (data: { tripId: string; seatNumbers: string[] }) => ({
+        url: '/seat-locks/check-availability',
+        method: 'POST',
+        body: data,
+      }),
+    }),
+
+    getTripSeatMap: builder.query({
+      query: (tripId: string) => `/trips/${tripId}/seat-map`,
+      providesTags: ['Trip', 'SeatLock'],
+    }),
+
+    getLockedSeats: builder.query({
+      query: (tripId: string) => `/seat-locks/${tripId}`,
+      providesTags: ['SeatLock'],
+    }),
+
+    releaseLocks: builder.mutation({
+      query: (sessionId: string) => ({
+        url: '/seat-locks/release',
+        method: 'POST',
+        body: { sessionId },
+      }),
+      invalidatesTags: ['SeatLock', 'Trip'],
+    }),
+
+    extendLocks: builder.mutation({
+      query: (data: { sessionId: string; minutes?: number }) => ({
+        url: '/seat-locks/extend',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['SeatLock'],
+    }),
   }),
 });
 
@@ -510,6 +579,7 @@ export const {
   useResetUserPasswordMutation,
   useBlockUserMutation,
   useSearchTripsQuery,
+  useLazySearchTripsQuery,
   useGetTripQuery,
   useCreateTripMutation,
   useDeleteTripMutation,
@@ -534,4 +604,11 @@ export const {
   useCreateOperatorMutation,
   useUpdateOperatorMutation,
   useDeleteOperatorMutation,
+  useSearchLocationsQuery,
+  useLockSeatsMutation,
+  useCheckSeatAvailabilityMutation,
+  useGetTripSeatMapQuery,
+  useGetLockedSeatsQuery,
+  useReleaseLocksMutation,
+  useExtendLocksMutation,
 } = api;

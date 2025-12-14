@@ -33,7 +33,7 @@ export default function ComponentShowcasePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {mockTripList.map((trip) => (
-              <TripCard key={trip.id} trip={trip} isDetailedView={false} />
+              <TripCard key={trip._id || trip.id} trip={trip} isDetailedView={false} />
             ))}
           </div>
         </section>
@@ -46,7 +46,7 @@ export default function ComponentShowcasePage() {
           </div>
           <div className="space-y-4">
             {mockTripList.map((trip) => (
-              <TripCard key={trip.id} trip={trip} isDetailedView={true} />
+              <TripCard key={trip._id || trip.id} trip={trip} isDetailedView={true} />
             ))}
           </div>
         </section>

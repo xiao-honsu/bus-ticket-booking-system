@@ -13,14 +13,15 @@ interface TripCardProps {
 
 export default function TripCard({ trip }: TripCardProps) {
   const router = useRouter();
+  const tripId = trip._id || trip.id;
 
   const handleViewDetails = () => {
-    router.push(`/trip-detail/${trip.id}`);
+    router.push(`/trip-detail/${tripId}`);
   };
 
   const handleBookNow = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/booking/${trip.id}`);
+    router.push(`/booking/${tripId}`);
   };
 
   const departureTime = new Date(trip.departureTime);

@@ -1,55 +1,54 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/lib/hooks';
 import { setSearchParams } from '@/lib/store/features/trip/tripSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import LocationAutocomplete from '@/components/LocationAutocomplete';
 import { toast } from 'sonner';
-
-const searchSchema = z.object({
-  origin: z.string().min(2, 'Origin must be at least 2 characters'),
-  destination: z.string().min(2, 'Destination must be at least 2 characters'),
-  date: z.string().min(1, 'Date is required'),
-});
-
-type SearchFormValues = z.infer<typeof searchSchema>;
 
 export default function SearchForm() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  const form = useForm<SearchFormValues>({
-    resolver: zodResolver(searchSchema),
-    defaultValues: {
-      origin: '',
-      destination: '',
-      date: '',
-    },
+  const [searchData, setSearchData] = useState({
+    origin: '',
+    originDisplay: '',
+    destination: '',
+    destinationDisplay: '',
+    date: '',
   });
 
-  const onSubmit = (data: SearchFormValues) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Always allow navigation to search page
+    // If all fields are empty, show all trips
     try {
+      // Build search params with filled fields (using exact city names from autocomplete)
+      const searchParamsObj: any = {};
+      if (searchData.origin && searchData.origin.trim()) searchParamsObj.origin = searchData.origin.trim();
+      if (searchData.destination && searchData.destination.trim())
+        searchParamsObj.destination = searchData.destination.trim();
+      if (searchData.date && searchData.date.trim()) searchParamsObj.date = searchData.date.trim();
+
+      // Store in Redux
       dispatch(
         setSearchParams({
-          origin: data.origin,
-          destination: data.destination,
-          date: data.date,
+          origin: searchData.origin || '',
+          destination: searchData.destination || '',
+          date: searchData.date || '',
         })
       );
 
-      const searchParams = new URLSearchParams({
-        origin: data.origin,
-        destination: data.destination,
-        date: data.date,
-      });
+      // Navigate with only filled fields
+      const searchParams = new URLSearchParams(searchParamsObj);
+      const hasAnyFilter = Object.keys(searchParamsObj).length > 0;
 
       router.push(`/search?${searchParams.toString()}`);
-      toast.success('Searching for trips...');
+      toast.success(hasAnyFilter ? 'Searching for trips...' : 'Showing all available trips...');
     } catch (error) {
       toast.error('Failed to search trips. Please try again.');
     }
@@ -60,54 +59,38 @@ export default function SearchForm() {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 -mt-10 relative z-10 max-w-4xl mx-auto">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <FormField
-            control={form.control}
-            name="origin"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>From</FormLabel>
-                <FormControl>
-                  <Input placeholder="Origin city" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <LocationAutocomplete
+          label="From"
+          placeholder="Select origin city"
+          value={searchData.origin}
+          onSelect={(cityName, displayName) =>
+            setSearchData({ ...searchData, origin: cityName, originDisplay: displayName })
+          }
+        />
+        <LocationAutocomplete
+          label="To"
+          placeholder="Select destination city"
+          value={searchData.destination}
+          onSelect={(cityName, displayName) =>
+            setSearchData({ ...searchData, destination: cityName, destinationDisplay: displayName })
+          }
+        />
+        <div className="flex flex-col space-y-2">
+          <label className="text-sm font-medium">Date</label>
+          <Input
+            type="date"
+            value={searchData.date}
+            min={new Date().toISOString().split('T')[0]}
+            onChange={(e) => setSearchData({ ...searchData, date: e.target.value })}
           />
-          <FormField
-            control={form.control}
-            name="destination"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>To</FormLabel>
-                <FormControl>
-                  <Input placeholder="Destination city" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date</FormLabel>
-                <FormControl>
-                  <Input type="date" min={today} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="flex items-end">
-            <Button type="submit" className="w-full">
-              Search
-            </Button>
-          </div>
-        </form>
-      </Form>
+        </div>
+        <div className="flex items-end">
+          <Button type="submit" className="w-full">
+            Search
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

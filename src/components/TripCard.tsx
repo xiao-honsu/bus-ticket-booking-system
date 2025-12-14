@@ -22,6 +22,7 @@ export function TripCard({
   isDetailedView = false,
 }: TripCardProps & { _onSelect?: (trip: MockTrip) => void }) {
   const router = useRouter();
+  const tripId = trip._id || trip.id;
 
   const departureDate = new Date(trip.departureTime);
   const arrivalDate = new Date(trip.arrivalTime);
@@ -32,12 +33,12 @@ export function TripCard({
   const occupancyPercentage = ((trip.bus.totalSeats - trip.availableSeats) / trip.bus.totalSeats) * 100;
 
   const handleViewDetails = () => {
-    router.push(`/trip-detail/${trip.id}`);
+    router.push(`/trip-detail/${tripId}`);
   };
 
   const handleBooking = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/booking/${trip.id}`);
+    router.push(`/booking/${tripId}`);
   };
 
   return (
@@ -155,7 +156,7 @@ export function TripList({ trips, isDetailedView = false }: TripListProps) {
   return (
     <div className="space-y-4">
       {trips.map((trip) => (
-        <TripCard key={trip.id} trip={trip} isDetailedView={isDetailedView} />
+        <TripCard key={trip._id || trip.id} trip={trip} isDetailedView={isDetailedView} />
       ))}
     </div>
   );

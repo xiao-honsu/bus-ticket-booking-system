@@ -9,11 +9,15 @@ export default function SeatLegend() {
         </div>
         <div className="flex items-center">
           <div className="w-8 h-8 bg-blue-500 rounded mr-3"></div>
-          <span>Selected</span>
+          <span>Selected by you</span>
+        </div>
+        <div className="flex items-center">
+          <div className="w-8 h-8 bg-yellow-300 rounded mr-3"></div>
+          <span>Locked by others</span>
         </div>
         <div className="flex items-center">
           <div className="w-8 h-8 bg-gray-300 rounded mr-3"></div>
-          <span>Occupied</span>
+          <span>Booked</span>
         </div>
       </div>
     </div>

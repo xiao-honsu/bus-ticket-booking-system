@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
+import SeatLockTimer from '@/components/SeatLockTimer';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function CheckoutPage() {
   const passengers = useAppSelector((state) => state.booking.passengers);
   const payment = useAppSelector((state) => state.booking.payment);
   const contactInfo = useAppSelector((state) => state.booking.contactInfo);
+  const sessionId = useAppSelector((state) => state.booking.sessionId);
 
   const { data: trip } = useGetTripQuery(tripId || '', {
     skip: !tripId,
@@ -72,6 +74,7 @@ export default function CheckoutPage() {
         contactPhone: contactInfo.phone,
         paymentMethod: payment.method,
         totalAmount,
+        sessionId, // Include sessionId to verify lock ownership
       };
 
       const result = await createBooking(bookingData).unwrap();
@@ -98,6 +101,7 @@ export default function CheckoutPage() {
           <PaymentMethods />
         </div>
         <aside className="lg:col-span-1 space-y-4">
+          <SeatLockTimer />
           <BookingSummary />
           <Button onClick={handleCompletePayment} disabled={isCreatingBooking} className="w-full" size="lg">
             {isCreatingBooking ? 'Processing...' : 'Complete Payment'}

@@ -24,6 +24,8 @@ interface BookingState {
     phone: string;
   } | null;
   currentStep: 'seat-selection' | 'passenger-details' | 'payment' | 'confirmation';
+  sessionId: string | null;
+  lockExpiresAt: Date | null;
 }
 
 const initialState: BookingState = {
@@ -33,6 +35,8 @@ const initialState: BookingState = {
   payment: null,
   contactInfo: null,
   currentStep: 'seat-selection',
+  sessionId: null,
+  lockExpiresAt: null,
 };
 
 const bookingSlice = createSlice({
@@ -80,6 +84,12 @@ const bookingSlice = createSlice({
     ) => {
       state.currentStep = action.payload;
     },
+    setSessionId: (state, action: PayloadAction<string>) => {
+      state.sessionId = action.payload;
+    },
+    setLockExpiresAt: (state, action: PayloadAction<Date | null>) => {
+      state.lockExpiresAt = action.payload;
+    },
     resetBooking: () => {
       return initialState;
     },
@@ -97,6 +107,8 @@ export const {
   setPayment,
   setContactInfo,
   setCurrentStep,
+  setSessionId,
+  setLockExpiresAt,
   resetBooking,
 } = bookingSlice.actions;
 
