@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { SeatMap, SeatLegend, PassengerForm } from '@/containers/seat-selection';
-import { useGetTripQuery } from '@/lib/store/services/api';
+import { useGetTripQuery, useReleaseLocksMutation } from '@/lib/store/services/api';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { setTripId } from '@/lib/store/features/booking/bookingSlice';
 import { useEffect } from 'react';
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import SeatLockTimer from '@/components/SeatLockTimer';
 
 interface BookingPageProps {
   params: Promise<{ tripId: string }>;
@@ -23,10 +24,44 @@ export default function BookingPage({ params }: BookingPageProps) {
   const { data: trip, isLoading, error } = useGetTripQuery(tripId);
   const selectedSeats = useAppSelector((state) => state.booking.selectedSeats);
   const passengers = useAppSelector((state) => state.booking.passengers);
+  const sessionId = useAppSelector((state) => state.booking.sessionId);
+
+  const [releaseLocks] = useReleaseLocksMutation();
 
   useEffect(() => {
     dispatch(setTripId(tripId));
   }, [dispatch, tripId]);
+
+  // Release locks when user leaves the page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (sessionId) {
+        // Use navigator.sendBeacon for reliable cleanup on page unload
+        const blob = new Blob([JSON.stringify({ sessionId })], { type: 'application/json' });
+        navigator.sendBeacon(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/v1/seat-locks/release`,
+          blob
+        );
+      }
+    };
+
+    const handleRouteChange = async () => {
+      if (sessionId) {
+        try {
+          await releaseLocks(sessionId);
+        } catch (error) {
+          console.error('Failed to release locks:', error);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      handleRouteChange();
+    };
+  }, [sessionId, releaseLocks]);
 
   const handleContinueToCheckout = () => {
     if (selectedSeats.length === 0) {
@@ -85,32 +120,31 @@ export default function BookingPage({ params }: BookingPageProps) {
     );
   }
 
-  const occupiedSeats = trip.bookedSeats || [];
-  const totalSeats = trip.bus?.totalSeats || 40;
-
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Select Your Seats</h1>
         <div className="flex items-center gap-4 text-gray-600">
           <span>
-            {trip.route?.origin} → {trip.route?.destination}
+            {trip.route?.origin?.city || trip.route?.origin} →{' '}
+            {trip.route?.destination?.city || trip.route?.destination}
           </span>
           <span>•</span>
           <span>{new Date(trip.departureTime).toLocaleDateString()}</span>
           <span>•</span>
-          <span className="font-medium">${trip.price}</span>
+          <span className="font-medium">{trip.pricePerSeat?.toLocaleString() || trip.price} ₫</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <SeatMap tripId={tripId} totalSeats={totalSeats} occupiedSeats={occupiedSeats} />
+          <SeatMap tripId={tripId} />
           <div className="mt-6">
             <PassengerForm />
           </div>
         </div>
         <aside className="lg:col-span-1 space-y-4">
+          <SeatLockTimer />
           <SeatLegend />
 
           <Card>
@@ -124,12 +158,14 @@ export default function BookingPage({ params }: BookingPageProps) {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Price per seat:</span>
-                <span className="font-medium">${trip.price}</span>
+                <span className="font-medium">{trip.pricePerSeat?.toLocaleString() || trip.price} ₫</span>
               </div>
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between font-bold">
                   <span>Total:</span>
-                  <span className="text-blue-600">${(trip.price * selectedSeats.length).toFixed(2)}</span>
+                  <span className="text-blue-600">
+                    {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
+                  </span>
                 </div>
               </div>
             </CardContent>

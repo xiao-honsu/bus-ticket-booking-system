@@ -202,60 +202,63 @@ export default function TripManagement() {
                     </td>
                   </tr>
                 ) : (
-                  trips.map((trip: any) => (
-                    <tr key={trip.id} className="border-t">
-                      <td className="px-4 py-3">{trip.route?.routeName || 'N/A'}</td>
-                      <td className="px-4 py-3">
-                        {new Date(trip.departureTime).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </td>
-                      <td className="px-4 py-3">
-                        {new Date(trip.departureTime).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </td>
-                      <td className="px-4 py-3">
-                        {trip.availableSeats}/{trip.bus?.totalSeats || 0}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-1 rounded-full text-sm ${
-                            trip.status === 'scheduled'
-                              ? 'bg-green-100 text-green-800'
-                              : trip.status === 'ongoing'
-                                ? 'bg-blue-100 text-blue-800'
-                                : trip.status === 'completed'
-                                  ? 'bg-gray-100 text-gray-800'
-                                  : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => router.push(`/admin/trips/${trip.id}/seat-pricing`)}
+                  trips.map((trip: any) => {
+                    const tripId = trip._id || trip.id;
+                    return (
+                      <tr key={tripId} className="border-t">
+                        <td className="px-4 py-3">{trip.route?.routeName || 'N/A'}</td>
+                        <td className="px-4 py-3">
+                          {new Date(trip.departureTime).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </td>
+                        <td className="px-4 py-3">
+                          {new Date(trip.departureTime).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </td>
+                        <td className="px-4 py-3">
+                          {trip.availableSeats}/{trip.bus?.totalSeats || 0}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`px-2 py-1 rounded-full text-sm ${
+                              trip.status === 'scheduled'
+                                ? 'bg-green-100 text-green-800'
+                                : trip.status === 'ongoing'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : trip.status === 'completed'
+                                    ? 'bg-gray-100 text-gray-800'
+                                    : 'bg-red-100 text-red-800'
+                            }`}
                           >
-                            Set Prices
-                          </Button>
-                          <button
-                            onClick={() => handleDeleteTrip(trip.id)}
-                            disabled={isDeleting}
-                            className="text-red-600 hover:text-red-800 disabled:opacity-50"
-                          >
-                            {isDeleting ? 'Deleting...' : 'Delete'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push(`/admin/trips/${tripId}/seat-pricing`)}
+                            >
+                              Set Prices
+                            </Button>
+                            <button
+                              onClick={() => handleDeleteTrip(tripId)}
+                              disabled={isDeleting}
+                              className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                            >
+                              {isDeleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

@@ -200,7 +200,7 @@ export default function TripList({ origin: _origin, destination: _destination, d
       {/* Trip Cards */}
       <div className="space-y-4">
         {sortedTrips.map((trip) => (
-          <TripCard key={trip.id} trip={trip} />
+          <TripCard key={trip._id || trip.id} trip={trip} />
         ))}
       </div>
 

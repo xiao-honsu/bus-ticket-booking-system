@@ -32,6 +32,7 @@ export interface PaginatedResponse<T> {
 
 export interface MockTrip {
   id: string;
+  _id?: string; // MongoDB ObjectId format
   tripId: string;
   departureTime: string;
   arrivalTime: string;
