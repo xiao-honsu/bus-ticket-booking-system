@@ -32,18 +32,18 @@ export default function BookingMonitoringPage() {
 
   // Fetch bookings
   const { data: bookingsData, isLoading } = useGetBookingsQuery({ page: 1, limit: 100 });
-  const bookings = bookingsData?.results || [];
 
   const [cancelBooking] = useCancelBookingMutation();
 
   // Filter bookings by date
   const filteredBookings = useMemo(() => {
+    const bookings = bookingsData?.results || [];
     if (!dateFilter) return bookings;
     return bookings.filter((bk: any) => {
       const bookingDate = format(parseISO(bk.createdAt), 'yyyy-MM-dd');
       return bookingDate === dateFilter;
     });
-  }, [bookings, dateFilter]);
+  }, [bookingsData?.results, dateFilter]);
 
   const statusColor = (status: string) => {
     if (status === 'confirmed') return 'bg-emerald-100 text-emerald-700';

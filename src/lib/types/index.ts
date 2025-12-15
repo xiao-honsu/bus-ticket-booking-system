@@ -210,3 +210,15 @@ export interface ApiError {
   code: number;
   message: string;
 }
+
+export interface ApiSuccessResponse<T> {
+  code: number;
+  data: T;
+  message: string;
+}
+
+export interface ApiErrorResponse {
+  code?: number;
+  message?: string;
+  data?: any;
+}

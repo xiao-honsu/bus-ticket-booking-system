@@ -1,6 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/lib/hooks';
 import { logout } from '@/lib/store/features/auth/authSlice';
@@ -24,6 +26,13 @@ export default function Navbar() {
   const dispatch = useAppDispatch();
   const { isAuthenticated, user, isLoading } = useAppSelector((state) => state.auth);
   const [logoutApi] = useLogoutMutation();
+
+  // Force client-only rendering to prevent hydration mismatch
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -65,8 +74,8 @@ export default function Navbar() {
             <Link href="/search" className="text-gray-700 hover:text-blue-600">
               Search
             </Link>
-            {isLoading ? (
-              // Show skeleton loader during session restore
+            {!mounted || isLoading ? (
+              // Show skeleton loader during SSR and session restore
               <div className="flex items-center gap-2">
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <div className="flex flex-col gap-1">
@@ -85,8 +94,18 @@ export default function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                       <Avatar>
-                        <AvatarImage src={user?.profilePictureUrl} alt={user?.name} />
-                        <AvatarFallback>{user?.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                        {user?.profilePictureUrl ? (
+                          <Image
+                            src={user.profilePictureUrl}
+                            alt={user?.name || 'User'}
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
+                            unoptimized
+                          />
+                        ) : (
+                          <AvatarFallback>{user?.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                        )}
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>

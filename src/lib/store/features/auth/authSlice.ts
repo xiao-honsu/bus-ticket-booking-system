@@ -115,7 +115,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  accessToken: null, // Will be populated on login/refresh
+  accessToken: null,
   isAuthenticated: false,
   isLoading: false,
 };
@@ -128,18 +128,18 @@ const authSlice = createSlice({
     setCredentials: (
       state,
       action: PayloadAction<{
-        user: User | null;
+        user: User;
         accessToken: string;
       }>
     ) => {
       state.user = action.payload.user;
       state.accessToken = action.payload.accessToken;
-      state.isAuthenticated = !!action.payload.user;
+      state.isAuthenticated = true;
 
-      // Cache user data to sessionStorage for instant restore on reload
-      if (action.payload.user) {
-        saveUserToSession(action.payload.user);
-      }
+      // // Cache user data to sessionStorage for instant restore on reload
+      // if (action.payload.user) {
+      //   saveUserToSession(action.payload.user);
+      // }
     },
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
@@ -153,8 +153,8 @@ const authSlice = createSlice({
       state.accessToken = null;
       state.isAuthenticated = false;
 
-      // Clear cached user data from sessionStorage
-      clearUserSession();
+      // // Clear cached user data from sessionStorage
+      // clearUserSession();
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
