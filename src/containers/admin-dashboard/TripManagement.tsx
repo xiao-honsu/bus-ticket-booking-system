@@ -47,8 +47,18 @@ export default function TripManagement() {
   const totalResults = tripsData?.totalResults || 0;
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [conflictMessage, setConflictMessage] = useState('');
   const [hasConflict, setHasConflict] = useState(false);
+
+  const [filters, setFilters] = useState({
+    routeId: 'all',
+    busId: 'all',
+    status: 'all',
+    date: '',
+    search: '',
+  });
 
   const [formData, setFormData] = useState({
     routeId: '',
@@ -85,16 +95,20 @@ export default function TripManagement() {
         return;
       }
 
+      const departureDateTime = new Date(`${formData.departureDate}T${formData.departureTime}`);
+      const arrivalDateTime = new Date(`${formData.arrivalDate}T${formData.arrivalTime}`);
+
+      if (arrivalDateTime <= departureDateTime) {
+        toast.error('Arrival time must be after departure time');
+        return;
+      }
+
       // Get selected bus to extract operator
       const selectedBus = buses.find((b: any) => b.id === formData.busId);
       if (!selectedBus || !selectedBus.operator) {
         toast.error('Selected bus must have an operator');
         return;
       }
-
-      // Combine date and time into Date objects (backend will handle conversion)
-      const departureDateTime = new Date(`${formData.departureDate}T${formData.departureTime}`);
-      const arrivalDateTime = new Date(`${formData.arrivalDate}T${formData.arrivalTime}`);
 
       const tripData = {
         route: formData.routeId,
@@ -137,26 +151,37 @@ export default function TripManagement() {
   };
 
   const handleDeleteTrip = async (tripId: string) => {
-    if (!confirm('Are you sure you want to delete this trip?')) {
-      return;
-    }
-
     try {
       await deleteTrip(tripId).unwrap();
       toast.success('Trip deleted successfully');
+      setDeleteDialogOpen(false);
+      setSelectedTripId(null);
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to delete trip');
     }
   };
 
   const checkConflicts = () => {
-    if (formData.busId && formData.departureDate) {
+    if (formData.busId && formData.departureDate && formData.departureTime) {
       setHasConflict(false);
-      setConflictMessage('✅ Bus is available for selected time slot');
+      setConflictMessage('✅ Bus is available for selected time slot (basic client check)');
     } else {
       setConflictMessage('Please select bus and departure time first');
     }
   };
+
+  const filteredTrips = trips.filter((trip: any) => {
+    const matchesRoute =
+      filters.routeId === 'all' || trip.route?.id === filters.routeId || trip.route === filters.routeId;
+    const matchesBus = filters.busId === 'all' || trip.bus?.id === filters.busId || trip.bus === filters.busId;
+    const matchesStatus = filters.status === 'all' || trip.status === filters.status;
+    const matchesDate = filters.date ? new Date(trip.departureTime).toISOString().slice(0, 10) === filters.date : true;
+    const matchesSearch = filters.search
+      ? (trip.route?.routeName || '').toLowerCase().includes(filters.search.toLowerCase()) ||
+        (trip.bus?.licensePlate || '').toLowerCase().includes(filters.search.toLowerCase())
+      : true;
+    return matchesRoute && matchesBus && matchesStatus && matchesDate && matchesSearch;
+  });
 
   return (
     <>
@@ -176,6 +201,64 @@ export default function TripManagement() {
           <Button onClick={() => setDialogOpen(true)}>+ Add Trip</Button>
         </CardHeader>
         <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
+            <Select value={filters.routeId} onValueChange={(value) => setFilters({ ...filters, routeId: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by route" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All routes</SelectItem>
+                {routes.map((route: any) => (
+                  <SelectItem key={route.id} value={route.id}>
+                    {route.routeName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filters.busId} onValueChange={(value) => setFilters({ ...filters, busId: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by bus" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All buses</SelectItem>
+                {buses.map((bus: any) => (
+                  <SelectItem key={bus.id} value={bus.id}>
+                    {bus.licensePlate}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All status</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="ongoing">Ongoing</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              type="date"
+              value={filters.date}
+              onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+            />
+            <div className="flex gap-2">
+              <Input
+                placeholder="Search route or bus"
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              />
+              <Button
+                variant="outline"
+                onClick={() => setFilters({ routeId: 'all', busId: 'all', status: 'all', date: '', search: '' })}
+              >
+                Reset
+              </Button>
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -195,14 +278,14 @@ export default function TripManagement() {
                       Loading trips...
                     </td>
                   </tr>
-                ) : trips.length === 0 ? (
+                ) : filteredTrips.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                      No trips scheduled yet. Create your first trip!
+                      No trips match the current filters.
                     </td>
                   </tr>
                 ) : (
-                  trips.map((trip: any) => {
+                  filteredTrips.map((trip: any) => {
                     const tripId = trip._id || trip.id;
                     return (
                       <tr key={tripId} className="border-t">
@@ -248,7 +331,10 @@ export default function TripManagement() {
                               Set Prices
                             </Button>
                             <button
-                              onClick={() => handleDeleteTrip(tripId)}
+                              onClick={() => {
+                                setSelectedTripId(tripId);
+                                setDeleteDialogOpen(true);
+                              }}
                               disabled={isDeleting}
                               className="text-red-600 hover:text-red-800 disabled:opacity-50"
                             >
@@ -269,7 +355,7 @@ export default function TripManagement() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 pb-6">
             <div className="text-sm text-gray-600">
-              Showing {trips.length} of {totalResults} trips
+              Showing {filteredTrips.length} of {totalResults} trips
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -466,20 +552,6 @@ export default function TripManagement() {
             {/* Driver Information */}
             <div className="space-y-3">
               <h3 className="font-semibold text-sm">Driver Information</h3>
-              <div>
-                <Label htmlFor="driverName">Driver Name *</Label>
-                <Input
-                  id="driverName"
-                  value={formData.driver.name}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      driver: { ...formData.driver, name: e.target.value },
-                    })
-                  }
-                  placeholder="Nguyen Van A"
-                />
-              </div>
               <div className="grid grid-cols-1 gap-3">
                 <div>
                   <Label htmlFor="driverName" className="mb-1.5 block">
@@ -495,6 +567,22 @@ export default function TripManagement() {
                       })
                     }
                     placeholder="Nguyen Van A"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="driverPhone" className="mb-1.5 block">
+                    Phone
+                  </Label>
+                  <Input
+                    id="driverPhone"
+                    value={formData.driver.phone}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        driver: { ...formData.driver, phone: e.target.value },
+                      })
+                    }
+                    placeholder="0901234567"
                   />
                 </div>
                 <div>
@@ -546,6 +634,30 @@ export default function TripManagement() {
             </Button>
             <Button onClick={handleSubmit} disabled={isCreating || hasConflict}>
               {isCreating ? 'Creating...' : 'Create Trip'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Trip Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Trip</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this trip? Passengers will lose their bookings.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={() => selectedTripId && handleDeleteTrip(selectedTripId)}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

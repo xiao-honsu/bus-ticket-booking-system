@@ -4,6 +4,7 @@ import {
   useGetBusesQuery,
   useCreateBusMutation,
   useDeleteBusMutation,
+  useUpdateBusMutation,
   useGetOperatorsQuery,
 } from '@/lib/store/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,12 +43,20 @@ export default function BusManagement() {
   } = useGetOperatorsQuery({ page: 1, limit: 100 });
   const [createBus, { isLoading: isCreating }] = useCreateBusMutation();
   const [deleteBus, { isLoading: isDeleting }] = useDeleteBusMutation();
+  const [updateBus, { isLoading: isUpdating }] = useUpdateBusMutation();
 
   const router = useRouter();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBusId, setSelectedBusId] = useState<string | null>(null);
+
+  const [filters, setFilters] = useState({
+    operatorId: 'all',
+    busType: 'all',
+    search: '',
+  });
 
   // Get operators and pagination info from RTK Query
   const operators = operatorsData?.results || [];
@@ -94,19 +103,54 @@ export default function BusManagement() {
       await createBus(busData).unwrap();
       toast.success('Bus created successfully');
       setDialogOpen(false);
-      setFormData({
-        busNumber: '',
-        licensePlate: '',
-        busType: 'standard',
-        totalSeats: 40,
-        operatorId: '',
-        amenities: '',
-        busModel: '',
-        yearOfManufacture: new Date().getFullYear(),
-      });
+      resetForm();
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to create bus');
     }
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedBusId) return;
+
+    try {
+      if (!formData.busNumber || !formData.licensePlate) {
+        toast.error('Bus Number and License Plate are required');
+        return;
+      }
+
+      const busData = {
+        busNumber: formData.busNumber,
+        licensePlate: formData.licensePlate,
+        busType: formData.busType,
+        totalSeats: formData.totalSeats,
+        operator: formData.operatorId,
+        amenities: formData.amenities ? formData.amenities.split(',').map((a) => a.trim()) : [],
+        busModel: formData.busModel,
+        yearOfManufacture: formData.yearOfManufacture,
+      };
+
+      await updateBus({ id: selectedBusId, ...busData }).unwrap();
+      toast.success('Bus updated successfully');
+      setDialogOpen(false);
+      resetForm();
+      setSelectedBusId(null);
+      setIsEditMode(false);
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to update bus');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      busNumber: '',
+      licensePlate: '',
+      busType: 'standard',
+      totalSeats: 40,
+      operatorId: '',
+      amenities: '',
+      busModel: '',
+      yearOfManufacture: new Date().getFullYear(),
+    });
   };
 
   const handleDelete = async () => {
@@ -163,57 +207,137 @@ export default function BusManagement() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Buses ({totalResults})</CardTitle>
-          <Button onClick={() => setDialogOpen(true)}>+ Add Bus</Button>
+          <Button
+            onClick={() => {
+              resetForm();
+              setIsEditMode(false);
+              setDialogOpen(true);
+            }}
+          >
+            + Add Bus
+          </Button>
         </CardHeader>
         <CardContent>
-          {buses.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No buses yet</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Plate Number</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Total Seats</TableHead>
-                  <TableHead>Operator</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {buses.map((bus: any) => (
-                  <TableRow key={bus.id}>
-                    <TableCell className="font-medium">{bus.licensePlate}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{bus.busType}</Badge>
-                    </TableCell>
-                    <TableCell>{bus.totalSeats} seats</TableCell>
-                    <TableCell>{bus.operator?.companyName || 'N/A'}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => router.push(`/admin/buses/${bus.id}/seat-map`)}
-                        >
-                          Configure Seats
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedBusId(bus.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+            <Input
+              placeholder="Search plate or number"
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            />
+            <Select value={filters.operatorId} onValueChange={(value) => setFilters({ ...filters, operatorId: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by operator" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All operators</SelectItem>
+                {operators.map((op: any) => (
+                  <SelectItem key={op.id} value={op.id}>
+                    {op.companyName}
+                  </SelectItem>
                 ))}
-              </TableBody>
-            </Table>
-          )}
+              </SelectContent>
+            </Select>
+            <Select value={filters.busType} onValueChange={(value) => setFilters({ ...filters, busType: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Bus type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All types</SelectItem>
+                <SelectItem value="standard">Standard</SelectItem>
+                <SelectItem value="limousine">Limousine</SelectItem>
+                <SelectItem value="sleeper">Sleeper</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={() => setFilters({ operatorId: 'all', busType: 'all', search: '' })}>
+              Reset Filters
+            </Button>
+          </div>
+
+          {(() => {
+            const filtered = buses.filter((bus: any) => {
+              const matchesSearch = filters.search
+                ? bus.licensePlate.toLowerCase().includes(filters.search.toLowerCase()) ||
+                  bus.busNumber?.toLowerCase().includes(filters.search.toLowerCase())
+                : true;
+              const matchesOperator =
+                filters.operatorId === 'all' ||
+                bus.operator?.id === filters.operatorId ||
+                bus.operator === filters.operatorId;
+              const matchesType = filters.busType === 'all' || bus.busType === filters.busType;
+              return matchesSearch && matchesOperator && matchesType;
+            });
+            return filtered.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No buses match the filters</p>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Plate Number</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Total Seats</TableHead>
+                      <TableHead>Operator</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((bus: any) => (
+                      <TableRow key={bus.id}>
+                        <TableCell className="font-medium">{bus.licensePlate}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{bus.busType}</Badge>
+                        </TableCell>
+                        <TableCell>{bus.totalSeats} seats</TableCell>
+                        <TableCell>{bus.operator?.companyName || 'N/A'}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push(`/admin/buses/${bus.id}/seat-map`)}
+                            >
+                              Configure Seats
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setIsEditMode(true);
+                                setSelectedBusId(bus.id);
+                                setFormData({
+                                  busNumber: bus.busNumber || '',
+                                  licensePlate: bus.licensePlate || '',
+                                  busType: bus.busType || 'standard',
+                                  totalSeats: bus.totalSeats || 40,
+                                  operatorId: bus.operator?.id || bus.operator || '',
+                                  amenities: Array.isArray(bus.amenities) ? bus.amenities.join(', ') : '',
+                                  busModel: bus.busModel || '',
+                                  yearOfManufacture: bus.yearOfManufacture || new Date().getFullYear(),
+                                });
+                                setDialogOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedBusId(bus.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </>
+            );
+          })()}
 
           {/* Pagination */}
           {totalPages > 1 && (
@@ -267,7 +391,9 @@ export default function BusManagement() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Bus</DialogTitle>
-            <DialogDescription>Enter bus details to add a new bus to the fleet</DialogDescription>
+            <DialogDescription>
+              {isEditMode ? 'Update bus details and seat capacity' : 'Enter bus details to add a new bus to the fleet'}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             <div className="grid grid-cols-2 gap-4">
@@ -404,9 +530,15 @@ export default function BusManagement() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={isCreating}>
-              {isCreating ? 'Creating...' : 'Create Bus'}
-            </Button>
+            {isEditMode ? (
+              <Button onClick={handleUpdate} disabled={isUpdating}>
+                {isUpdating ? 'Saving...' : 'Save Changes'}
+              </Button>
+            ) : (
+              <Button onClick={handleCreate} disabled={isCreating}>
+                {isCreating ? 'Creating...' : 'Create Bus'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
