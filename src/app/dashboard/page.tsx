@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   BookingHistory,
   UpcomingTrips,
@@ -11,10 +12,18 @@ import {
 import { useAppSelector } from '@/lib/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetBookingsQuery, useGetBusesQuery, useGetRoutesQuery } from '@/lib/store/services/api';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const user = useAppSelector((state) => state.auth.user);
   const isAdmin = user?.role === 'admin';
+
+  // Force client-only rendering to prevent hydration mismatch
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Admin-specific queries
   const { data: allBookingsData } = useGetBookingsQuery({ page: 1, limit: 1 }, { skip: !isAdmin });
@@ -24,10 +33,21 @@ export default function DashboardPage() {
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">{isAdmin ? 'Admin Dashboard' : `Welcome back, ${user?.name || 'User'}!`}</h1>
-        <p className="text-gray-600 mt-1">
-          {isAdmin ? 'Manage your bus booking system' : 'Manage your bookings and profile settings'}
-        </p>
+        {mounted ? (
+          <>
+            <h1 className="text-3xl font-bold">
+              {isAdmin ? 'Admin Dashboard' : `Welcome back, ${user?.name || 'User'}!`}
+            </h1>
+            <p className="text-gray-600 mt-1">
+              {isAdmin ? 'Manage your bus booking system' : 'Manage your bookings and profile settings'}
+            </p>
+          </>
+        ) : (
+          <>
+            <Skeleton className="h-9 w-80" />
+            <Skeleton className="h-5 w-60 mt-1" />
+          </>
+        )}
       </div>
 
       {/* Summary Cards Widget */}

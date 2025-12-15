@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetBookingsQuery } from '@/lib/store/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,7 +12,14 @@ export default function SummaryCards() {
     limit: 100,
   });
 
-  if (isLoading) {
+  // Force client-only rendering to prevent hydration mismatch
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-3">
         {[1, 2, 3].map((i) => (

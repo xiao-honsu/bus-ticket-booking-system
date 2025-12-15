@@ -42,18 +42,18 @@ export default function UserManagementPage() {
 
   // Fetch users
   const { data: usersData, isLoading } = useGetUsersQuery({ page: 1, limit: 100 });
-  const users = usersData?.results || [];
 
   const [resetPassword] = useResetUserPasswordMutation();
   const [blockUser] = useBlockUserMutation();
 
   const filtered = useMemo(() => {
+    const users = usersData?.results || [];
     return users.filter((u: any) => {
       const matchText = (u.name + u.email).toLowerCase().includes(search.toLowerCase());
       const matchRole = roleFilter === 'all' ? true : u.role === roleFilter;
       return matchText && matchRole;
     });
-  }, [users, search, roleFilter]);
+  }, [usersData?.results, search, roleFilter]);
 
   const statusColor = (status: string) => {
     if (status === 'active') return 'bg-emerald-100 text-emerald-700';

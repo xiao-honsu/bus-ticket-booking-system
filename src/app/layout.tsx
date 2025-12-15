@@ -5,7 +5,6 @@ import StoreProvider from './providers';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Toaster } from '@/components/ui/sonner';
-import AuthSync from '@/components/auth/AuthSync';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -34,7 +33,6 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <StoreProvider>
-          <AuthSync />
           <Navbar />
           <div className="flex-1">{children}</div>
           <Footer />

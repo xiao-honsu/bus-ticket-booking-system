@@ -5,6 +5,8 @@ import type { RootState } from '@/lib/store';
 import { setCredentials, setAccessToken, logout as logoutAction } from '../features/auth/authSlice';
 import { Mutex } from 'async-mutex';
 import { clearAuthCookies } from '@/lib/utils/cookies';
+import { ApiSuccessResponse, AuthResponse, LoginRequest } from '@/lib/types';
+import { toast } from 'sonner';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -12,16 +14,13 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 const mutex = new Mutex();
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: `${BASE_URL}/api/v1`,
-  credentials: 'include', // Send refreshToken cookie automatically
+  baseUrl: new URL('/api/v1', BASE_URL).toString(),
+  credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
-    // Get accessToken from Redux state (memory)
     const token = (getState() as RootState).auth.accessToken;
-
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
     }
-
     return headers;
   },
 });
@@ -32,40 +31,18 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   api,
   extraOptions
 ) => {
-  // Wait until the mutex is available without locking it
-  await mutex.waitForUnlock();
-
   let result = await baseQuery(args, api, extraOptions);
 
-  // Determine the endpoint URL
-  const url = typeof args === 'string' ? args : args.url;
-
-  // List of auth endpoints that should NOT trigger auto-refresh
-  const publicAuthEndpoints = [
-    '/auth/login',
-    '/auth/register',
-    '/auth/forgot-password',
-    '/auth/reset-password',
-    '/auth/verify-email',
-    '/auth/resend-verification-email',
-  ];
-
-  // Check if this is a public auth endpoint
-  const isPublicAuthEndpoint = publicAuthEndpoints.some((endpoint) => url.includes(endpoint));
-  console.log('isPublicAuthEndpoint:', isPublicAuthEndpoint);
   // If we get a 401 Unauthorized error, try to refresh the token
-  // BUT skip auto-refresh for public auth endpoints (login, register, etc.)
-  if (result.error && result.error.status === 401 && !isPublicAuthEndpoint) {
-    // Check if another request is already refreshing the token
+  if (result.error && result.error.status === 401) {
     if (!mutex.isLocked()) {
       const release = await mutex.acquire();
 
       try {
         // Attempt to refresh the access token
-        // refreshToken cookie will be sent automatically
         const refreshResult: any = await baseQuery(
           {
-            url: '/auth/refresh-tokens',
+            url: '/auth/refresh',
             method: 'POST',
           },
           api,
@@ -74,7 +51,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 
         if (refreshResult.data) {
           // Token refresh successful - update accessToken in Redux
-          const newAccessToken = refreshResult.data.data.tokens.access.token;
+          const newAccessToken = refreshResult.data?.data?.tokens?.access?.token;
           api.dispatch(setAccessToken(newAccessToken));
 
           // Retry the original request with new token
@@ -94,7 +71,6 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
           }
         }
       } finally {
-        // Release the mutex
         release();
       }
     } else {
@@ -114,16 +90,14 @@ export const api = createApi({
   tagTypes: ['Auth', 'User', 'Bus', 'Route', 'Trip', 'Booking', 'Operator'],
   endpoints: (builder) => ({
     // Auth endpoints
-    login: builder.mutation({
+    login: builder.mutation<AuthResponse, LoginRequest>({
       query: (credentials: { email: string; password: string }) => ({
         url: '/auth/login',
         method: 'POST',
         body: credentials,
       }),
-      transformErrorResponse: (response: FetchBaseQueryError) => {
-        // Customize error message handling if needed
-        return response.data;
-      },
+      transformErrorResponse: (response) => response.data,
+      transformResponse: (response: ApiSuccessResponse<AuthResponse>) => response.data,
       invalidatesTags: ['Auth'],
     }),
     register: builder.mutation({
@@ -145,7 +119,7 @@ export const api = createApi({
     }),
     refreshTokens: builder.mutation({
       query: () => ({
-        url: '/auth/refresh-tokens',
+        url: '/auth/refresh',
         method: 'POST',
         // No body needed - refreshToken is in httpOnly cookie
       }),

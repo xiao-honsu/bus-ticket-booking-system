@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { setUserRoleCookie } from '@/lib/utils/cookies';
+import { ApiErrorResponse } from '@/lib/types';
 
 const loginSchema = z.object({
   email: z.email('Invalid email address'),
@@ -43,27 +43,25 @@ export default function LoginForm() {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      const result = await login(data).unwrap();
+      const resultData = await login(data).unwrap();
 
-      console.log('Login result:', result);
+      console.log('Login result:', resultData);
 
       // Login successful
       // - refreshToken is set in httpOnly cookie by backend
       // - accessToken is stored in Redux state (memory)
+      // - userRole is set in cookie by backend (for middleware access control)
       dispatch(
         setCredentials({
-          user: result.user,
-          accessToken: result.tokens.access.token,
+          user: resultData.user,
+          accessToken: resultData.tokens.access.token,
         })
       );
-
-      // Save user role to client-side cookie for middleware
-      setUserRoleCookie(result.user.role);
 
       toast.success('Login successful!');
 
       // Redirect based on role
-      if (result.user.role === 'admin') {
+      if (resultData.user.role === 'admin') {
         router.push('/admin');
       } else {
         router.push('/dashboard');
@@ -72,8 +70,8 @@ export default function LoginForm() {
       console.log('Login error:', error);
 
       // RTK Query error format: { status: number, data: { message, emailNotVerified?, ... } }
-      const errorMessage = error?.data?.message || error?.message || 'Login failed';
-      const errorStatus = error?.status;
+      const errorMessage = error?.message || 'Login failed';
+      const errorStatus = error?.code;
 
       // Handle different error scenarios
       if (error?.data?.emailNotVerified) {
