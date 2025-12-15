@@ -12,7 +12,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    fetch(new URL('api/v1/auth/refresh', BASE_URL).toString(), {
+    fetch(new URL('/api/v1/auth/refresh', BASE_URL).toString(), {
       method: 'POST',
       credentials: 'include',
     }).then(async (response) => {
