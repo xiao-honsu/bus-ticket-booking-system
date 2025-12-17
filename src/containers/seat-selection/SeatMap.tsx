@@ -30,6 +30,8 @@ interface Seat {
     isAisle: boolean;
   };
   selectable: boolean;
+  lockedUntil?: string;
+  lockedBy?: string;
 }
 
 interface SeatMapProps {
