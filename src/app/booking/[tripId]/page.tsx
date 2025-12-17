@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import SeatLockTimer from '@/components/SeatLockTimer';
 
 interface BookingPageProps {
@@ -123,59 +124,150 @@ export default function BookingPage({ params }: BookingPageProps) {
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Select Your Seats</h1>
-        <div className="flex items-center gap-4 text-gray-600">
-          <span>
+        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
+          ← Back
+        </Button>
+        <h1 className="text-2xl font-bold mb-2">Select Your Seats</h1>
+        <div className="flex items-center gap-4 text-sm text-gray-600">
+          <span className="font-medium">
             {trip.route?.origin?.city || trip.route?.origin} →{' '}
             {trip.route?.destination?.city || trip.route?.destination}
           </span>
           <span>•</span>
-          <span>{new Date(trip.departureTime).toLocaleDateString()}</span>
+          <span>
+            {new Date(trip.departureTime).toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </span>
           <span>•</span>
-          <span className="font-medium">{trip.pricePerSeat?.toLocaleString() || trip.price} ₫</span>
+          <span className="text-gray-500">
+            {trip.availableSeats || 0} / {trip.bus?.totalSeats || 40} available
+          </span>
+          <span>•</span>
+          <span className="text-gray-500">Base Fare: {trip.pricePerSeat?.toLocaleString() || trip.price} ₫</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <SeatMap tripId={tripId} />
-          <div className="mt-6">
-            <PassengerForm />
-          </div>
+        {/* Seat Map - Left Side */}
+        <div className="lg:col-span-2 space-y-6">
+          <SeatMap tripId={tripId} totalSeats={trip.bus?.totalSeats || 40} />
         </div>
+
+        {/* Booking Summary - Right Side */}
         <aside className="lg:col-span-1 space-y-4">
           <SeatLockTimer />
-          <SeatLegend />
 
+          {/* Your Destination */}
           <Card>
-            <CardHeader>
-              <CardTitle>Booking Summary</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Your Destination</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Seats selected:</span>
-                <span className="font-medium">{selectedSeats.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Price per seat:</span>
-                <span className="font-medium">{trip.pricePerSeat?.toLocaleString() || trip.price} ₫</span>
-              </div>
-              <div className="border-t pt-2 mt-2">
-                <div className="flex justify-between font-bold">
-                  <span>Total:</span>
-                  <span className="text-blue-600">
-                    {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
-                  </span>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center text-sm">
+                <div>
+                  <p className="text-gray-500 text-xs">From</p>
+                  <p className="font-semibold">{trip.route?.origin?.city || trip.route?.origin}</p>
+                  <p className="text-xs text-gray-600">
+                    {new Date(trip.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-gray-500 text-xs">To</p>
+                  <p className="font-semibold">{trip.route?.destination?.city || trip.route?.destination}</p>
+                  <p className="text-xs text-gray-600">
+                    {new Date(trip.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Button onClick={handleContinueToCheckout} disabled={selectedSeats.length === 0} className="w-full" size="lg">
-            Continue to Checkout
+          {/* Selected Seats */}
+          {selectedSeats.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Selected Seats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {selectedSeats.map((seat) => (
+                    <Badge key={seat} variant="default" className="text-sm px-3 py-1">
+                      {seat}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Fare Details */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Fare Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Basic Fare:</span>
+                <span className="font-medium">{(trip.pricePerSeat || trip.price)?.toLocaleString()} ₫</span>
+              </div>
+              {selectedSeats.length > 0 && (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Seats × {selectedSeats.length}:</span>
+                    <span className="font-medium">
+                      {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
+                    </span>
+                  </div>
+                  <div className="border-t pt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">Total Price:</span>
+                      <span className="text-xl font-bold text-blue-600">
+                        {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">(Including all taxes)</p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Legend */}
+          <SeatLegend />
+
+          {/* Checkout Button */}
+          <Button
+            onClick={handleContinueToCheckout}
+            disabled={selectedSeats.length === 0}
+            size="lg"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-6 text-base uppercase"
+          >
+            {selectedSeats.length === 0 ? 'Select Seats' : 'Proceed to Checkout'}
           </Button>
+
+          {selectedSeats.length === 0 && (
+            <p className="text-xs text-center text-gray-500">Please select at least one seat to continue</p>
+          )}
         </aside>
       </div>
+
+      {/* Passenger Form Below */}
+      {selectedSeats.length > 0 && (
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Passenger Details</CardTitle>
+              <p className="text-sm text-gray-600">Provide information for all passengers</p>
+            </CardHeader>
+            <CardContent>
+              <PassengerForm />
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </main>
   );
 }

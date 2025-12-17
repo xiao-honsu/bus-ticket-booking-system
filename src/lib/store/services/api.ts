@@ -13,8 +13,17 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 // Create a mutex to prevent multiple simultaneous refresh token calls
 const mutex = new Mutex();
 
+// Build base URL - handle both absolute URLs and relative paths
+const getBaseUrl = () => {
+  if (BASE_URL.startsWith('http')) {
+    return new URL('/api/v1', BASE_URL).toString();
+  }
+  // For relative paths like '/api/mock', append '/api/v1' path
+  return BASE_URL === '/api/mock' ? BASE_URL : `${BASE_URL}/api/v1`;
+};
+
 const baseQuery = fetchBaseQuery({
-  baseUrl: new URL('/api/v1', BASE_URL).toString(),
+  baseUrl: getBaseUrl(),
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.accessToken;
