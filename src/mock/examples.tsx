@@ -96,7 +96,8 @@ export function ExampleGenerateCustomData() {
 // =====================================
 // Example 4: Use in Tests
 // =====================================
-
+/*
+// In your test file (e.g., SeatMap.test.tsx):
 describe('SeatMap Component', () => {
   it('should display all seats from mock data', () => {
     const mockData = mockSeatMapScenario1;
@@ -113,6 +114,7 @@ describe('SeatMap Component', () => {
     expect(bookedSeats).toHaveLength(20);
   });
 });
+*/
 
 // =====================================
 // Example 5: Storybook Story
