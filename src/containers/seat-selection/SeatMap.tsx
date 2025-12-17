@@ -42,6 +42,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
   const dispatch = useAppDispatch();
   const [localSelectedSeats, setLocalSelectedSeats] = useState<string[]>([]);
   const sessionId = useAppSelector((state) => state.booking.sessionId);
+  const reduxSelectedSeats = useAppSelector((state) => state.booking.selectedSeats);
 
   // Fetch seat map with sessionId to get user's locked seats
   const queryParams = sessionId ? `?sessionId=${sessionId}` : '';
@@ -80,12 +81,12 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
       setLocalSelectedSeats(selectedFromAPI);
       // Sync with Redux
       selectedFromAPI.forEach((seatNum) => {
-        if (!dispatch.getState || !dispatch.getState().booking.selectedSeats.includes(seatNum)) {
+        if (!reduxSelectedSeats.includes(seatNum)) {
           dispatch(toggleSeat(seatNum));
         }
       });
     }
-  }, [seats, dispatch]);
+  }, [seats, dispatch, reduxSelectedSeats]);
 
   const handleSeatClick = async (seat: Seat) => {
     // Check if seat is selectable
