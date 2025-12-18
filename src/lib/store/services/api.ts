@@ -5,7 +5,13 @@ import type { RootState } from '@/lib/store';
 import { setCredentials, setAccessToken, logout as logoutAction } from '../features/auth/authSlice';
 import { Mutex } from 'async-mutex';
 import { clearAuthCookies } from '@/lib/utils/cookies';
-import { ApiSuccessResponse, AuthResponse, LoginRequest } from '@/lib/types';
+import {
+  ApiSuccessResponse,
+  AuthResponse,
+  LoginRequest,
+  CreateBookingRequest,
+  CreateBookingResponse,
+} from '@/lib/types';
 import { toast } from 'sonner';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -26,7 +32,7 @@ const baseQuery = fetchBaseQuery({
   baseUrl: getBaseUrl(),
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.accessToken;
+    const token = (getState() as unknown as RootState).auth.accessToken;
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
     }
@@ -284,13 +290,28 @@ export const api = createApi({
     }),
 
     // Booking endpoints
-    createBooking: builder.mutation({
+    createBooking: builder.mutation<CreateBookingResponse, CreateBookingRequest>({
       query: (bookingData) => ({
         url: '/bookings',
         method: 'POST',
         body: bookingData,
       }),
       invalidatesTags: ['Booking', 'Trip'],
+      // transformResponse: Extract data from success response wrapper
+      // transformResponse: (response: ApiSuccessResponse<CreateBookingResponse>) => {
+      //   // Backend returns { code: 201, message: '...', data: {...} }
+      //   // We extract just the data object
+      //   return response.data;
+      // },
+      // transformErrorResponse: Extract error message from error response
+      transformErrorResponse: (response: any) => {
+        // Backend returns { code: 400, message: 'Error message', stack?: '...' }
+        // Extract the message for display
+        return {
+          status: response.status,
+          data: response.data,
+        };
+      },
     }),
     getBookings: builder.query({
       query: (params?: { page?: number; limit?: number }) => ({
