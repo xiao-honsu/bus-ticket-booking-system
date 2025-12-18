@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { toggleSeat, setSessionId, setLockExpiresAt } from '@/lib/store/features/booking/bookingSlice';
 import { cn } from '@/lib/utils';
@@ -11,20 +12,26 @@ import {
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 interface Seat {
   seatNumber: string;
   row: number;
   column: number;
-  deck?: string;
-  type: string;
+  deck?: 'upper' | 'lower';
+  seatType: 'window' | 'aisle' | 'standard' | 'vip' | 'sleeper';
+  type: 'standard' | 'vip' | 'sleeper';
   price: number;
   status: 'available' | 'booked' | 'locked' | 'selected';
   position: {
+    x: number;
+    y: number;
     isWindow: boolean;
     isAisle: boolean;
   };
+  selectable: boolean;
   lockedUntil?: string;
+  lockedBy?: string;
 }
 
 interface SeatMapProps {
@@ -35,118 +42,101 @@ interface SeatMapProps {
 
 export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }: SeatMapProps) {
   const dispatch = useAppDispatch();
-  const selectedSeats = useAppSelector((state) => state.booking.selectedSeats);
+  const [localSelectedSeats, setLocalSelectedSeats] = useState<string[]>([]);
   const sessionId = useAppSelector((state) => state.booking.sessionId);
+  const reduxSelectedSeats = useAppSelector((state) => state.booking.selectedSeats);
 
-  // Fetch seat map with real-time status
+  // Fetch seat map with sessionId to get user's locked seats
+  const queryParams = sessionId ? `?sessionId=${sessionId}` : '';
+  const [checkAvailability] = useCheckSeatAvailabilityMutation();
+
   const {
     data: seatMapData,
     isLoading,
     refetch,
-  } = useGetTripSeatMapQuery(tripId, {
-    pollingInterval: 10000, // Poll every 10 seconds for updates
+  } = useGetTripSeatMapQuery(`${tripId}${queryParams}`, {
+    pollingInterval: 30000, // Poll every 30 seconds for real-time updates
   });
 
   const [lockSeats, { isLoading: isLocking }] = useLockSeatsMutation();
-  const [checkAvailability] = useCheckSeatAvailabilityMutation();
 
-  // Backend may wrap response in 'data' field
+  // API response structure: { tripId, busType, totalSeats, availableSeats, layout, seats }
   const seatData = (seatMapData as any)?.data || seatMapData;
   const seats: Seat[] = seatData?.seats || [];
   const layout = seatData?.layout;
+  const busType = seatData?.busType;
+  const availableSeatsCount = seatData?.availableSeats;
 
-  // Generate or retrieve session ID
+  // Initialize session ID from localStorage or wait for API to generate
   useEffect(() => {
-    if (!sessionId) {
-      const storedSessionId = localStorage.getItem('bookingSessionId');
-      if (storedSessionId) {
-        dispatch(setSessionId(storedSessionId));
-      } else {
-        const newSessionId = crypto.randomUUID();
-        localStorage.setItem('bookingSessionId', newSessionId);
-        dispatch(setSessionId(newSessionId));
-      }
+    const storedSessionId = localStorage.getItem('seatlock_session');
+    if (storedSessionId && !sessionId) {
+      dispatch(setSessionId(storedSessionId));
     }
   }, [sessionId, dispatch]);
 
+  // Extract selected seats from API response (status === 'selected')
+  useEffect(() => {
+    const selectedFromAPI = seats.filter((s) => s.status === 'selected').map((s) => s.seatNumber);
+
+    if (selectedFromAPI.length > 0) {
+      setLocalSelectedSeats(selectedFromAPI);
+      // Sync with Redux
+      selectedFromAPI.forEach((seatNum) => {
+        if (!reduxSelectedSeats.includes(seatNum)) {
+          dispatch(toggleSeat(seatNum));
+        }
+      });
+    }
+  }, [seats, dispatch, reduxSelectedSeats]);
+
   const handleSeatClick = async (seat: Seat) => {
-    // Can't select booked or locked seats
-    if (seat.status === 'booked' || seat.status === 'locked') {
-      toast.error(seat.status === 'booked' ? 'This seat is already booked' : 'This seat is locked by another user');
+    // Check if seat is selectable
+    if (!seat.selectable || seat.status === 'booked') {
+      toast.error('This seat is not available');
       return;
     }
 
-    const isCurrentlySelected = seat.status === 'selected';
+    if (seat.status === 'locked') {
+      toast.error('This seat is temporarily locked by another user');
+      return;
+    }
+
+    const isCurrentlySelected = seat.status === 'selected' || localSelectedSeats.includes(seat.seatNumber);
 
     if (isCurrentlySelected) {
       // Deselect seat
       dispatch(toggleSeat(seat.seatNumber));
-      // Note: We don't release locks immediately, they'll expire or be released on page exit
+      setLocalSelectedSeats(localSelectedSeats.filter((s) => s !== seat.seatNumber));
     } else {
-      // Check availability first
-      try {
-        const availabilityCheck = await checkAvailability({
-          tripId,
-          seatNumbers: [seat.seatNumber],
-        }).unwrap();
-
-        if (!availabilityCheck.available) {
-          toast.error(`Seat ${seat.seatNumber} is no longer available`);
-          refetch(); // Refresh seat map
-          return;
-        }
-
-        // Select seat optimistically
-        dispatch(toggleSeat(seat.seatNumber));
-
-        // Lock the seat
-        const currentSessionId = sessionId || localStorage.getItem('bookingSessionId');
-        const response: any = await lockSeats({
-          tripId,
-          seatNumbers: [...selectedSeats, seat.seatNumber],
-          sessionId: currentSessionId!,
-        }).unwrap();
-
-        // Backend wraps response in 'data' field
-        const lockData = response.data || response;
-
-        // Store session data
-        const returnedSessionId = response.sessionId || lockData.sessionId;
-        if (returnedSessionId && !sessionId) {
-          dispatch(setSessionId(returnedSessionId));
-          localStorage.setItem('bookingSessionId', returnedSessionId);
-        }
-        const expiresAt = lockData.expiresAt || response.expiresAt;
-        if (expiresAt) {
-          dispatch(setLockExpiresAt(new Date(expiresAt)));
-        }
-
-        toast.success(`Seat ${seat.seatNumber} locked for 10 minutes`);
-      } catch (error: any) {
-        // Revert selection if lock fails
-        dispatch(toggleSeat(seat.seatNumber));
-        console.error('Failed to lock seat:', error);
-        toast.error(error?.data?.message || 'Failed to lock seat. Please try again.');
-        refetch(); // Refresh to get current status
-      }
+      // Select seat (simple selection without backend locking for now)
+      dispatch(toggleSeat(seat.seatNumber));
+      setLocalSelectedSeats([...localSelectedSeats, seat.seatNumber]);
+      toast.success(`Seat ${seat.seatNumber} selected`);
     }
   };
 
   const getSeatClassName = (seat: Seat) => {
-    const isSelected = selectedSeats.includes(seat.seatNumber);
+    const isSelected = localSelectedSeats.includes(seat.seatNumber);
     const status = isSelected ? 'selected' : seat.status;
 
-    return cn('rounded-lg p-3 font-medium transition-all relative', {
-      'border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 cursor-pointer': status === 'available',
-      'bg-blue-500 text-white cursor-pointer hover:bg-blue-600': status === 'selected',
-      'bg-gray-300 text-gray-500 cursor-not-allowed': status === 'booked',
-      'bg-yellow-300 text-yellow-800 cursor-not-allowed': status === 'locked',
-      'ring-2 ring-green-500': seat.position.isWindow,
-    });
+    return cn(
+      'w-14 h-14 rounded-md font-semibold text-sm transition-all relative flex items-center justify-center border-2',
+      {
+        // Available - white with green border (matches reference UI)
+        'bg-white border-green-500 hover:bg-green-50 cursor-pointer text-gray-800': status === 'available',
+        // Selected - orange/yellow (matches reference UI)
+        'bg-orange-400 border-orange-500 text-white cursor-pointer': status === 'selected',
+        // Booked - red (matches reference UI)
+        'bg-red-500 border-red-600 text-white cursor-not-allowed': status === 'booked',
+        // Locked - yellow (locked by others)
+        'bg-yellow-400 border-yellow-500 text-gray-800 cursor-not-allowed': status === 'locked',
+      }
+    );
   };
 
   const getSeatTooltip = (seat: Seat) => {
-    const isSelected = selectedSeats.includes(seat.seatNumber);
+    const isSelected = localSelectedSeats.includes(seat.seatNumber);
     const status = isSelected ? 'selected' : seat.status;
 
     if (status === 'booked') return 'Already booked';
@@ -198,43 +188,53 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Select Your Seats</h3>
-        <div className="flex items-center gap-2 text-xs text-gray-600">
-          <div className="w-3 h-3 rounded border-2 border-green-500"></div>
-          <span>Window Seat</span>
-        </div>
+      <div className="mb-4">
+        <p className="text-sm text-gray-600 mb-3">Click on available seats to reserve your seat.</p>
       </div>
 
       {/* Driver Section */}
       <div className="mb-6">
-        <div className="bg-gray-800 text-white py-2 px-4 rounded-t-lg text-center font-medium">🚗 Driver</div>
+        <div className="bg-gray-800 text-white py-3 px-4 rounded-lg text-center font-medium flex items-center justify-center gap-2">
+          <span className="text-2xl">🚗</span>
+          <span>Driver</span>
+        </div>
       </div>
 
-      {/* Seat Grid */}
-      <div className="space-y-6">
+      {/* Seat Grid - Matches Reference UI */}
+      <div className="space-y-8">
         {layout?.decks?.includes('lower') && (
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Lower Deck</h4>
-            <div className="grid gap-2">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-semibold text-gray-700 uppercase">Lower Deck</h4>
+              <Badge variant="outline" className="text-xs">
+                {seats.filter((s) => s.deck === 'lower' && s.status === 'available').length} available
+              </Badge>
+            </div>
+            <div className="space-y-3">
               {Object.entries(groupedSeats)
                 .filter(([key]) => key.startsWith('lower'))
                 .sort(([a], [b]) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]))
                 .map(([key, rowSeats]) => (
-                  <div key={key} className="grid grid-cols-4 gap-2">
+                  <div key={key} className="flex items-center gap-3 justify-center">
                     {rowSeats
                       .sort((a, b) => a.column - b.column)
                       .map((seat) => (
-                        <button
-                          key={seat.seatNumber}
-                          onClick={() => handleSeatClick(seat)}
-                          disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking}
-                          className={getSeatClassName(seat)}
-                          title={getSeatTooltip(seat)}
-                        >
-                          <span className="text-xs">{seat.seatNumber}</span>
-                          {seat.status === 'locked' && <span className="absolute top-1 right-1 text-xs">🔒</span>}
-                        </button>
+                        <div key={seat.seatNumber} className="relative">
+                          <button
+                            onClick={() => handleSeatClick(seat)}
+                            disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking}
+                            className={getSeatClassName(seat)}
+                            title={getSeatTooltip(seat)}
+                          >
+                            <span className="font-bold">{seat.seatNumber}</span>
+                          </button>
+                          {seat.position.isWindow && (
+                            <div
+                              className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"
+                              title="Window seat"
+                            />
+                          )}
+                        </div>
                       ))}
                   </div>
                 ))}
@@ -244,26 +244,37 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
 
         {layout?.decks?.includes('upper') && (
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Upper Deck</h4>
-            <div className="grid gap-2">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-semibold text-gray-700 uppercase">Upper Deck</h4>
+              <Badge variant="outline" className="text-xs">
+                {seats.filter((s) => s.deck === 'upper' && s.status === 'available').length} available
+              </Badge>
+            </div>
+            <div className="space-y-3">
               {Object.entries(groupedSeats)
                 .filter(([key]) => key.startsWith('upper'))
                 .sort(([a], [b]) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]))
                 .map(([key, rowSeats]) => (
-                  <div key={key} className="grid grid-cols-4 gap-2">
+                  <div key={key} className="flex items-center gap-3 justify-center">
                     {rowSeats
                       .sort((a, b) => a.column - b.column)
                       .map((seat) => (
-                        <button
-                          key={seat.seatNumber}
-                          onClick={() => handleSeatClick(seat)}
-                          disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking}
-                          className={getSeatClassName(seat)}
-                          title={getSeatTooltip(seat)}
-                        >
-                          <span className="text-xs">{seat.seatNumber}</span>
-                          {seat.status === 'locked' && <span className="absolute top-1 right-1 text-xs">🔒</span>}
-                        </button>
+                        <div key={seat.seatNumber} className="relative">
+                          <button
+                            onClick={() => handleSeatClick(seat)}
+                            disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking}
+                            className={getSeatClassName(seat)}
+                            title={getSeatTooltip(seat)}
+                          >
+                            <span className="font-bold">{seat.seatNumber}</span>
+                          </button>
+                          {seat.position.isWindow && (
+                            <div
+                              className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"
+                              title="Window seat"
+                            />
+                          )}
+                        </div>
                       ))}
                   </div>
                 ))}
@@ -273,24 +284,34 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
 
         {/* Single deck layout */}
         {!layout?.decks && (
-          <div className="grid gap-2">
+          <div className="space-y-3">
             {Object.entries(groupedSeats)
               .sort(([a], [b]) => parseInt(a) - parseInt(b))
               .map(([row, rowSeats]) => (
-                <div key={row} className="grid grid-cols-4 gap-2">
+                <div key={row} className="flex items-center gap-3 justify-center">
                   {rowSeats
                     .sort((a, b) => a.column - b.column)
-                    .map((seat) => (
-                      <button
-                        key={seat.seatNumber}
-                        onClick={() => handleSeatClick(seat)}
-                        disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking}
-                        className={getSeatClassName(seat)}
-                        title={getSeatTooltip(seat)}
-                      >
-                        <span className="text-xs">{seat.seatNumber}</span>
-                        {seat.status === 'locked' && <span className="absolute top-1 right-1 text-xs">🔒</span>}
-                      </button>
+                    .map((seat, idx) => (
+                      <React.Fragment key={seat.seatNumber}>
+                        <div className="relative">
+                          <button
+                            onClick={() => handleSeatClick(seat)}
+                            disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking}
+                            className={getSeatClassName(seat)}
+                            title={getSeatTooltip(seat)}
+                          >
+                            <span className="font-bold">{seat.seatNumber}</span>
+                          </button>
+                          {seat.position.isWindow && (
+                            <div
+                              className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"
+                              title="Window seat"
+                            />
+                          )}
+                        </div>
+                        {/* Add aisle gap after 2nd column */}
+                        {seat.column === 2 && idx < rowSeats.length - 1 && <div className="w-8" />}
+                      </React.Fragment>
                     ))}
                 </div>
               ))}
@@ -302,13 +323,13 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
       <div className="mt-6 pt-4 border-t">
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-600">
-            Selected: {selectedSeats.length} seat{selectedSeats.length !== 1 ? 's' : ''}
+            Selected: {localSelectedSeats.length} seat{localSelectedSeats.length !== 1 ? 's' : ''}
           </span>
-          {selectedSeats.length > 0 && (
+          {localSelectedSeats.length > 0 && (
             <span className="font-bold text-blue-600">
               Total:{' '}
               {seats
-                .filter((s) => selectedSeats.includes(s.seatNumber))
+                .filter((s) => localSelectedSeats.includes(s.seatNumber))
                 .reduce((sum, s) => sum + s.price, 0)
                 .toLocaleString()}{' '}
               ₫

@@ -3,7 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { useGetRoutesQuery, useCreateRouteMutation, useDeleteRouteMutation } from '@/lib/store/services/api';
+import {
+  useGetRoutesQuery,
+  useCreateRouteMutation,
+  useDeleteRouteMutation,
+  useUpdateRouteMutation,
+} from '@/lib/store/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,14 +39,17 @@ export default function RouteManagement() {
   });
   const [createRoute, { isLoading: isCreating }] = useCreateRouteMutation();
   const [deleteRoute, { isLoading: isDeleting }] = useDeleteRouteMutation();
+  const [updateRoute, { isLoading: isUpdating }] = useUpdateRouteMutation();
 
   const routes = data?.results || [];
   const totalPages = data?.totalPages || 1;
   const totalResults = data?.totalResults || 0;
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+  const [filters, setFilters] = useState({ search: '' });
   const [formData, setFormData] = useState({
     routeName: '',
     origin: {
@@ -65,23 +73,61 @@ export default function RouteManagement() {
     }>,
   });
 
+  const validateRoute = () => {
+    if (!formData.routeName || !formData.origin.city || !formData.destination.city) {
+      toast.error('Route name, origin city, and destination city are required');
+      return false;
+    }
+    if (formData.distance <= 0 || formData.estimatedDuration <= 0) {
+      toast.error('Distance and duration must be greater than zero');
+      return false;
+    }
+    const hasInvalidStop = formData.stops.some(
+      (stop) => !stop.city || stop.stopOrder <= 0 || stop.minutesFromStart < 0
+    );
+    if (hasInvalidStop) {
+      toast.error('Each stop needs a city, positive order, and non-negative minutes');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
     try {
+      if (!validateRoute()) return;
       await createRoute(formData).unwrap();
       toast.success('Route created successfully');
       setDialogOpen(false);
-      // Reset form
-      setFormData({
-        routeName: '',
-        origin: { city: '', state: '', landmark: '' },
-        destination: { city: '', state: '', landmark: '' },
-        distance: 0,
-        estimatedDuration: 0,
-        stops: [],
-      });
+      resetForm();
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to create route');
     }
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedRouteId) return;
+    try {
+      if (!validateRoute()) return;
+      await updateRoute({ id: selectedRouteId, ...formData }).unwrap();
+      toast.success('Route updated successfully');
+      setDialogOpen(false);
+      resetForm();
+      setSelectedRouteId(null);
+      setIsEditMode(false);
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to update route');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      routeName: '',
+      origin: { city: '', state: '', landmark: '' },
+      destination: { city: '', state: '', landmark: '' },
+      distance: 0,
+      estimatedDuration: 0,
+      stops: [],
+    });
   };
 
   const handleDelete = async () => {
@@ -113,7 +159,7 @@ export default function RouteManagement() {
   };
 
   const removeStop = (index: number) => {
-    const newStops = formData.stops.filter((_, i) => i !== index);
+    const newStops = formData.stops.filter((_, i) => i !== index).map((stop, idx) => ({ ...stop, stopOrder: idx + 1 }));
     setFormData({ ...formData, stops: newStops });
   };
 
@@ -158,58 +204,118 @@ export default function RouteManagement() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Routes ({totalResults})</CardTitle>
-          <Button onClick={() => setDialogOpen(true)}>+ Add Route</Button>
+          <Button
+            onClick={() => {
+              resetForm();
+              setIsEditMode(false);
+              setDialogOpen(true);
+            }}
+          >
+            + Add Route
+          </Button>
         </CardHeader>
         <CardContent>
-          {routes.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No routes yet</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Route Name</TableHead>
-                  <TableHead>Origin</TableHead>
-                  <TableHead>Destination</TableHead>
-                  <TableHead>Distance</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Stops</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {routes.map((route: any) => (
-                  <TableRow key={route.id}>
-                    <TableCell className="font-medium">{route.routeName}</TableCell>
-                    <TableCell>
-                      {route.origin.city}, {route.origin.state}
-                    </TableCell>
-                    <TableCell>
-                      {route.destination.city}, {route.destination.state}
-                    </TableCell>
-                    <TableCell>{route.distance} km</TableCell>
-                    <TableCell>
-                      {Math.floor(route.estimatedDuration / 60)}h {route.estimatedDuration % 60}m
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{route.stops?.length || 0} stops</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedRouteId(route.id);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <Input
+              placeholder="Search route, origin, destination"
+              value={filters.search}
+              onChange={(e) => setFilters({ search: e.target.value })}
+            />
+            <div className="text-sm text-gray-600 flex items-center">Showing {routes.length} loaded routes</div>
+            <Button variant="outline" onClick={() => setFilters({ search: '' })}>
+              Reset Filters
+            </Button>
+          </div>
+
+          {(() => {
+            const filtered = routes.filter((route: any) => {
+              if (!filters.search) return true;
+              const query = filters.search.toLowerCase();
+              return (
+                route.routeName.toLowerCase().includes(query) ||
+                route.origin.city.toLowerCase().includes(query) ||
+                route.destination.city.toLowerCase().includes(query)
+              );
+            });
+
+            if (filtered.length === 0) {
+              return <p className="text-gray-500 text-center py-8">No routes match the filters</p>;
+            }
+
+            return (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Route Name</TableHead>
+                    <TableHead>Origin</TableHead>
+                    <TableHead>Destination</TableHead>
+                    <TableHead>Distance</TableHead>
+                    <TableHead>Duration</TableHead>
+                    <TableHead>Stops</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((route: any) => (
+                    <TableRow key={route.id}>
+                      <TableCell className="font-medium">{route.routeName}</TableCell>
+                      <TableCell>
+                        {route.origin.city}, {route.origin.state}
+                      </TableCell>
+                      <TableCell>
+                        {route.destination.city}, {route.destination.state}
+                      </TableCell>
+                      <TableCell>{route.distance} km</TableCell>
+                      <TableCell>
+                        {Math.floor(route.estimatedDuration / 60)}h {route.estimatedDuration % 60}m
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{route.stops?.length || 0} stops</Badge>
+                      </TableCell>
+                      <TableCell className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setIsEditMode(true);
+                            setSelectedRouteId(route.id);
+                            setFormData({
+                              routeName: route.routeName || '',
+                              origin: route.origin || { city: '', state: '', landmark: '' },
+                              destination: route.destination || { city: '', state: '', landmark: '' },
+                              distance: route.distance || 0,
+                              estimatedDuration: route.estimatedDuration || 0,
+                              stops:
+                                route.stops?.map((stop: any, idx: number) => ({
+                                  city: stop.city || '',
+                                  state: stop.state || '',
+                                  stopOrder: stop.stopOrder || idx + 1,
+                                  minutesFromStart: stop.minutesFromStart || 0,
+                                  stopType: stop.stopType || 'both',
+                                })) || [],
+                            });
+                            setDialogOpen(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedRouteId(route.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            );
+          })()}
 
           {/* Pagination */}
           {totalPages > 1 && (
@@ -262,8 +368,12 @@ export default function RouteManagement() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add New Route</DialogTitle>
-            <DialogDescription>Create a new bus route with origin, destination, and optional stops</DialogDescription>
+            <DialogTitle>{isEditMode ? 'Edit Route' : 'Add New Route'}</DialogTitle>
+            <DialogDescription>
+              {isEditMode
+                ? 'Update route details, distance, duration, and stops'
+                : 'Create a new bus route with origin, destination, and optional stops'}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -548,9 +658,15 @@ export default function RouteManagement() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={isCreating}>
-              {isCreating ? 'Creating...' : 'Create Route'}
-            </Button>
+            {isEditMode ? (
+              <Button onClick={handleUpdate} disabled={isUpdating}>
+                {isUpdating ? 'Saving...' : 'Save Changes'}
+              </Button>
+            ) : (
+              <Button onClick={handleSubmit} disabled={isCreating}>
+                {isCreating ? 'Creating...' : 'Create Route'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

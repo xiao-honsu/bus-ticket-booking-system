@@ -7,12 +7,29 @@ import { useEffect, useState } from 'react';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
+// Build URL helper - handle both absolute URLs and relative paths
+const buildUrl = (path: string) => {
+  if (BASE_URL.startsWith('http')) {
+    return new URL(path, BASE_URL).toString();
+  }
+  // For relative paths like '/api/mock', skip auth calls since mock doesn't have auth endpoints
+  return null;
+};
+
 export function AuthInitializer({ children }: { children: React.ReactNode }) {
   const [isChecking, setIsChecking] = useState(true);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    fetch(new URL('/api/v1/auth/refresh', BASE_URL).toString(), {
+    const refreshUrl = buildUrl('/api/v1/auth/refresh');
+
+    // Skip auth initialization when using mock API
+    if (!refreshUrl) {
+      setIsChecking(false);
+      return;
+    }
+
+    fetch(refreshUrl, {
       method: 'POST',
       credentials: 'include',
     }).then(async (response) => {
@@ -20,7 +37,13 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
         const data = await response.json();
         dispatch(setAccessToken(data?.data?.tokens?.access?.token));
 
-        const responseMe = await fetch(new URL('api/v1/auth/me', BASE_URL).toString(), {
+        const meUrl = buildUrl('/api/v1/auth/me');
+        if (!meUrl) {
+          setIsChecking(false);
+          return;
+        }
+
+        const responseMe = await fetch(meUrl, {
           headers: {
             Authorization: `Bearer ${data?.data?.tokens?.access?.token}`,
           },
