@@ -70,6 +70,9 @@ export default function BookingPage({ params }: BookingPageProps) {
       return;
     }
 
+    console.log('Selected Seats:', selectedSeats);
+    console.log('Passengers:', passengers);
+
     if (passengers.length !== selectedSeats.length) {
       toast.error('Please fill in passenger details for all selected seats');
       return;
@@ -146,7 +149,7 @@ export default function BookingPage({ params }: BookingPageProps) {
             {trip.availableSeats || 0} / {trip.bus?.totalSeats || 40} available
           </span>
           <span>•</span>
-          <span className="text-gray-500">Base Fare: {trip.pricePerSeat?.toLocaleString() || trip.price} ₫</span>
+          <span className="text-gray-500">Base Fare: {trip.pricePerSeat?.toLocaleString() || 0} ₫</span>
         </div>
       </div>
 
@@ -211,21 +214,21 @@ export default function BookingPage({ params }: BookingPageProps) {
             <CardContent className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Basic Fare:</span>
-                <span className="font-medium">{(trip.pricePerSeat || trip.price)?.toLocaleString()} ₫</span>
+                <span className="font-medium">{trip.pricePerSeat?.toLocaleString() || 0} ₫</span>
               </div>
               {selectedSeats.length > 0 && (
                 <>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Seats × {selectedSeats.length}:</span>
                     <span className="font-medium">
-                      {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
+                      {((trip.pricePerSeat || 0) * selectedSeats.length).toLocaleString()} ₫
                     </span>
                   </div>
                   <div className="border-t pt-3">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold">Total Price:</span>
                       <span className="text-xl font-bold text-blue-600">
-                        {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
+                        {((trip.pricePerSeat || 0) * selectedSeats.length).toLocaleString()} ₫
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">(Including all taxes)</p>

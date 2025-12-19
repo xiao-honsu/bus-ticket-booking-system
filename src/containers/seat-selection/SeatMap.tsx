@@ -145,7 +145,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
       return `Locked until ${lockTime}`;
     }
     if (status === 'selected') return `Selected - ${seat.price.toLocaleString()} ₫`;
-    return `${seat.seatNumber} - ${seat.price.toLocaleString()} ₫${seat.position.isWindow ? ' (Window)' : ''}`;
+    return `${seat.seatNumber} - ${seat.price.toLocaleString()} ₫${seat.position?.isWindow ? ' (Window)' : ''}`;
   };
 
   if (isLoading) {
@@ -228,7 +228,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
                           >
                             <span className="font-bold">{seat.seatNumber}</span>
                           </button>
-                          {seat.position.isWindow && (
+                          {seat.position?.isWindow && (
                             <div
                               className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"
                               title="Window seat"
@@ -268,7 +268,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
                           >
                             <span className="font-bold">{seat.seatNumber}</span>
                           </button>
-                          {seat.position.isWindow && (
+                          {seat.position?.isWindow && (
                             <div
                               className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"
                               title="Window seat"
@@ -302,7 +302,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
                           >
                             <span className="font-bold">{seat.seatNumber}</span>
                           </button>
-                          {seat.position.isWindow && (
+                          {seat.position?.isWindow && (
                             <div
                               className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"
                               title="Window seat"
