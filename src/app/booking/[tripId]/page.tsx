@@ -122,152 +122,229 @@ export default function BookingPage({ params }: BookingPageProps) {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
-          ← Back
-        </Button>
-        <h1 className="text-2xl font-bold mb-2">Select Your Seats</h1>
-        <div className="flex items-center gap-4 text-sm text-gray-600">
-          <span className="font-medium">
-            {trip.route?.origin?.city || trip.route?.origin} →{' '}
-            {trip.route?.destination?.city || trip.route?.destination}
-          </span>
-          <span>•</span>
-          <span>
-            {new Date(trip.departureTime).toLocaleDateString('en-US', {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </span>
-          <span>•</span>
-          <span className="text-gray-500">
-            {trip.availableSeats || 0} / {trip.bus?.totalSeats || 40} available
-          </span>
-          <span>•</span>
-          <span className="text-gray-500">Base Fare: {trip.pricePerSeat?.toLocaleString() || trip.price} ₫</span>
-        </div>
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Animated Background Shapes */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-1000" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Seat Map - Left Side */}
-        <div className="lg:col-span-2 space-y-6">
-          <SeatMap tripId={tripId} totalSeats={trip.bus?.totalSeats || 40} />
-        </div>
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        {/* Header Section */}
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="mb-4 hover:bg-white/50 transition-all duration-300"
+          >
+            ← Back to Search
+          </Button>
 
-        {/* Booking Summary - Right Side */}
-        <aside className="lg:col-span-1 space-y-4">
-          <SeatLockTimer />
-
-          {/* Your Destination */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Your Destination</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center text-sm">
-                <div>
-                  <p className="text-gray-500 text-xs">From</p>
-                  <p className="font-semibold">{trip.route?.origin?.city || trip.route?.origin}</p>
-                  <p className="text-xs text-gray-600">
-                    {new Date(trip.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-gray-500 text-xs">To</p>
-                  <p className="font-semibold">{trip.route?.destination?.city || trip.route?.destination}</p>
-                  <p className="text-xs text-gray-600">
-                    {new Date(trip.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-white/20">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
+                  🎫 Choose Your Perfect Seats
+                </h1>
+                <div className="flex flex-wrap items-center gap-4 text-sm">
+                  <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full">
+                    <span className="text-2xl">🚌</span>
+                    <span className="font-semibold text-blue-900">
+                      {trip.route?.origin?.city || trip.route?.origin} →{' '}
+                      {trip.route?.destination?.city || trip.route?.destination}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-full">
+                    <span className="text-xl">📅</span>
+                    <span className="font-medium text-purple-900">
+                      {new Date(trip.departureTime).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full">
+                    <span className="text-xl">💺</span>
+                    <span className="font-medium text-green-900">
+                      {trip.availableSeats || 0} / {trip.bus?.totalSeats || 40} seats left
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-full">
+                    <span className="text-xl">💰</span>
+                    <span className="font-medium text-amber-900">
+                      From {trip.pricePerSeat?.toLocaleString() || trip.price} ₫
+                    </span>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+        </div>
 
-          {/* Selected Seats */}
-          {selectedSeats.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Selected Seats</CardTitle>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Seat Map - Left Side */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="transform transition-all duration-500 hover:scale-[1.01]">
+              <SeatMap tripId={tripId} totalSeats={trip.bus?.totalSeats || 40} />
+            </div>
+          </div>
+
+          {/* Booking Summary - Right Side */}
+          <aside className="lg:col-span-1 space-y-4">
+            {/* Timer */}
+            <div className="transform transition-all duration-300 hover:scale-105">
+              <SeatLockTimer />
+            </div>
+
+            {/* Trip Info Card */}
+            <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white border-0 shadow-xl overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
+              <CardHeader className="pb-3 relative z-10">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <span className="text-2xl">✈️</span>
+                  Your Journey
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {selectedSeats.map((seat) => (
-                    <Badge key={seat} variant="default" className="text-sm px-3 py-1">
-                      {seat}
-                    </Badge>
-                  ))}
+              <CardContent className="space-y-4 relative z-10">
+                <div className="flex justify-between items-center">
+                  <div className="flex-1">
+                    <p className="text-white/70 text-xs mb-1">Departure</p>
+                    <p className="font-bold text-lg">{trip.route?.origin?.city || trip.route?.origin}</p>
+                    <p className="text-sm text-white/90">
+                      {new Date(trip.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <div className="px-4">
+                    <div className="text-3xl animate-bounce">→</div>
+                  </div>
+                  <div className="flex-1 text-right">
+                    <p className="text-white/70 text-xs mb-1">Arrival</p>
+                    <p className="font-bold text-lg">{trip.route?.destination?.city || trip.route?.destination}</p>
+                    <p className="text-sm text-white/90">
+                      {new Date(trip.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          )}
 
-          {/* Fare Details */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Fare Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Basic Fare:</span>
-                <span className="font-medium">{(trip.pricePerSeat || trip.price)?.toLocaleString()} ₫</span>
-              </div>
-              {selectedSeats.length > 0 && (
-                <>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Seats × {selectedSeats.length}:</span>
-                    <span className="font-medium">
-                      {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
-                    </span>
+            {/* Selected Seats */}
+            {selectedSeats.length > 0 && (
+              <Card className="border-2 border-green-200 bg-green-50/50 backdrop-blur-sm shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2 text-green-900">
+                    <span className="text-xl">✅</span>
+                    Your Selected Seats
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedSeats.map((seat, index) => (
+                      <Badge
+                        key={seat}
+                        className="text-sm px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0 shadow-md animate-in fade-in-50 slide-in-from-bottom-2"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        💺 {seat}
+                      </Badge>
+                    ))}
                   </div>
-                  <div className="border-t pt-3">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">Total Price:</span>
-                      <span className="text-xl font-bold text-blue-600">
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Fare Details */}
+            <Card className="bg-white/80 backdrop-blur-sm border-2 border-blue-100 shadow-lg">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <span className="text-xl">💳</span>
+                  Fare Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Base Fare per seat:</span>
+                  <span className="font-semibold">{(trip.pricePerSeat || trip.price)?.toLocaleString()} ₫</span>
+                </div>
+                {selectedSeats.length > 0 && (
+                  <>
+                    <div className="flex justify-between text-sm bg-blue-50 p-3 rounded-lg">
+                      <span className="text-gray-700 font-medium">Selected Seats × {selectedSeats.length}:</span>
+                      <span className="font-semibold text-blue-900">
                         {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">(Including all taxes)</p>
-                  </div>
-                </>
+                    <div className="border-t-2 border-dashed border-gray-200 pt-4">
+                      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-xl text-white">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-lg">Total Amount:</span>
+                          <span className="text-2xl font-black">
+                            {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
+                          </span>
+                        </div>
+                        <p className="text-xs text-white/80 mt-2">✓ All taxes included</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Legend */}
+            <div className="transform transition-all duration-300 hover:scale-105">
+              <SeatLegend />
+            </div>
+
+            {/* Checkout Button */}
+            <Button
+              onClick={handleContinueToCheckout}
+              disabled={selectedSeats.length === 0}
+              size="lg"
+              className={`w-full font-bold py-7 text-lg rounded-xl shadow-xl transition-all duration-300 transform hover:scale-105 ${
+                selectedSeats.length === 0
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white animate-pulse hover:animate-none'
+              }`}
+            >
+              {selectedSeats.length === 0 ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span>👆</span> Select Your Seats First
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <span>🎉</span> Continue to Checkout ({selectedSeats.length} seat{selectedSeats.length > 1 ? 's' : ''}
+                  )
+                </span>
               )}
-            </CardContent>
-          </Card>
+            </Button>
 
-          {/* Legend */}
-          <SeatLegend />
-
-          {/* Checkout Button */}
-          <Button
-            onClick={handleContinueToCheckout}
-            disabled={selectedSeats.length === 0}
-            size="lg"
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-6 text-base uppercase"
-          >
-            {selectedSeats.length === 0 ? 'Select Seats' : 'Proceed to Checkout'}
-          </Button>
-
-          {selectedSeats.length === 0 && (
-            <p className="text-xs text-center text-gray-500">Please select at least one seat to continue</p>
-          )}
-        </aside>
-      </div>
-
-      {/* Passenger Form Below */}
-      {selectedSeats.length > 0 && (
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Passenger Details</CardTitle>
-              <p className="text-sm text-gray-600">Provide information for all passengers</p>
-            </CardHeader>
-            <CardContent>
-              <PassengerForm />
-            </CardContent>
-          </Card>
+            {selectedSeats.length === 0 && (
+              <p className="text-sm text-center text-gray-500 animate-pulse">
+                💡 Tip: Click on available seats to select them
+              </p>
+            )}
+          </aside>
         </div>
-      )}
+
+        {/* Passenger Form Below */}
+        {selectedSeats.length > 0 && (
+          <div className="mt-8 animate-in slide-in-from-bottom-4 duration-500">
+            <Card className="bg-white/80 backdrop-blur-sm border-2 border-purple-100 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50 border-b">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <span className="text-2xl">👤</span>
+                  Passenger Information
+                </CardTitle>
+                <p className="text-sm text-gray-600 mt-2">📝 Please provide accurate details for all passengers</p>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <PassengerForm />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
