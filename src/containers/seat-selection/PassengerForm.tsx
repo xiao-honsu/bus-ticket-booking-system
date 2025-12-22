@@ -37,9 +37,25 @@ function SinglePassengerForm({ seatNumber, onUpdate, initialData }: PassengerFor
     },
   });
 
+  // Update state immediately when form has valid values (including on mount)
   useEffect(() => {
-    const subscription = form.watch((value) => {
-      if (form.formState.isValid) {
+    const validateAndUpdate = async () => {
+      const isValid = await form.trigger(); // Trigger validation
+      if (isValid) {
+        const values = form.getValues();
+        onUpdate(values);
+      }
+    };
+
+    // Call on mount to capture default/initial values
+    validateAndUpdate();
+  }, []);
+
+  // Watch for changes and update state
+  useEffect(() => {
+    const subscription = form.watch(async (value) => {
+      const isValid = await form.trigger();
+      if (isValid && value.name && value.age && value.gender) {
         onUpdate(value as z.infer<typeof passengerSchema>);
       }
     });
@@ -72,7 +88,12 @@ function SinglePassengerForm({ seatNumber, onUpdate, initialData }: PassengerFor
                 <FormItem>
                   <FormLabel>Age *</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Age" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="Age"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

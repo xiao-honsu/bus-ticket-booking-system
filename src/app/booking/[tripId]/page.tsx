@@ -70,6 +70,9 @@ export default function BookingPage({ params }: BookingPageProps) {
       return;
     }
 
+    console.log('Selected Seats:', selectedSeats);
+    console.log('Passengers:', passengers);
+
     if (passengers.length !== selectedSeats.length) {
       toast.error('Please fill in passenger details for all selected seats');
       return;
