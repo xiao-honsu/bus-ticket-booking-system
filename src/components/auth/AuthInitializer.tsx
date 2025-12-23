@@ -32,30 +32,36 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
     fetch(refreshUrl, {
       method: 'POST',
       credentials: 'include',
-    }).then(async (response) => {
-      if (response.ok) {
-        const data = await response.json();
-        dispatch(setAccessToken(data?.data?.tokens?.access?.token));
+    })
+      .then(async (response) => {
+        if (response.ok) {
+          const data = await response.json();
+          dispatch(setAccessToken(data?.data?.tokens?.access?.token));
 
-        const meUrl = buildUrl('/api/v1/auth/me');
-        if (!meUrl) {
-          setIsChecking(false);
-          return;
-        }
+          const meUrl = buildUrl('/api/v1/auth/me');
+          if (!meUrl) {
+            setIsChecking(false);
+            return;
+          }
 
-        const responseMe = await fetch(meUrl, {
-          headers: {
-            Authorization: `Bearer ${data?.data?.tokens?.access?.token}`,
-          },
-          credentials: 'include',
-        });
-        if (responseMe.ok) {
-          const userData = await responseMe.json();
-          dispatch(setUser(userData.data?.user as User));
+          const responseMe = await fetch(meUrl, {
+            headers: {
+              Authorization: `Bearer ${data?.data?.tokens?.access?.token}`,
+            },
+            credentials: 'include',
+          });
+          if (responseMe.ok) {
+            const userData = await responseMe.json();
+            dispatch(setUser(userData.data?.user as User));
+          }
         }
-      }
-      setIsChecking(false);
-    });
+        setIsChecking(false);
+      })
+      .catch((error) => {
+        // Handle network errors gracefully (e.g., backend not running)
+        console.warn('Auth refresh failed:', error.message);
+        setIsChecking(false);
+      });
   }, [dispatch]);
 
   if (isChecking) {
