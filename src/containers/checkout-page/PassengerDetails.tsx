@@ -31,9 +31,32 @@ export default function PassengerDetails() {
     },
   });
 
+  // Update state immediately when form has valid values (including on mount)
   useEffect(() => {
-    const subscription = form.watch((value) => {
-      if (form.formState.isValid && value.email && value.phone) {
+    const validateAndUpdate = async () => {
+      const isValid = await form.trigger(); // Trigger validation
+      if (isValid) {
+        const values = form.getValues();
+        if (values.email && values.phone) {
+          dispatch(
+            setContactInfo({
+              email: values.email,
+              phone: values.phone,
+            })
+          );
+        }
+      }
+    };
+
+    // Call on mount to capture default/initial values
+    validateAndUpdate();
+  }, []);
+
+  // Watch for changes and update state
+  useEffect(() => {
+    const subscription = form.watch(async (value) => {
+      const isValid = await form.trigger();
+      if (isValid && value.email && value.phone) {
         dispatch(
           setContactInfo({
             email: value.email,

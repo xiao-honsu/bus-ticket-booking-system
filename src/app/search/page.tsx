@@ -293,9 +293,7 @@ function TripCard({ trip }: { trip: any }) {
         {/* Right: Pricing & CTA */}
         <div className="md:w-48 flex flex-col justify-between items-end text-right">
           <div>
-            <p className="text-3xl font-bold text-blue-600">
-              {trip.pricePerSeat?.toLocaleString() || trip.price?.toLocaleString()} ₫
-            </p>
+            <p className="text-3xl font-bold text-blue-600">{trip.pricePerSeat?.toLocaleString() || 0} ₫</p>
             <p className="text-xs text-gray-600">per seat</p>
           </div>
 

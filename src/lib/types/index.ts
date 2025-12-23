@@ -61,7 +61,7 @@ export interface Passenger {
   age: number;
   gender: 'male' | 'female' | 'other';
   seatNumber: string;
-  seatPrice: number;
+  seatPrice?: number; // Optional to match backend
   documentId?: string;
   phoneNumber?: string;
 }
@@ -96,6 +96,16 @@ export interface Booking {
 }
 
 // Route types
+export interface Location {
+  city: string;
+  state: string;
+  landmark?: string;
+  coordinates?: [number, number];
+  stopOrder?: number;
+  minutesFromStart?: number;
+  stopType?: 'pickup' | 'dropoff' | 'both';
+}
+
 export interface RouteStop {
   name: string;
   sequence: number;
@@ -105,8 +115,8 @@ export interface RouteStop {
 export interface Route {
   id: string;
   name: string;
-  origin: string;
-  destination: string;
+  origin: Location;
+  destination: Location;
   distance: number;
   estimatedDuration: number;
   stops: RouteStop[];
@@ -146,9 +156,12 @@ export interface Trip {
   operatorId: string;
   departureTime: Date;
   arrivalTime: Date;
-  basePrice: number;
+  pricePerSeat: number; // Match backend field name
+  seatPricing?: Record<string, number>; // Optional seat-specific pricing
   availableSeats: number;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  bookedSeats?: string[];
+  seatStatus?: Record<string, 'available' | 'booked' | 'locked'>;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
   route?: Route;
   bus?: Bus;
   createdAt: Date;
@@ -198,12 +211,84 @@ export interface PaginatedResponse<T> {
   totalResults: number;
 }
 
-export interface CreateBookingRequest {
-  tripId: string;
+// Booking types - Payment Info
+export interface PaymentInfo {
+  paymentReference?: string;
+  method?: 'momo' | 'zalopay' | 'payos' | 'card' | 'bank_transfer';
+  amount: number;
+  currency: string;
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  transactionId?: string;
+  gatewayResponse?: any;
+  paidAt?: Date;
+}
+
+export interface Booking {
+  id: string;
+  referenceNumber: string;
+  user?: string;
+  trip: string | Trip;
+  guestEmail?: string;
+  guestPhone?: string;
   passengers: Passenger[];
+  totalPassengers: number;
+  totalAmount: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  expiresAt?: Date;
+  confirmedAt?: Date;
+  contactPhone: string;
+  contactEmail: string;
+  cancellationReason?: string;
+  cancelledAt?: Date;
+  payment: PaymentInfo;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Create Booking Request (what frontend sends to backend)
+// MUST match backend validation schema exactly
+export interface CreateBookingRequest {
+  trip: string; // Backend expects 'trip', not 'tripId'
+  passengers: Array<{
+    name: string;
+    age: number;
+    gender: 'male' | 'female' | 'other';
+    seatNumber: string;
+    // Note: Only these 4 fields are allowed by backend validation
+    // documentId, phoneNumber, seatPrice are NOT in validation schema
+  }>;
   contactEmail: string;
   contactPhone: string;
-  paymentMethod: 'momo' | 'zalopay' | 'payos' | 'card' | 'bank_transfer';
+  totalAmount: number;
+  sessionId?: string; // For seat lock verification
+}
+
+// Create Booking Response (what backend returns)
+export interface CreateBookingResponse {
+  id: string;
+  referenceNumber: string;
+  trip: string;
+  passengers: Passenger[];
+  totalPassengers: number;
+  totalAmount: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  contactPhone: string;
+  contactEmail: string;
+  payment: PaymentInfo;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Guest Booking Request (no authentication)
+export interface CreateGuestBookingRequest {
+  trip: string;
+  guestEmail: string;
+  guestPhone: string;
+  passengers: Passenger[];
+  contactPhone: string;
+  contactEmail: string;
+  totalAmount: number;
+  sessionId?: string;
 }
 
 export interface ApiError {

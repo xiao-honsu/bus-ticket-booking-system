@@ -42,7 +42,8 @@ export default function BookingSummary() {
     );
   }
 
-  const totalPrice = trip.price * selectedSeats.length;
+  const pricePerSeat = trip.pricePerSeat || 0;
+  const totalPrice = pricePerSeat * selectedSeats.length;
 
   return (
     <Card>
@@ -53,7 +54,7 @@ export default function BookingSummary() {
         <div className="flex justify-between">
           <span className="text-gray-600">Route:</span>
           <span className="font-medium">
-            {trip.route?.origin} → {trip.route?.destination}
+            {trip.route?.origin?.city} → {trip.route?.destination?.city}
           </span>
         </div>
         <div className="flex justify-between">
@@ -84,7 +85,7 @@ export default function BookingSummary() {
         <div className="border-t pt-3 mt-3">
           <div className="flex justify-between mb-2">
             <span className="text-gray-600">Price per seat:</span>
-            <span className="font-medium">${trip.price}</span>
+            <span className="font-medium">${pricePerSeat.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-lg font-bold">
             <span>Total:</span>
