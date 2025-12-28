@@ -180,7 +180,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
         }
 
         // Save expiration time
-        dispatch(setLockExpiresAt(response.expiresAt));
+        dispatch(setLockExpiresAt(new Date(response.expiresAt)));
         refetch();
       } catch (error: any) {
         console.error('Failed to update lock:', error);
@@ -210,7 +210,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
         }
 
         // Save expiration time
-        dispatch(setLockExpiresAt(response.expiresAt));
+        dispatch(setLockExpiresAt(new Date(response.expiresAt)));
         toast.success(`Seat ${seat.seatNumber} locked for you`);
         refetch();
       } catch (error: any) {
