@@ -13,6 +13,8 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import SeatLockTimer from '@/components/SeatLockTimer';
+import { getSocket } from '@/lib/services/socket';
+import { SOCKET_EVENTS } from '@/lib/types/socket';
 
 interface BookingPageProps {
   params: Promise<{ tripId: string }>;
@@ -54,6 +56,12 @@ export default function BookingPage({ params }: BookingPageProps) {
           console.error('Failed to release locks:', error);
         }
       }
+
+      // Leave trip room and disconnect socket
+      const socket = getSocket();
+      if (socket) {
+        socket.emit(SOCKET_EVENTS.LEAVE_TRIP, { tripId });
+      }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -62,7 +70,7 @@ export default function BookingPage({ params }: BookingPageProps) {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       handleRouteChange();
     };
-  }, [sessionId, releaseLocks]);
+  }, [sessionId, releaseLocks, tripId]);
 
   const handleContinueToCheckout = () => {
     if (selectedSeats.length === 0) {

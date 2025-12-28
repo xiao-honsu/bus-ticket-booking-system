@@ -43,10 +43,13 @@ export default function SeatLockTimer() {
     }
 
     try {
-      await extendLocks({ sessionId, minutes: 10 }).unwrap();
-      const newExpiryTime = new Date(Date.now() + 10 * 60 * 1000);
+      const response = await extendLocks({ sessionId, minutes: 10 }).unwrap();
+
+      // Use newExpiresAt from response (matches new API)
+      const newExpiryTime = new Date(response.newExpiresAt);
       dispatch(setLockExpiresAt(newExpiryTime));
-      toast.success('Lock time extended by 10 minutes');
+
+      toast.success(`Lock extended by 10 minutes (${response.extendedCount} locks)`);
     } catch (error: any) {
       console.error('Failed to extend lock:', error);
       toast.error(error?.data?.message || 'Failed to extend lock time');

@@ -4,15 +4,13 @@ import React from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { toggleSeat, setSessionId, setLockExpiresAt } from '@/lib/store/features/booking/bookingSlice';
 import { cn } from '@/lib/utils';
-import {
-  useGetTripSeatMapQuery,
-  useLockSeatsMutation,
-  useCheckSeatAvailabilityMutation,
-} from '@/lib/store/services/api';
-import { useEffect, useState } from 'react';
+import { useGetTripSeatMapQuery, useLockSeatsMutation } from '@/lib/store/services/api';
+import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { useTripRoom } from '@/lib/services/socket';
+import { SocketSeatLockedEvent, SocketSeatReleasedEvent, SocketSeatBookedEvent } from '@/lib/types/socket';
 
 interface Seat {
   seatNumber: string;
@@ -46,19 +44,69 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
   const sessionId = useAppSelector((state) => state.booking.sessionId);
   const reduxSelectedSeats = useAppSelector((state) => state.booking.selectedSeats);
 
-  // Fetch seat map with sessionId to get user's locked seats
-  const queryParams = sessionId ? `?sessionId=${sessionId}` : '';
-  const [checkAvailability] = useCheckSeatAvailabilityMutation();
-
+  // Fetch seat map with sessionId
   const {
     data: seatMapData,
     isLoading,
     refetch,
-  } = useGetTripSeatMapQuery(`${tripId}${queryParams}`, {
-    pollingInterval: 30000, // Poll every 30 seconds for real-time updates
+  } = useGetTripSeatMapQuery(sessionId ? { tripId, sessionId } : tripId, {
+    // No polling - rely on Socket.IO for real-time updates
+    pollingInterval: 0,
   });
 
   const [lockSeats, { isLoading: isLocking }] = useLockSeatsMutation();
+
+  // Socket.IO: Real-time seat updates
+  const handleSeatLocked = useCallback(
+    (data: SocketSeatLockedEvent) => {
+      console.log('🔒 Seat locked event:', data);
+
+      // Check if it's our lock
+      if (data.sessionId === sessionId) {
+        console.log('✅ Our seats locked successfully');
+        return; // Already handled in local state
+      }
+
+      // Someone else locked seats - refresh UI
+      toast.info(`Seats ${data.seatNumbers.join(', ')} locked by another user`);
+      refetch();
+    },
+    [sessionId, refetch]
+  );
+
+  const handleSeatReleased = useCallback(
+    (data: SocketSeatReleasedEvent) => {
+      console.log('🔓 Seat released event:', data);
+
+      if (data.reason === 'booked') {
+        // Seats were booked - show as booked
+        toast.info(`Seats ${data.seatNumbers.join(', ')} have been booked`);
+      } else {
+        // Seats released - back to available
+        toast.success(`Seats ${data.seatNumbers.join(', ')} are now available`);
+      }
+
+      refetch();
+    },
+    [refetch]
+  );
+
+  const handleSeatBooked = useCallback(
+    (data: SocketSeatBookedEvent) => {
+      console.log('🎫 Seat booked event:', data);
+
+      toast.info(`Seats ${data.seatNumbers.join(', ')} just got booked`);
+      refetch();
+    },
+    [refetch]
+  );
+
+  // Join trip room and listen to events
+  const { isConnected, isInRoom } = useTripRoom(tripId, sessionId, {
+    onSeatLocked: handleSeatLocked,
+    onSeatReleased: handleSeatReleased,
+    onSeatBooked: handleSeatBooked,
+  });
 
   // API response structure: { tripId, busType, totalSeats, availableSeats, layout, seats }
   const seatData = (seatMapData as any)?.data || seatMapData;
@@ -105,14 +153,81 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
     const isCurrentlySelected = seat.status === 'selected' || localSelectedSeats.includes(seat.seatNumber);
 
     if (isCurrentlySelected) {
-      // Deselect seat
+      // Deselect seat - remove from selection
+      const newSelection = localSelectedSeats.filter((s) => s !== seat.seatNumber);
+      setLocalSelectedSeats(newSelection);
       dispatch(toggleSeat(seat.seatNumber));
-      setLocalSelectedSeats(localSelectedSeats.filter((s) => s !== seat.seatNumber));
+
+      // If no seats left, don't call lock API
+      if (newSelection.length === 0) {
+        toast.info('All seats deselected');
+        return;
+      }
+
+      // Lock remaining seats
+      try {
+        const response = await lockSeats({
+          tripId,
+          seatNumbers: newSelection,
+          sessionId: sessionId || undefined,
+        }).unwrap();
+
+        // Save session ID
+        const newSessionId = response.sessionId;
+        if (newSessionId && newSessionId !== sessionId) {
+          localStorage.setItem('seatlock_session', newSessionId);
+          dispatch(setSessionId(newSessionId));
+        }
+
+        // Save expiration time
+        dispatch(setLockExpiresAt(new Date(response.expiresAt)));
+        refetch();
+      } catch (error: any) {
+        console.error('Failed to update lock:', error);
+        toast.error(error?.data?.message || 'Failed to update seat selection');
+        // Revert selection
+        setLocalSelectedSeats([...newSelection, seat.seatNumber]);
+      }
     } else {
-      // Select seat (simple selection without backend locking for now)
+      // Select seat - add to selection
+      const newSelection = [...localSelectedSeats, seat.seatNumber];
+      setLocalSelectedSeats(newSelection);
       dispatch(toggleSeat(seat.seatNumber));
-      setLocalSelectedSeats([...localSelectedSeats, seat.seatNumber]);
-      toast.success(`Seat ${seat.seatNumber} selected`);
+
+      // Lock seats
+      try {
+        const response = await lockSeats({
+          tripId,
+          seatNumbers: newSelection,
+          sessionId: sessionId || undefined,
+        }).unwrap();
+
+        // Save session ID (first time)
+        const newSessionId = response.sessionId;
+        if (newSessionId && newSessionId !== sessionId) {
+          localStorage.setItem('seatlock_session', newSessionId);
+          dispatch(setSessionId(newSessionId));
+        }
+
+        // Save expiration time
+        dispatch(setLockExpiresAt(new Date(response.expiresAt)));
+        toast.success(`Seat ${seat.seatNumber} locked for you`);
+        refetch();
+      } catch (error: any) {
+        console.error('Failed to lock seat:', error);
+        const errorMsg = error?.data?.message || 'Failed to lock seat';
+
+        if (error?.status === 409) {
+          toast.error('This seat was just locked by another user');
+        } else {
+          toast.error(errorMsg);
+        }
+
+        // Revert selection
+        setLocalSelectedSeats(newSelection.filter((s) => s !== seat.seatNumber));
+        dispatch(toggleSeat(seat.seatNumber));
+        refetch();
+      }
     }
   };
 

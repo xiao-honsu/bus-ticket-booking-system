@@ -521,9 +521,20 @@ export const api = createApi({
       }),
     }),
 
-    // Seat Lock endpoints
-    lockSeats: builder.mutation({
-      query: (data: { tripId: string; seatNumbers: string[]; sessionId?: string; metadata?: any }) => ({
+    // Seat Lock endpoints - Updated for Socket.IO integration
+    lockSeats: builder.mutation<
+      {
+        id: string;
+        trip: string;
+        seatNumbers: string[];
+        sessionId: string;
+        expiresAt: string;
+        createdAt: string;
+        updatedAt: string;
+      },
+      { tripId: string; seatNumbers: string[]; sessionId?: string }
+    >({
+      query: (data) => ({
         url: '/seat-locks/lock',
         method: 'POST',
         body: data,
@@ -531,26 +542,26 @@ export const api = createApi({
       invalidatesTags: ['SeatLock', 'Trip'],
     }),
 
-    checkSeatAvailability: builder.mutation({
-      query: (data: { tripId: string; seatNumbers: string[] }) => ({
-        url: '/seat-locks/check-availability',
-        method: 'POST',
-        body: data,
-      }),
-    }),
-
     getTripSeatMap: builder.query({
-      query: (tripId: string) => `/trips/${tripId}/seat-map`,
+      query: (params: string | { tripId: string; sessionId?: string }) => {
+        if (typeof params === 'string') {
+          return `/trips/${params}/seat-map`;
+        }
+        const { tripId, sessionId } = params;
+        const queryParams = sessionId ? `?sessionId=${sessionId}` : '';
+        return `/trips/${tripId}/seat-map${queryParams}`;
+      },
       providesTags: ['Trip', 'SeatLock'],
     }),
 
-    getLockedSeats: builder.query({
-      query: (tripId: string) => `/seat-locks/${tripId}`,
-      providesTags: ['SeatLock'],
-    }),
-
-    releaseLocks: builder.mutation({
-      query: (sessionId: string) => ({
+    releaseLocks: builder.mutation<
+      {
+        message: string;
+        releasedCount: number;
+      },
+      string
+    >({
+      query: (sessionId) => ({
         url: '/seat-locks/release',
         method: 'POST',
         body: { sessionId },
@@ -558,8 +569,15 @@ export const api = createApi({
       invalidatesTags: ['SeatLock', 'Trip'],
     }),
 
-    extendLocks: builder.mutation({
-      query: (data: { sessionId: string; minutes?: number }) => ({
+    extendLocks: builder.mutation<
+      {
+        message: string;
+        extendedCount: number;
+        newExpiresAt: string;
+      },
+      { sessionId: string; minutes?: number }
+    >({
+      query: (data) => ({
         url: '/seat-locks/extend',
         method: 'POST',
         body: data,
@@ -610,9 +628,7 @@ export const {
   useDeleteOperatorMutation,
   useSearchLocationsQuery,
   useLockSeatsMutation,
-  useCheckSeatAvailabilityMutation,
   useGetTripSeatMapQuery,
-  useGetLockedSeatsQuery,
   useReleaseLocksMutation,
   useExtendLocksMutation,
 } = api;
