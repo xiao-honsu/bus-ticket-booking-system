@@ -47,7 +47,7 @@ export default function SeatLockTimer() {
 
       // Use newExpiresAt from response (matches new API)
       const newExpiryTime = new Date(response.newExpiresAt);
-      dispatch(setLockExpiresAt(newExpiryTime.toISOString()));
+      dispatch(setLockExpiresAt(newExpiryTime));
 
       toast.success(`Lock extended by 10 minutes (${response.extendedCount} locks)`);
     } catch (error: any) {
