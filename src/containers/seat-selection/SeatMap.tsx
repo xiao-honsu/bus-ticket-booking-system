@@ -419,7 +419,6 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
       const lockTime = new Date(seat.lockedUntil).toLocaleTimeString();
       return `Locked until ${lockTime}`;
     }
-    if (status === 'selected') return `Selected - ${seat.price.toLocaleString()} ₫`;
     return `${seat.seatNumber} - ${seat.price.toLocaleString()} ₫${seat.position?.isWindow ? ' (Window)' : ''}`;
   };
 
