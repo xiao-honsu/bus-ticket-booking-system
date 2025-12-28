@@ -25,7 +25,7 @@ interface BookingState {
   } | null;
   currentStep: 'seat-selection' | 'passenger-details' | 'payment' | 'confirmation';
   sessionId: string | null;
-  lockExpiresAt: Date | null;
+  lockExpiresAt: string | null;
 }
 
 const initialState: BookingState = {
@@ -87,7 +87,7 @@ const bookingSlice = createSlice({
     setSessionId: (state, action: PayloadAction<string>) => {
       state.sessionId = action.payload;
     },
-    setLockExpiresAt: (state, action: PayloadAction<Date | null>) => {
+    setLockExpiresAt: (state, action: PayloadAction<string | null>) => {
       state.lockExpiresAt = action.payload;
     },
     resetBooking: () => {

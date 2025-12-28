@@ -46,13 +46,41 @@ export default function SeatLockTimer() {
       const response = await extendLocks({ sessionId, minutes: 10 }).unwrap();
 
       // Use newExpiresAt from response (matches new API)
-      const newExpiryTime = new Date(response.newExpiresAt);
-      dispatch(setLockExpiresAt(newExpiryTime));
+      dispatch(setLockExpiresAt(response.newExpiresAt));
 
       toast.success(`Lock extended by 10 minutes (${response.extendedCount} locks)`);
     } catch (error: any) {
-      console.error('Failed to extend lock:', error);
-      toast.error(error?.data?.message || 'Failed to extend lock time');
+      // RTK Query error structure: { status, data }
+      const errorMsg =
+        error?.data?.message || // RTK Query: error.data.message
+        error?.data?.error?.message || // Backend nested error
+        error?.response?.data?.message || // Axios format (fallback)
+        error?.error?.message ||
+        error?.message ||
+        'Unable to extend lock time';
+
+      const statusCode = error?.status || error?.data?.statusCode || error?.statusCode || 0;
+
+      // Debug logging (only in development)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('⚠️ Extend lock failed:', {
+          message: errorMsg,
+          statusCode: statusCode,
+        });
+      }
+
+      // User-friendly notification
+      if (errorMsg && errorMsg !== 'Unable to extend lock time') {
+        toast.error(errorMsg, {
+          description: 'Your seat lock could not be extended.',
+          duration: 4000,
+        });
+      } else {
+        toast.error('Unable to extend lock time', {
+          description: 'Please complete your booking before time runs out.',
+          duration: 4000,
+        });
+      }
     }
   };
 

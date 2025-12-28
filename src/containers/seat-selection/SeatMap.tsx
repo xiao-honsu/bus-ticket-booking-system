@@ -4,7 +4,7 @@ import React from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { toggleSeat, setSessionId, setLockExpiresAt } from '@/lib/store/features/booking/bookingSlice';
 import { cn } from '@/lib/utils';
-import { useGetTripSeatMapQuery, useLockSeatsMutation } from '@/lib/store/services/api';
+import { useGetTripSeatMapQuery, useLockSeatsMutation, useReleaseLocksMutation } from '@/lib/store/services/api';
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -41,6 +41,7 @@ interface SeatMapProps {
 export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }: SeatMapProps) {
   const dispatch = useAppDispatch();
   const [localSelectedSeats, setLocalSelectedSeats] = useState<string[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const sessionId = useAppSelector((state) => state.booking.sessionId);
   const reduxSelectedSeats = useAppSelector((state) => state.booking.selectedSeats);
 
@@ -55,19 +56,24 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
   });
 
   const [lockSeats, { isLoading: isLocking }] = useLockSeatsMutation();
+  const [releaseLocks] = useReleaseLocksMutation();
 
   // Socket.IO: Real-time seat updates
   const handleSeatLocked = useCallback(
     (data: SocketSeatLockedEvent) => {
-      console.log('🔒 Seat locked event:', data);
+      console.log('🔒 [Seat Event] Seat locked event received:', data);
+      console.log('   Locked seats:', data.seatNumbers);
+      console.log('   Session ID:', data.sessionId);
+      console.log('   Current user session:', sessionId);
 
       // Check if it's our lock
       if (data.sessionId === sessionId) {
-        console.log('✅ Our seats locked successfully');
+        console.log('✅ [Seat Event] Our seats locked successfully (skipping UI update)');
         return; // Already handled in local state
       }
 
       // Someone else locked seats - refresh UI
+      console.log('⚠️ [Seat Event] Another user locked seats, refreshing...');
       toast.info(`Seats ${data.seatNumbers.join(', ')} locked by another user`);
       refetch();
     },
@@ -76,7 +82,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
 
   const handleSeatReleased = useCallback(
     (data: SocketSeatReleasedEvent) => {
-      console.log('🔓 Seat released event:', data);
+      console.log('🔓 [Seat Event] Seat released event received:', data);
 
       if (data.reason === 'booked') {
         // Seats were booked - show as booked
@@ -93,7 +99,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
 
   const handleSeatBooked = useCallback(
     (data: SocketSeatBookedEvent) => {
-      console.log('🎫 Seat booked event:', data);
+      console.log('🎫 [Seat Event] Seat booked event received:', data);
 
       toast.info(`Seats ${data.seatNumbers.join(', ')} just got booked`);
       refetch();
@@ -102,11 +108,44 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
   );
 
   // Join trip room and listen to events
-  const { isConnected, isInRoom } = useTripRoom(tripId, sessionId, {
+  const socketHandlers = {
     onSeatLocked: handleSeatLocked,
     onSeatReleased: handleSeatReleased,
     onSeatBooked: handleSeatBooked,
-  });
+  };
+
+  // Debug: Log handlers setup
+  useEffect(() => {
+    console.log('🎯 [SeatMap] Socket handlers configured:', {
+      hasLockHandler: !!socketHandlers.onSeatLocked,
+      hasReleaseHandler: !!socketHandlers.onSeatReleased,
+      hasBookedHandler: !!socketHandlers.onSeatBooked,
+    });
+  }, [socketHandlers.onSeatLocked, socketHandlers.onSeatReleased, socketHandlers.onSeatBooked]);
+
+  const { isConnected, isInRoom } = useTripRoom(tripId, sessionId, socketHandlers);
+
+  // Debug: Log connection status
+  useEffect(() => {
+    console.log('🔌 [WebSocket] Connection status:', {
+      isConnected,
+      isInRoom,
+      tripId,
+      sessionId,
+    });
+
+    if (!isConnected) {
+      console.warn('⚠️ [WebSocket] Not connected! Events will not be received.');
+    }
+
+    if (isConnected && !isInRoom) {
+      console.warn('⚠️ [WebSocket] Connected but not in room! Events will not be received.');
+    }
+
+    if (isConnected && isInRoom) {
+      console.log('✅ [WebSocket] Ready to receive events!');
+    }
+  }, [isConnected, isInRoom, tripId, sessionId]);
 
   // API response structure: { tripId, busType, totalSeats, availableSeats, layout, seats }
   const seatData = (seatMapData as any)?.data || seatMapData;
@@ -124,10 +163,12 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
   }, [sessionId, dispatch]);
 
   // Extract selected seats from API response (status === 'selected')
+  // Only sync when initializing, not when user is actively selecting/deselecting
   useEffect(() => {
     const selectedFromAPI = seats.filter((s) => s.status === 'selected').map((s) => s.seatNumber);
 
-    if (selectedFromAPI.length > 0) {
+    // Only sync if we don't have any local selection yet (initial load)
+    if (selectedFromAPI.length > 0 && localSelectedSeats.length === 0) {
       setLocalSelectedSeats(selectedFromAPI);
       // Sync with Redux
       selectedFromAPI.forEach((seatNum) => {
@@ -136,36 +177,82 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
         }
       });
     }
-  }, [seats, dispatch, reduxSelectedSeats]);
+
+    // Clear local state if API says no seats selected (after release)
+    if (selectedFromAPI.length === 0 && localSelectedSeats.length > 0) {
+      // Check if this is after a release operation (not during active selection)
+      const hasLockedSeats = seats.some((s) => localSelectedSeats.includes(s.seatNumber) && s.status !== 'selected');
+      if (hasLockedSeats) {
+        // Seats were released, clear local state
+        setLocalSelectedSeats([]);
+      }
+    }
+  }, [seats, dispatch]);
 
   const handleSeatClick = async (seat: Seat) => {
+    // Prevent double click/concurrent operations
+    if (isProcessing) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('⚠️ [BLOCKED] Operation in progress, ignoring click');
+      }
+      return;
+    }
+
+    console.log('👆 [CLICK] Seat clicked:', seat.seatNumber);
+
     // Check if seat is selectable
     if (!seat.selectable || seat.status === 'booked') {
       toast.error('This seat is not available');
       return;
     }
 
-    if (seat.status === 'locked') {
+    if (seat.status === 'locked' && !localSelectedSeats.includes(seat.seatNumber)) {
       toast.error('This seat is temporarily locked by another user');
       return;
     }
 
-    const isCurrentlySelected = seat.status === 'selected' || localSelectedSeats.includes(seat.seatNumber);
+    // Check if seat is currently selected by this user (prioritize local state)
+    const isCurrentlySelected = localSelectedSeats.includes(seat.seatNumber);
 
     if (isCurrentlySelected) {
       // Deselect seat - remove from selection
+      console.log('🔄 [START] Deselecting seat:', seat.seatNumber);
+      setIsProcessing(true);
+
       const newSelection = localSelectedSeats.filter((s) => s !== seat.seatNumber);
       setLocalSelectedSeats(newSelection);
       dispatch(toggleSeat(seat.seatNumber));
 
-      // If no seats left, don't call lock API
+      // If no seats left, release all locks
       if (newSelection.length === 0) {
-        toast.info('All seats deselected');
+        if (sessionId) {
+          try {
+            console.log('📤 [API] Calling releaseLocks for session:', sessionId);
+            await releaseLocks(sessionId).unwrap();
+            console.log('✅ [DONE] All locks released');
+            toast.info('All seats deselected');
+            dispatch(setLockExpiresAt(null));
+            refetch();
+          } catch (error: any) {
+            // Silent fail - locks will auto-expire anyway
+            if (process.env.NODE_ENV === 'development') {
+              console.log('⚠️ Release locks failed (will auto-expire):', error?.data?.message);
+            }
+            toast.info('All seats deselected');
+            dispatch(setLockExpiresAt(null));
+          } finally {
+            setIsProcessing(false);
+          }
+        } else {
+          toast.info('All seats deselected');
+          setIsProcessing(false);
+        }
         return;
       }
 
       // Lock remaining seats
       try {
+        console.log('📤 [API] Updating lock for remaining seats:', newSelection);
         const response = await lockSeats({
           tripId,
           seatNumbers: newSelection,
@@ -180,16 +267,54 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
         }
 
         // Save expiration time
-        dispatch(setLockExpiresAt(new Date(response.expiresAt)));
+        dispatch(setLockExpiresAt(response.expiresAt));
+        console.log('✅ [DONE] Lock updated successfully');
         refetch();
       } catch (error: any) {
         console.error('Failed to update lock:', error);
-        toast.error(error?.data?.message || 'Failed to update seat selection');
+
+        // RTK Query error structure: { status, data }
+        const errorMsg =
+          error?.data?.message || // RTK Query: error.data.message
+          error?.data?.error?.message || // Backend nested error
+          error?.response?.data?.message || // Axios format (fallback)
+          error?.error?.message ||
+          error?.message ||
+          'Failed to update seat selection';
+
+        const statusCode = error?.status || error?.data?.statusCode || error?.statusCode || 0;
+
+        // Debug logging (only in development)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('⚠️ Seat update failed:', {
+            remainingSeats: newSelection,
+            message: errorMsg,
+            statusCode: statusCode,
+          });
+        }
+
+        // User-friendly notification
+        if (errorMsg && errorMsg !== 'Failed to update seat selection') {
+          toast.error(errorMsg, {
+            description: 'Your seat selection could not be updated.',
+            duration: 3000,
+          });
+        } else {
+          toast.error('Unable to update selection', {
+            description: 'Please try selecting your seats again.',
+            duration: 3000,
+          });
+        }
+
         // Revert selection
         setLocalSelectedSeats([...newSelection, seat.seatNumber]);
+      } finally {
+        setIsProcessing(false);
       }
     } else {
       // Select seat - add to selection
+      console.log('➕ [START] Selecting seat:', seat.seatNumber);
+      setIsProcessing(true);
       const newSelection = [...localSelectedSeats, seat.seatNumber];
       setLocalSelectedSeats(newSelection);
       dispatch(toggleSeat(seat.seatNumber));
@@ -210,23 +335,56 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
         }
 
         // Save expiration time
-        dispatch(setLockExpiresAt(new Date(response.expiresAt)));
+        dispatch(setLockExpiresAt(response.expiresAt));
+        console.log('✅ [DONE] Seat locked successfully');
         toast.success(`Seat ${seat.seatNumber} locked for you`);
         refetch();
       } catch (error: any) {
-        console.error('Failed to lock seat:', error);
-        const errorMsg = error?.data?.message || 'Failed to lock seat';
+        // RTK Query error structure: { status, data }
+        // Backend response in error.data: { success, statusCode, message, error: {...} }
+        const errorMsg =
+          error?.data?.message || // RTK Query: error.data.message
+          error?.data?.error?.message || // Backend nested error
+          error?.response?.data?.message || // Axios format (fallback)
+          error?.error?.message || // Alternative format
+          error?.message || // Generic error
+          'Unable to lock seat. Please try another seat.';
 
-        if (error?.status === 409) {
-          toast.error('This seat was just locked by another user');
+        const statusCode = error?.status || error?.data?.statusCode || error?.statusCode || 0;
+
+        // Debug logging (only in development)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('⚠️ Seat lock failed:', {
+            seat: seat.seatNumber,
+            message: errorMsg,
+            statusCode: statusCode,
+          });
+        }
+
+        // User-friendly notifications
+        if (statusCode === 409) {
+          toast.error(`Seat ${seat.seatNumber} is already taken`, {
+            description: 'Another user just locked this seat. Please choose a different one.',
+            duration: 4000,
+          });
+        } else if (errorMsg && errorMsg !== 'Unable to lock seat. Please try another seat.') {
+          toast.error(errorMsg, {
+            description: 'Please try selecting another seat.',
+            duration: 3000,
+          });
         } else {
-          toast.error(errorMsg);
+          toast.error('Unable to lock this seat', {
+            description: 'This seat may have been taken. Please choose another one.',
+            duration: 3000,
+          });
         }
 
         // Revert selection
         setLocalSelectedSeats(newSelection.filter((s) => s !== seat.seatNumber));
         dispatch(toggleSeat(seat.seatNumber));
         refetch();
+      } finally {
+        setIsProcessing(false);
       }
     }
   };
@@ -240,8 +398,9 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
       {
         // Available - white with green border (matches reference UI)
         'bg-white border-green-500 hover:bg-green-50 cursor-pointer text-gray-800': status === 'available',
-        // Selected - orange/yellow (matches reference UI)
-        'bg-orange-400 border-orange-500 text-white cursor-pointer': status === 'selected',
+        // Selected - orange/yellow with hover effect to deselect (matches reference UI)
+        'bg-orange-400 border-orange-500 text-white cursor-pointer hover:bg-orange-500 hover:scale-105':
+          status === 'selected',
         // Booked - red (matches reference UI)
         'bg-red-500 border-red-600 text-white cursor-not-allowed': status === 'booked',
         // Locked - yellow (locked by others)
@@ -254,6 +413,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
     const isSelected = localSelectedSeats.includes(seat.seatNumber);
     const status = isSelected ? 'selected' : seat.status;
 
+    if (status === 'selected') return 'Click to deselect';
     if (status === 'booked') return 'Already booked';
     if (status === 'locked' && seat.lockedUntil) {
       const lockTime = new Date(seat.lockedUntil).toLocaleTimeString();
@@ -303,11 +463,39 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
+      {/* WebSocket Connection Status Indicator */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {isConnected && isInRoom ? (
+            <>
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-xs text-green-700 font-medium">Real-time sync active</span>
+            </>
+          ) : isConnected ? (
+            <>
+              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+              <span className="text-xs text-yellow-700 font-medium">Connecting to room...</span>
+            </>
+          ) : (
+            <>
+              <div className="w-2 h-2 bg-red-500 rounded-full" />
+              <span className="text-xs text-red-700 font-medium">Offline - Reconnecting...</span>
+            </>
+          )}
+        </div>
+      </div>
+
       <div className="mb-6">
-        <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+        <p className="text-sm text-gray-600 mb-2 flex items-center gap-2">
           <span className="text-lg">💡</span>
           <span>Click on available seats to reserve your perfect spot</span>
         </p>
+        {localSelectedSeats.length > 0 && (
+          <p className="text-xs text-orange-600 ml-7 flex items-center gap-1">
+            <span>✨</span>
+            <span>Click selected seats or refresh the website to deselect them</span>
+          </p>
+        )}
       </div>
 
       {/* Driver Section - Front Left Position (Like Real Bus) */}
@@ -357,7 +545,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
                         <div key={seat.seatNumber} className="relative">
                           <button
                             onClick={() => handleSeatClick(seat)}
-                            disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking}
+                            disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking || isProcessing}
                             className={getSeatClassName(seat)}
                             title={getSeatTooltip(seat)}
                           >
@@ -400,7 +588,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
                         <div key={seat.seatNumber} className="relative">
                           <button
                             onClick={() => handleSeatClick(seat)}
-                            disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking}
+                            disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking || isProcessing}
                             className={getSeatClassName(seat)}
                             title={getSeatTooltip(seat)}
                           >
@@ -434,7 +622,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
                         <div className="relative">
                           <button
                             onClick={() => handleSeatClick(seat)}
-                            disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking}
+                            disabled={seat.status === 'booked' || seat.status === 'locked' || isLocking || isProcessing}
                             className={getSeatClassName(seat)}
                             title={getSeatTooltip(seat)}
                           >
