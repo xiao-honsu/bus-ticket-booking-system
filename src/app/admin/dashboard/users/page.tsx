@@ -102,13 +102,15 @@ export default function UserManagementPage() {
 
   const handleConfirmBlock = async () => {
     if (!selectedUserId) return;
+    const user = usersData?.results?.find((u: any) => u.id === selectedUserId);
+    const isUnblocking = user?.status === 'suspended';
     try {
       await blockUser(selectedUserId).unwrap();
-      toast.success('User blocked successfully');
+      toast.success(isUnblocking ? 'User unblocked successfully' : 'User blocked successfully');
       setShowBlockConfirm(false);
       setSelectedUserId(null);
     } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to block user');
+      toast.error(error?.data?.message || `Failed to ${isUnblocking ? 'unblock' : 'block'} user`);
     }
   };
 
@@ -177,22 +179,18 @@ export default function UserManagementPage() {
                           <Badge className={statusColor(user.status)}>{user.status}</Badge>
                         </td>
                         <td className="px-4 py-3 flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleResetPasswordClick(user.id)}
-                            disabled={user.status === 'suspended'}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => handleResetPasswordClick(user.id)}>
                             Reset pwd
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleBlockClick(user.id)}
-                            disabled={user.status === 'suspended'}
-                          >
-                            Block
-                          </Button>
+                          {user.role !== 'admin' && (
+                            <Button
+                              size="sm"
+                              variant={user.status === 'suspended' ? 'default' : 'destructive'}
+                              onClick={() => handleBlockClick(user.id)}
+                            >
+                              {user.status === 'suspended' ? 'Unblock' : 'Block'}
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -246,18 +244,25 @@ export default function UserManagementPage() {
       <AlertDialog open={showBlockConfirm} onOpenChange={setShowBlockConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Block User Account</AlertDialogTitle>
+            <AlertDialogTitle>
+              {selectedUserId && usersData?.results?.find((u: any) => u.id === selectedUserId)?.status === 'suspended'
+                ? 'Unblock User Account'
+                : 'Block User Account'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to block this user? Their account status will change to suspended and they won't be
-              able to log in.
+              {selectedUserId && usersData?.results?.find((u: any) => u.id === selectedUserId)?.status === 'suspended'
+                ? 'Are you sure you want to unblock this user? Their account status will change to active and they will be able to log in.'
+                : "Are you sure you want to block this user? Their account status will change to suspended and they won't be able to log in."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogCancel>Keep Active</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirmBlock}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            Block User
+            {selectedUserId && usersData?.results?.find((u: any) => u.id === selectedUserId)?.status === 'suspended'
+              ? 'Unblock User'
+              : 'Block User'}
           </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
