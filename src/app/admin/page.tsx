@@ -4,7 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, TrendingUp, Bus, MapPin, Navigation, UserCheck, LogOut, BarChart3 } from 'lucide-react';
+import { Users, TrendingUp, Bus, MapPin, Navigation, UserCheck, LogOut, BarChart3, Tag } from 'lucide-react';
 import {
   useGetBookingsQuery,
   useGetBusesQuery,
@@ -75,6 +75,14 @@ export default function AdminPage() {
       href: '/admin/dashboard/bookings',
       color: 'from-rose-50 to-rose-100',
       borderColor: 'border-rose-300',
+    },
+    {
+      icon: <Tag className="w-6 h-6" />,
+      title: 'Promotions Management',
+      description: 'Create and manage discount codes and offers',
+      href: '/admin/dashboard/promotions',
+      color: 'from-pink-50 to-pink-100',
+      borderColor: 'border-pink-300',
     },
   ];
 

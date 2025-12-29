@@ -102,7 +102,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Auth', 'User', 'Bus', 'Route', 'Trip', 'Booking', 'Operator', 'SeatLock'],
+  tagTypes: ['Auth', 'User', 'Bus', 'Route', 'Trip', 'Booking', 'Operator', 'SeatLock', 'Promotion', 'UserPromotion'],
   endpoints: (builder) => ({
     // Auth endpoints
     login: builder.mutation<AuthResponse, LoginRequest>({
@@ -584,6 +584,140 @@ export const api = createApi({
       }),
       invalidatesTags: ['SeatLock'],
     }),
+
+    // Universal Search endpoints
+    universalSearch: builder.query<
+      {
+        trips: any[];
+        operators: any[];
+        routes: any[];
+        suggestions: string[];
+        matchType: 'route' | 'operator' | 'tripCode' | 'boardingPoint' | 'mixed' | 'none';
+      },
+      { q: string; limit?: number }
+    >({
+      query: ({ q, limit = 10 }) => ({
+        url: '/search',
+        params: { q, limit },
+      }),
+    }),
+
+    getSearchSuggestions: builder.query<{ suggestions: string[] }, { q: string; limit?: number }>({
+      query: ({ q, limit = 8 }) => ({
+        url: '/search/suggestions',
+        params: { q, limit },
+      }),
+    }),
+
+    // Promotion endpoints
+    // Admin
+    createPromotion: builder.mutation({
+      query: (data) => ({
+        url: '/promotions',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Promotion'],
+    }),
+
+    getPromotionsAdmin: builder.query({
+      query: (params?: { page?: number; limit?: number; isActive?: boolean }) => ({
+        url: '/promotions/admin',
+        params,
+      }),
+      transformResponse: (response: any) => {
+        if (response.docs) {
+          return {
+            results: response.docs,
+            page: response.page,
+            limit: response.limit,
+            totalPages: response.totalPages,
+            totalResults: response.totalDocs,
+          };
+        }
+        return response;
+      },
+      providesTags: ['Promotion'],
+    }),
+
+    getPromotion: builder.query({
+      query: (promotionId: string) => `/promotions/${promotionId}`,
+      providesTags: ['Promotion'],
+    }),
+
+    updatePromotion: builder.mutation({
+      query: ({ promotionId, ...data }) => ({
+        url: `/promotions/${promotionId}`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: ['Promotion'],
+    }),
+
+    deletePromotion: builder.mutation({
+      query: (promotionId: string) => ({
+        url: `/promotions/${promotionId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Promotion'],
+    }),
+
+    // User
+    getActivePromotions: builder.query({
+      query: (params?: { page?: number; limit?: number }) => ({
+        url: '/promotions/active',
+        params,
+      }),
+      transformResponse: (response: any) => {
+        if (response.docs) {
+          return {
+            results: response.docs,
+            page: response.page,
+            limit: response.limit,
+            totalPages: response.totalPages,
+            totalResults: response.totalDocs,
+          };
+        }
+        return response;
+      },
+      providesTags: ['Promotion'],
+    }),
+
+    collectPromotion: builder.mutation({
+      query: (promotionId: string) => ({
+        url: `/promotions/${promotionId}/collect`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Promotion', 'UserPromotion'],
+    }),
+
+    getMyPromotions: builder.query({
+      query: (params?: { status?: 'available' | 'used' | 'expired' | 'all'; page?: number; limit?: number }) => ({
+        url: '/promotions/my-promotions',
+        params,
+      }),
+      transformResponse: (response: any) => {
+        if (response.docs) {
+          return {
+            results: response.docs,
+            page: response.page,
+            limit: response.limit,
+            totalPages: response.totalPages,
+            totalResults: response.totalDocs,
+          };
+        }
+        return response;
+      },
+      providesTags: ['UserPromotion'],
+    }),
+
+    validatePromotion: builder.mutation({
+      query: (data: { code: string; orderAmount: number }) => ({
+        url: '/promotions/validate',
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -631,4 +765,17 @@ export const {
   useGetTripSeatMapQuery,
   useReleaseLocksMutation,
   useExtendLocksMutation,
+  useUniversalSearchQuery,
+  useLazyUniversalSearchQuery,
+  useGetSearchSuggestionsQuery,
+  useLazyGetSearchSuggestionsQuery,
+  useCreatePromotionMutation,
+  useGetPromotionsAdminQuery,
+  useGetPromotionQuery,
+  useUpdatePromotionMutation,
+  useDeletePromotionMutation,
+  useGetActivePromotionsQuery,
+  useCollectPromotionMutation,
+  useGetMyPromotionsQuery,
+  useValidatePromotionMutation,
 } = api;

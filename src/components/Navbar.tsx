@@ -74,6 +74,9 @@ export default function Navbar() {
             <Link href="/search" className="text-gray-700 hover:text-blue-600">
               Search
             </Link>
+            <Link href="/promotions" className="text-gray-700 hover:text-blue-600">
+              Promotions
+            </Link>
             {!mounted || isLoading ? (
               // Show skeleton loader during SSR and session restore
               <div className="flex items-center gap-2">
@@ -122,6 +125,9 @@ export default function Navbar() {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/dashboard">My Bookings</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/my-promotions">My Promotions</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
