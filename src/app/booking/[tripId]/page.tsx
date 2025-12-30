@@ -31,6 +31,9 @@ export default function BookingPage({ params }: BookingPageProps) {
   const sessionId = useAppSelector((state) => state.booking.sessionId);
   const promotion = useAppSelector((state) => state.booking.promotion);
 
+  // Calculate total price from selected seat details
+  const totalPrice = selectedSeatDetails.reduce((sum, seat) => sum + seat.price, 0);
+
   const [releaseLocks] = useReleaseLocksMutation();
 
   // Debug: Log promotion state changes
