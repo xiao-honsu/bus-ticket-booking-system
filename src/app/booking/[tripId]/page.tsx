@@ -26,6 +26,7 @@ export default function BookingPage({ params }: BookingPageProps) {
   const dispatch = useAppDispatch();
   const { data: trip, isLoading, error } = useGetTripQuery(tripId);
   const selectedSeats = useAppSelector((state) => state.booking.selectedSeats);
+  const selectedSeatDetails = useAppSelector((state) => state.booking.selectedSeatDetails);
   const passengers = useAppSelector((state) => state.booking.passengers);
   const sessionId = useAppSelector((state) => state.booking.sessionId);
   const promotion = useAppSelector((state) => state.booking.promotion);
@@ -375,11 +376,21 @@ export default function BookingPage({ params }: BookingPageProps) {
                 </div>
                 {selectedSeats.length > 0 && (
                   <>
+                    {/* Show individual seat prices */}
+                    <div className="space-y-2">
+                      {selectedSeatDetails.map((seat) => (
+                        <div key={seat.seatNumber} className="flex justify-between text-sm bg-gray-50 p-2 rounded">
+                          <span className="text-gray-700">
+                            Seat {seat.seatNumber} ({seat.seatType}):
+                          </span>
+                          <span className="font-semibold text-gray-900">{seat.price.toLocaleString()} ₫</span>
+                        </div>
+                      ))}
+                    </div>
+
                     <div className="flex justify-between text-sm bg-blue-50 p-3 rounded-lg">
-                      <span className="text-gray-700 font-medium">Selected Seats × {selectedSeats.length}:</span>
-                      <span className="font-semibold text-blue-900">
-                        {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
-                      </span>
+                      <span className="text-gray-700 font-medium">Total for {selectedSeats.length} seat(s):</span>
+                      <span className="font-semibold text-blue-900">{totalPrice.toLocaleString()} ₫</span>
                     </div>
                     {promotion && (
                       <div className="flex justify-between text-sm bg-green-50 p-3 rounded-lg border-2 border-green-200">
