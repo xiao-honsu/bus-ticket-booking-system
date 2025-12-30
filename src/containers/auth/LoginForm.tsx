@@ -16,6 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ApiErrorResponse } from '@/lib/types';
+import { setUserInfoCookie } from '@/lib/utils/cookies';
 
 const loginSchema = z.object({
   email: z.email('Invalid email address'),
@@ -51,6 +52,15 @@ export default function LoginForm() {
       // - refreshToken is set in httpOnly cookie by backend
       // - accessToken is stored in Redux state (memory)
       // - userRole is set in cookie by backend (for middleware access control)
+
+      // Set user-info cookie for SSR hydration on next navigation
+      setUserInfoCookie({
+        id: resultData.user.id,
+        role: resultData.user.role,
+        name: resultData.user.name,
+        email: resultData.user.email,
+      });
+
       dispatch(
         setCredentials({
           user: resultData.user,

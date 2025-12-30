@@ -35,6 +35,7 @@ export interface IUserStats {
   totalSpent: number;
 }
 
+// Full User interface - from API responses
 export interface User {
   id: string;
   name: string;
@@ -53,6 +54,15 @@ export interface User {
   stats: IUserStats;
   createdAt: Date | string;
   updatedAt: Date | string;
+}
+
+// Partial User interface - for SSR state (only id and role available from JWT)
+// Used during initial SSR before full user data is fetched
+export interface PartialUser {
+  id: string;
+  role: string;
+  name?: string;
+  email?: string;
 }
 
 // Passenger types

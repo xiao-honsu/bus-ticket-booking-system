@@ -4,24 +4,16 @@ import { useAppDispatch } from '@/lib/hooks';
 import { setAccessToken, setCredentials, setUser } from '@/lib/store/features/auth/authSlice';
 import { User } from '@/lib/types';
 import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-
-// Build URL helper - handle both absolute URLs and relative paths
-const buildUrl = (path: string) => {
-  if (BASE_URL.startsWith('http')) {
-    return new URL(path, BASE_URL).toString();
-  }
-  // For relative paths like '/api/mock', skip auth calls since mock doesn't have auth endpoints
-  return null;
-};
 
 export function AuthInitializer({ children }: { children: React.ReactNode }) {
   const [isChecking, setIsChecking] = useState(true);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    const refreshUrl = buildUrl('/api/v1/auth/refresh');
+    const refreshUrl = new URL('/api/v1/auth/refresh', BASE_URL).toString();
 
     // Skip auth initialization when using mock API
     if (!refreshUrl) {
@@ -38,7 +30,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
           const data = await response.json();
           dispatch(setAccessToken(data?.data?.tokens?.access?.token));
 
-          const meUrl = buildUrl('/api/v1/auth/me');
+          const meUrl = new URL('/api/v1/auth/me', BASE_URL).toString();
           if (!meUrl) {
             setIsChecking(false);
             return;
@@ -65,7 +57,11 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   }, [dispatch]);
 
   if (isChecking) {
-    return <div className="flex justify-center items-center h-full">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return <>{children}</>;

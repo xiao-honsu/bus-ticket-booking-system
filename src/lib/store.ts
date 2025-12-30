@@ -6,7 +6,18 @@ import tripReducer from './store/features/trip/tripSlice';
 import busReducer from './store/features/bus/busSlice';
 import routeReducer from './store/features/route/routeSlice';
 
-export const makeStore = () => {
+// Type for initial auth state from server
+export interface InitialAuthState {
+  user: {
+    id: string;
+    role: string;
+    name?: string;
+    email?: string;
+  } | null;
+  isAuthenticated: boolean;
+}
+
+export const makeStore = (preloadedAuthState?: InitialAuthState) => {
   return configureStore({
     reducer: {
       [api.reducerPath]: api.reducer,
@@ -16,6 +27,16 @@ export const makeStore = () => {
       bus: busReducer,
       route: routeReducer,
     },
+    preloadedState: preloadedAuthState
+      ? {
+          auth: {
+            user: preloadedAuthState.user as any,
+            accessToken: null, // Will be fetched via background sync
+            isAuthenticated: preloadedAuthState.isAuthenticated,
+            isLoading: false,
+          },
+        }
+      : undefined,
     middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(api.middleware),
   });
 };

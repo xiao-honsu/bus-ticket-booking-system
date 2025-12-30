@@ -4,6 +4,7 @@ import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppDispatch } from '@/lib/hooks';
 import { setCredentials } from '@/lib/store/features/auth/authSlice';
+import { setUserInfoCookie } from '@/lib/utils/cookies';
 
 function AuthCallbackContent() {
   const router = useRouter();
@@ -26,7 +27,7 @@ function AuthCallbackContent() {
       // accessToken is passed in URL and will be stored in memory
       const fetchUserData = async () => {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, {
+          const response = await fetch(new URL('/api/v1/auth/me', process.env.NEXT_PUBLIC_API_URL).toString(), {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -35,9 +36,19 @@ function AuthCallbackContent() {
 
           if (response.ok) {
             const data = await response.json();
+            const user = data.data.user;
+
+            // Set user-info cookie for SSR hydration on next navigation
+            setUserInfoCookie({
+              id: user.id,
+              role: user.role,
+              name: user.name,
+              email: user.email,
+            });
+
             dispatch(
               setCredentials({
-                user: data.data.user,
+                user: user,
                 accessToken: token,
               })
             );
