@@ -25,6 +25,16 @@ interface PromotionInfo {
   finalAmount: number;
 }
 
+interface SeatDetail {
+  seatNumber: string;
+  price: number;
+  seatType: string;
+  position?: {
+    isWindow: boolean;
+    isAisle: boolean;
+  };
+}
+
 interface BookingState {
   tripId: string | null;
   selectedSeats: string[];
