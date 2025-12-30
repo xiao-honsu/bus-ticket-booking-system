@@ -9,6 +9,7 @@ export default function BookingSummary() {
   const tripId = useAppSelector((state) => state.booking.tripId);
   const selectedSeats = useAppSelector((state) => state.booking.selectedSeats);
   const passengers = useAppSelector((state) => state.booking.passengers);
+  const promotion = useAppSelector((state) => state.booking.promotion);
 
   const { data: trip, isLoading } = useGetTripQuery(tripId || '', {
     skip: !tripId,
@@ -44,6 +45,8 @@ export default function BookingSummary() {
 
   const pricePerSeat = trip.pricePerSeat || 0;
   const totalPrice = pricePerSeat * selectedSeats.length;
+  const discountAmount = promotion?.discountAmount || 0;
+  const finalPrice = totalPrice - discountAmount;
 
   return (
     <Card>
@@ -87,10 +90,27 @@ export default function BookingSummary() {
             <span className="text-gray-600">Price per seat:</span>
             <span className="font-medium">${pricePerSeat.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between text-lg font-bold">
-            <span>Total:</span>
-            <span className="text-blue-600">${totalPrice.toFixed(2)}</span>
+          <div className="flex justify-between mb-2">
+            <span className="text-gray-600">Subtotal:</span>
+            <span className="font-medium">${totalPrice.toFixed(2)}</span>
           </div>
+          {promotion && (
+            <div className="flex justify-between mb-2 text-green-600">
+              <span className="flex items-center gap-1">
+                <span>Discount ({promotion.code}):</span>
+              </span>
+              <span className="font-medium">-${discountAmount.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-lg font-bold border-t pt-2">
+            <span>Total:</span>
+            <span className="text-blue-600">${finalPrice.toFixed(2)}</span>
+          </div>
+          {promotion && (
+            <p className="text-xs text-green-600 mt-2">
+              You saved ${discountAmount.toFixed(2)} with {promotion.title}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -260,7 +260,9 @@ export interface CreateBookingRequest {
   contactEmail: string;
   contactPhone: string;
   totalAmount: number;
-  sessionId?: string; // For seat lock verification
+  // TODO: Backend needs to be updated to accept these fields:
+  // sessionId?: string; // For seat lock verification
+  // userPromotion?: string; // Optional UserPromotion ID from validate API
 }
 
 // Create Booking Response (what backend returns)

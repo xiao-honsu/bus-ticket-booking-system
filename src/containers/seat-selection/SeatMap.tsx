@@ -643,25 +643,6 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
           </div>
         )}
       </div>
-
-      {/* Selection Summary */}
-      <div className="mt-6 pt-4 border-t">
-        <div className="flex justify-between items-center text-sm">
-          <span className="text-gray-600">
-            Selected: {localSelectedSeats.length} seat{localSelectedSeats.length !== 1 ? 's' : ''}
-          </span>
-          {localSelectedSeats.length > 0 && (
-            <span className="font-bold text-blue-600">
-              Total:{' '}
-              {seats
-                .filter((s) => localSelectedSeats.includes(s.seatNumber))
-                .reduce((sum, s) => sum + s.price, 0)
-                .toLocaleString()}{' '}
-              ₫
-            </span>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
