@@ -5,6 +5,9 @@ import StoreProvider from './providers';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Toaster } from '@/components/ui/sonner';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cookies } from 'next/headers';
+import { InitialAuthState } from '@/lib/store';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -21,21 +24,58 @@ export const metadata: Metadata = {
   description: 'Book your bus tickets online with ease',
 };
 
-export default function RootLayout({
+// Helper to parse user-info cookie safely
+async function getInitialAuthFromCookies(): Promise<InitialAuthState | undefined> {
+  try {
+    const cookieStore = await cookies();
+    const userInfoCookie = cookieStore.get('user-info');
+    const refreshToken = cookieStore.get('refreshToken');
+
+    // Only consider authenticated if both user-info and refreshToken exist
+    if (userInfoCookie?.value && refreshToken?.value) {
+      const userInfo = JSON.parse(userInfoCookie.value);
+
+      // Validate required fields
+      if (userInfo.id && userInfo.role) {
+        return {
+          user: {
+            id: userInfo.id,
+            role: userInfo.role,
+            name: userInfo.name, // May be undefined, will be fetched via sync
+            email: userInfo.email, // May be undefined, will be fetched via sync
+          },
+          isAuthenticated: true,
+        };
+      }
+    }
+  } catch (error) {
+    // Cookie parsing failed - return undefined (guest state)
+    console.warn('[Layout] Failed to parse auth cookies:', error);
+  }
+
+  return undefined;
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Read auth state from cookies on server-side
+  const initialAuth = await getInitialAuthFromCookies();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <StoreProvider>
-          <Navbar />
-          <div className="flex-1">{children}</div>
-          <Footer />
+        <StoreProvider initialAuth={initialAuth}>
+          <ScrollArea className="h-screen">
+            <Navbar />
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </ScrollArea>
           <Toaster />
         </StoreProvider>
       </body>

@@ -1,7 +1,7 @@
 /**
  * Cookie utilities for authentication
  * NOTE: This file is now minimal since we use httpOnly cookies set by the backend.
- * These utilities are only for reading non-httpOnly cookies like userRole.
+ * These utilities are only for reading/writing non-httpOnly cookies like userRole and user-info.
  */
 
 /**
@@ -26,7 +26,7 @@ export function getCookie(name: string): string | null {
  */
 export function setCookie(name: string, value: string, maxAge: number) {
   if (typeof document === 'undefined') return;
-  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Strict`;
+  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
 }
 
 /**
@@ -52,9 +52,51 @@ export function getUserRoleCookie(): string | null {
 }
 
 /**
+ * Set user-info cookie for SSR hydration
+ * This allows the server to pre-render with basic user info
+ * @param userInfo Object with id and role (required), name and email (optional)
+ */
+export function setUserInfoCookie(userInfo: { id: string; role: string; name?: string; email?: string }) {
+  if (typeof document === 'undefined') return;
+
+  const value = JSON.stringify({
+    id: userInfo.id,
+    role: userInfo.role,
+    name: userInfo.name,
+    email: userInfo.email,
+  });
+
+  // Encode for safe cookie storage
+  const encodedValue = encodeURIComponent(value);
+  document.cookie = `user-info=${encodedValue}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`; // 30 days
+}
+
+/**
+ * Get user-info from cookie
+ */
+export function getUserInfoCookie(): { id: string; role: string; name?: string; email?: string } | null {
+  const value = getCookie('user-info');
+  if (!value) return null;
+
+  try {
+    return JSON.parse(decodeURIComponent(value));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clear user-info cookie
+ */
+export function clearUserInfoCookie() {
+  deleteCookie('user-info');
+}
+
+/**
  * Clear all client-accessible auth cookies
  * Note: httpOnly cookies (accessToken, refreshToken) are cleared by backend
  */
 export function clearAuthCookies() {
   deleteCookie('userRole');
+  deleteCookie('user-info');
 }

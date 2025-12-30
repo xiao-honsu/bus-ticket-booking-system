@@ -87,21 +87,24 @@ interface IUserStats {
   totalSpent: number;
 }
 
+// User interface with optional fields to support partial SSR state
+// During SSR, only id and role are available from the decoded JWT
+// Full user data (name, email, etc.) is fetched via background sync
 interface User {
   id: string;
-  name: string;
-  email: string;
+  name?: string; // Optional for SSR partial state
+  email?: string; // Optional for SSR partial state
   role: string;
   phone?: string;
-  isEmailVerified: boolean;
+  isEmailVerified?: boolean;
   profilePictureUrl?: string;
-  status: 'active' | 'suspended' | 'deleted';
-  failedLoginAttempts: number;
+  status?: 'active' | 'suspended' | 'deleted';
+  failedLoginAttempts?: number;
   lockedUntil?: Date;
   lastLoginAt?: Date;
-  oauthProviders: IOAuthProvider[];
-  notificationPreferences: INotificationPreferences;
-  stats: IUserStats;
+  oauthProviders?: IOAuthProvider[];
+  notificationPreferences?: INotificationPreferences;
+  stats?: IUserStats;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }
