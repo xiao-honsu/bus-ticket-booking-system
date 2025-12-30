@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import LocationAutocomplete from '@/components/LocationAutocomplete';
 import TripFilters, { TripFilterValues } from '@/components/TripFilters';
+import UniversalSearchBar from '@/components/UniversalSearchBar';
 import { useSearchTripsQuery } from '@/lib/store/services/api';
 import { Calendar, ArrowRight, Users, Clock, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -127,6 +128,30 @@ function SearchContent() {
       </div>
 
       <div className="relative z-10">
+        {/* Universal Search Bar - NEW */}
+        <div className="mb-6">
+          <UniversalSearchBar
+            placeholder="Quick search: Ha Noi - Sai Gon, Phuong Trang, or trip details..."
+            onRouteSelect={(origin, destination) => {
+              setSearchForm({
+                ...searchForm,
+                origin,
+                destination,
+                originDisplay: origin,
+                destinationDisplay: destination,
+              });
+              // Trigger search after setting
+              setTimeout(() => refetch(), 100);
+            }}
+            onOperatorSelect={(operatorName) => {
+              // You can add operator filter to filters state if needed
+              console.log('Operator selected:', operatorName);
+            }}
+            showRecentSearches={true}
+            className="max-w-4xl mx-auto"
+          />
+        </div>
+
         {/* Enhanced Search Bar with Gradient */}
         <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8 mb-8 relative overflow-hidden">
           {/* Decorative Background Elements */}
