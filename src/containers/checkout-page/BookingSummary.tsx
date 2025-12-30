@@ -89,28 +89,24 @@ export default function BookingSummary() {
         </div>
         <div className="border-t pt-3 mt-3">
           <div className="flex justify-between mb-2">
-            <span className="text-gray-600">Base price per seat:</span>
-            <span className="font-medium">${pricePerSeat.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between mb-2">
             <span className="text-gray-600">Subtotal:</span>
-            <span className="font-medium">${totalPrice.toFixed(2)}</span>
+            <span className="font-medium">{totalPrice.toLocaleString()} ₫</span>
           </div>
           {promotion && (
             <div className="flex justify-between mb-2 text-green-600">
               <span className="flex items-center gap-1">
                 <span>Discount ({promotion.code}):</span>
               </span>
-              <span className="font-medium">-${discountAmount.toFixed(2)}</span>
+              <span className="font-medium">-{discountAmount.toLocaleString()} ₫</span>
             </div>
           )}
           <div className="flex justify-between text-lg font-bold border-t pt-2">
             <span>Total:</span>
-            <span className="text-blue-600">${finalPrice.toFixed(2)}</span>
+            <span className="text-blue-600">{finalPrice.toLocaleString()} ₫</span>
           </div>
           {promotion && (
             <p className="text-xs text-green-600 mt-2">
-              You saved ${discountAmount.toFixed(2)} with {promotion.title}
+              You saved {discountAmount.toLocaleString()} ₫ with {promotion.title}
             </p>
           )}
         </div>
