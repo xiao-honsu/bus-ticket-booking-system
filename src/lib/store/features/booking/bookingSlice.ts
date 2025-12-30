@@ -14,6 +14,17 @@ interface PaymentInfo {
   amount: number;
 }
 
+interface PromotionInfo {
+  userPromotionId: string; // ID of UserPromotion from validate API
+  promotionId: string; // ID of Promotion
+  code: string;
+  title: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  discountAmount: number;
+  finalAmount: number;
+}
+
 interface SeatDetail {
   seatNumber: string;
   price: number;
@@ -37,6 +48,7 @@ interface BookingState {
   currentStep: 'seat-selection' | 'passenger-details' | 'payment' | 'confirmation';
   sessionId: string | null;
   lockExpiresAt: string | null;
+  promotion: PromotionInfo | null;
 }
 
 const initialState: BookingState = {
@@ -49,6 +61,7 @@ const initialState: BookingState = {
   currentStep: 'seat-selection',
   sessionId: null,
   lockExpiresAt: null,
+  promotion: null,
 };
 
 const bookingSlice = createSlice({
@@ -116,6 +129,9 @@ const bookingSlice = createSlice({
     setLockExpiresAt: (state, action: PayloadAction<string | null>) => {
       state.lockExpiresAt = action.payload;
     },
+    setPromotion: (state, action: PayloadAction<PromotionInfo | null>) => {
+      state.promotion = action.payload;
+    },
     resetBooking: () => {
       return initialState;
     },
@@ -138,6 +154,7 @@ export const {
   setCurrentStep,
   setSessionId,
   setLockExpiresAt,
+  setPromotion,
   resetBooking,
 } = bookingSlice.actions;
 

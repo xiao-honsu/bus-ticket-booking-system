@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { SeatMap, SeatLegend, PassengerForm } from '@/containers/seat-selection';
+import { SeatMap, SeatLegend, PassengerForm, BookingPromoCode } from '@/containers/seat-selection';
 import { useGetTripQuery, useReleaseLocksMutation } from '@/lib/store/services/api';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { setTripId } from '@/lib/store/features/booking/bookingSlice';
@@ -29,11 +29,21 @@ export default function BookingPage({ params }: BookingPageProps) {
   const selectedSeatDetails = useAppSelector((state) => state.booking.selectedSeatDetails);
   const passengers = useAppSelector((state) => state.booking.passengers);
   const sessionId = useAppSelector((state) => state.booking.sessionId);
-
-  const [releaseLocks] = useReleaseLocksMutation();
+  const promotion = useAppSelector((state) => state.booking.promotion);
 
   // Calculate total price from selected seat details
   const totalPrice = selectedSeatDetails.reduce((sum, seat) => sum + seat.price, 0);
+
+  const [releaseLocks] = useReleaseLocksMutation();
+
+  // Debug: Log promotion state changes
+  useEffect(() => {
+    if (promotion) {
+      console.log('🎁 Promotion Updated in Booking Page:', promotion);
+    } else {
+      console.log('🎁 No promotion applied');
+    }
+  }, [promotion]);
 
   useEffect(() => {
     dispatch(setTripId(tripId));
@@ -385,19 +395,47 @@ export default function BookingPage({ params }: BookingPageProps) {
                       <span className="text-gray-700 font-medium">Total for {selectedSeats.length} seat(s):</span>
                       <span className="font-semibold text-blue-900">{totalPrice.toLocaleString()} ₫</span>
                     </div>
+                    {promotion && (
+                      <div className="flex justify-between text-sm bg-green-50 p-3 rounded-lg border-2 border-green-200">
+                        <span className="text-green-700 font-medium flex items-center gap-1">
+                          <span>🎉</span> Discount ({promotion.code}):
+                        </span>
+                        <span className="font-bold text-green-700">-{promotion.discountAmount.toLocaleString()} ₫</span>
+                      </div>
+                    )}
                     <div className="border-t-2 border-dashed border-gray-200 pt-4">
                       <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-xl text-white">
                         <div className="flex justify-between items-center">
                           <span className="font-bold text-lg">Total Amount:</span>
-                          <span className="text-2xl font-black">{totalPrice.toLocaleString()} ₫</span>
+                          <span className="text-2xl font-black">
+                            {promotion
+                              ? (
+                                  (trip.pricePerSeat || trip.price) * selectedSeats.length -
+                                  promotion.discountAmount
+                                ).toLocaleString()
+                              : ((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()}{' '}
+                            ₫
+                          </span>
                         </div>
                         <p className="text-xs text-white/80 mt-2">✓ All taxes included</p>
+                        {promotion && (
+                          <p className="text-xs text-yellow-300 mt-1 font-bold">
+                            💰 You saved {promotion.discountAmount.toLocaleString()} ₫ with {promotion.title}!
+                          </p>
+                        )}
                       </div>
                     </div>
                   </>
                 )}
               </CardContent>
             </Card>
+
+            {/* Promo Code Section */}
+            {selectedSeats.length > 0 && (
+              <div className="transform transition-all duration-300 hover:scale-105 animate-in slide-in-from-bottom-2">
+                <BookingPromoCode totalAmount={(trip.pricePerSeat || trip.price) * selectedSeats.length} />
+              </div>
+            )}
 
             {/* Legend */}
             <div className="transform transition-all duration-300 hover:scale-105">

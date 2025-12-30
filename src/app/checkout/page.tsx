@@ -22,6 +22,7 @@ export default function CheckoutPage() {
   const payment = useAppSelector((state) => state.booking.payment);
   const contactInfo = useAppSelector((state) => state.booking.contactInfo);
   const sessionId = useAppSelector((state) => state.booking.sessionId);
+  const promotion = useAppSelector((state) => state.booking.promotion);
   const accessToken = useAppSelector((state) => state.auth.accessToken);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
@@ -88,10 +89,18 @@ export default function CheckoutPage() {
         return;
       }
 
+      const discountAmount = promotion?.discountAmount || 0;
+      const finalAmount = totalAmount - discountAmount;
+
       // Validate totalAmount is a valid number
-      if (isNaN(totalAmount) || totalAmount <= 0) {
+      if (isNaN(finalAmount) || finalAmount <= 0) {
         toast.error('Invalid total amount calculated');
-        console.error('Invalid totalAmount:', { selectedSeatDetails, totalAmount });
+        console.error('Invalid finalAmount:', {
+          totalAmount,
+          selectedSeats,
+          discountAmount,
+          finalAmount,
+        });
         return;
       }
 
@@ -108,8 +117,10 @@ export default function CheckoutPage() {
         })),
         contactEmail: contactInfo.email,
         contactPhone: contactInfo.phone,
-        totalAmount,
-        sessionId: sessionId || undefined, // Convert null to undefined
+        totalAmount: finalAmount,
+        // TODO: Backend needs to accept userPromotion and sessionId
+        // userPromotion: promotion?.userPromotionId,
+        // sessionId: sessionId || undefined,
       };
 
       console.log('Creating booking with data:', bookingData);

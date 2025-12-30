@@ -10,6 +10,7 @@ export default function BookingSummary() {
   const selectedSeats = useAppSelector((state) => state.booking.selectedSeats);
   const selectedSeatDetails = useAppSelector((state) => state.booking.selectedSeatDetails);
   const passengers = useAppSelector((state) => state.booking.passengers);
+  const promotion = useAppSelector((state) => state.booking.promotion);
 
   const { data: trip, isLoading } = useGetTripQuery(tripId || '', {
     skip: !tripId,
@@ -46,7 +47,8 @@ export default function BookingSummary() {
     );
   }
 
-  const pricePerSeat = trip.pricePerSeat || 0;
+  const discountAmount = promotion?.discountAmount || 0;
+  const finalPrice = totalPrice - discountAmount;
 
   return (
     <Card>
@@ -87,28 +89,26 @@ export default function BookingSummary() {
         </div>
         <div className="border-t pt-3 mt-3">
           <div className="flex justify-between mb-2">
-            <span className="text-gray-600">Base price per seat:</span>
-            <span className="font-medium">${pricePerSeat.toFixed(2)}</span>
+            <span className="text-gray-600">Subtotal:</span>
+            <span className="font-medium">{totalPrice.toLocaleString()} ₫</span>
           </div>
-
-          {/* Show individual seat prices */}
-          {selectedSeatDetails.length > 0 && (
-            <div className="space-y-1 mb-3">
-              {selectedSeatDetails.map((seat) => (
-                <div key={seat.seatNumber} className="flex justify-between text-sm">
-                  <span className="text-gray-600">
-                    Seat {seat.seatNumber} ({seat.seatType}):
-                  </span>
-                  <span className="font-medium">${seat.price.toFixed(2)}</span>
-                </div>
-              ))}
+          {promotion && (
+            <div className="flex justify-between mb-2 text-green-600">
+              <span className="flex items-center gap-1">
+                <span>Discount ({promotion.code}):</span>
+              </span>
+              <span className="font-medium">-{discountAmount.toLocaleString()} ₫</span>
             </div>
           )}
-
-          <div className="flex justify-between text-lg font-bold">
+          <div className="flex justify-between text-lg font-bold border-t pt-2">
             <span>Total:</span>
-            <span className="text-blue-600">${totalPrice.toFixed(2)}</span>
+            <span className="text-blue-600">{finalPrice.toLocaleString()} ₫</span>
           </div>
+          {promotion && (
+            <p className="text-xs text-green-600 mt-2">
+              You saved {discountAmount.toLocaleString()} ₫ with {promotion.title}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
