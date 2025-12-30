@@ -2,7 +2,13 @@
 
 import React from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
-import { toggleSeat, setSessionId, setLockExpiresAt } from '@/lib/store/features/booking/bookingSlice';
+import {
+  toggleSeat,
+  setSessionId,
+  setLockExpiresAt,
+  addSeatDetail,
+  removeSeatDetail,
+} from '@/lib/store/features/booking/bookingSlice';
 import { cn } from '@/lib/utils';
 import { useGetTripSeatMapQuery, useLockSeatsMutation, useReleaseLocksMutation } from '@/lib/store/services/api';
 import { useEffect, useState, useCallback } from 'react';
@@ -170,10 +176,22 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
     // Only sync if we don't have any local selection yet (initial load)
     if (selectedFromAPI.length > 0 && localSelectedSeats.length === 0) {
       setLocalSelectedSeats(selectedFromAPI);
-      // Sync with Redux
+      // Sync with Redux and store seat details
       selectedFromAPI.forEach((seatNum) => {
         if (!reduxSelectedSeats.includes(seatNum)) {
           dispatch(toggleSeat(seatNum));
+          // Add seat detail with price
+          const seatInfo = seats.find((s) => s.seatNumber === seatNum);
+          if (seatInfo) {
+            dispatch(
+              addSeatDetail({
+                seatNumber: seatInfo.seatNumber,
+                price: seatInfo.price,
+                seatType: seatInfo.seatType,
+                position: seatInfo.position,
+              })
+            );
+          }
         }
       });
     }
@@ -222,6 +240,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
       const newSelection = localSelectedSeats.filter((s) => s !== seat.seatNumber);
       setLocalSelectedSeats(newSelection);
       dispatch(toggleSeat(seat.seatNumber));
+      dispatch(removeSeatDetail(seat.seatNumber));
 
       // If no seats left, release all locks
       if (newSelection.length === 0) {
@@ -318,6 +337,16 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
       const newSelection = [...localSelectedSeats, seat.seatNumber];
       setLocalSelectedSeats(newSelection);
       dispatch(toggleSeat(seat.seatNumber));
+
+      // Add seat detail with price
+      dispatch(
+        addSeatDetail({
+          seatNumber: seat.seatNumber,
+          price: seat.price,
+          seatType: seat.seatType,
+          position: seat.position,
+        })
+      );
 
       // Lock seats
       try {

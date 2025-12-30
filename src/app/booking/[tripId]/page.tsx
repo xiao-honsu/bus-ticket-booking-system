@@ -26,10 +26,14 @@ export default function BookingPage({ params }: BookingPageProps) {
   const dispatch = useAppDispatch();
   const { data: trip, isLoading, error } = useGetTripQuery(tripId);
   const selectedSeats = useAppSelector((state) => state.booking.selectedSeats);
+  const selectedSeatDetails = useAppSelector((state) => state.booking.selectedSeatDetails);
   const passengers = useAppSelector((state) => state.booking.passengers);
   const sessionId = useAppSelector((state) => state.booking.sessionId);
 
   const [releaseLocks] = useReleaseLocksMutation();
+
+  // Calculate total price from selected seat details
+  const totalPrice = selectedSeatDetails.reduce((sum, seat) => sum + seat.price, 0);
 
   useEffect(() => {
     dispatch(setTripId(tripId));
@@ -365,19 +369,27 @@ export default function BookingPage({ params }: BookingPageProps) {
                 </div>
                 {selectedSeats.length > 0 && (
                   <>
+                    {/* Show individual seat prices */}
+                    <div className="space-y-2">
+                      {selectedSeatDetails.map((seat) => (
+                        <div key={seat.seatNumber} className="flex justify-between text-sm bg-gray-50 p-2 rounded">
+                          <span className="text-gray-700">
+                            Seat {seat.seatNumber} ({seat.seatType}):
+                          </span>
+                          <span className="font-semibold text-gray-900">{seat.price.toLocaleString()} ₫</span>
+                        </div>
+                      ))}
+                    </div>
+
                     <div className="flex justify-between text-sm bg-blue-50 p-3 rounded-lg">
-                      <span className="text-gray-700 font-medium">Selected Seats × {selectedSeats.length}:</span>
-                      <span className="font-semibold text-blue-900">
-                        {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
-                      </span>
+                      <span className="text-gray-700 font-medium">Total for {selectedSeats.length} seat(s):</span>
+                      <span className="font-semibold text-blue-900">{totalPrice.toLocaleString()} ₫</span>
                     </div>
                     <div className="border-t-2 border-dashed border-gray-200 pt-4">
                       <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-xl text-white">
                         <div className="flex justify-between items-center">
                           <span className="font-bold text-lg">Total Amount:</span>
-                          <span className="text-2xl font-black">
-                            {((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()} ₫
-                          </span>
+                          <span className="text-2xl font-black">{totalPrice.toLocaleString()} ₫</span>
                         </div>
                         <p className="text-xs text-white/80 mt-2">✓ All taxes included</p>
                       </div>
