@@ -89,7 +89,6 @@ export default function CheckoutPage() {
         return;
       }
 
-      const totalAmount = pricePerSeat * selectedSeats.length;
       const discountAmount = promotion?.discountAmount || 0;
       const finalAmount = totalAmount - discountAmount;
 
@@ -97,9 +96,8 @@ export default function CheckoutPage() {
       if (isNaN(finalAmount) || finalAmount <= 0) {
         toast.error('Invalid total amount calculated');
         console.error('Invalid finalAmount:', {
-          pricePerSeat,
-          selectedSeats,
           totalAmount,
+          selectedSeats,
           discountAmount,
           finalAmount,
         });

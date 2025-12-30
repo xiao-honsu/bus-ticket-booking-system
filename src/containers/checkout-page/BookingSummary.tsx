@@ -47,8 +47,6 @@ export default function BookingSummary() {
     );
   }
 
-  const pricePerSeat = trip.pricePerSeat || 0;
-  const totalPrice = pricePerSeat * selectedSeats.length;
   const discountAmount = promotion?.discountAmount || 0;
   const finalPrice = totalPrice - discountAmount;
 
