@@ -17,6 +17,7 @@ export default function CheckoutPage() {
   const dispatch = useAppDispatch();
   const tripId = useAppSelector((state) => state.booking.tripId);
   const selectedSeats = useAppSelector((state) => state.booking.selectedSeats);
+  const selectedSeatDetails = useAppSelector((state) => state.booking.selectedSeatDetails);
   const passengers = useAppSelector((state) => state.booking.passengers);
   const payment = useAppSelector((state) => state.booking.payment);
   const contactInfo = useAppSelector((state) => state.booking.contactInfo);
@@ -30,6 +31,9 @@ export default function CheckoutPage() {
   const { data: trip } = useGetTripQuery(tripId || '', {
     skip: !tripId,
   });
+
+  // Calculate total amount from actual seat prices
+  const totalAmount = selectedSeatDetails.reduce((sum, seat) => sum + seat.price, 0);
 
   // Set PayOS as default payment method
   useEffect(() => {
@@ -79,10 +83,9 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Ensure price is valid
-      const pricePerSeat = trip.pricePerSeat || 0;
-      if (pricePerSeat === 0) {
-        toast.error('Trip price information is not available');
+      // Validate total amount from selected seat details
+      if (selectedSeatDetails.length === 0) {
+        toast.error('No seat information available');
         return;
       }
 

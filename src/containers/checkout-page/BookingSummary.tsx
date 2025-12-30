@@ -8,12 +8,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function BookingSummary() {
   const tripId = useAppSelector((state) => state.booking.tripId);
   const selectedSeats = useAppSelector((state) => state.booking.selectedSeats);
+  const selectedSeatDetails = useAppSelector((state) => state.booking.selectedSeatDetails);
   const passengers = useAppSelector((state) => state.booking.passengers);
   const promotion = useAppSelector((state) => state.booking.promotion);
 
   const { data: trip, isLoading } = useGetTripQuery(tripId || '', {
     skip: !tripId,
   });
+
+  // Calculate total price from actual seat prices
+  const totalPrice = selectedSeatDetails.reduce((sum, seat) => sum + seat.price, 0);
 
   if (isLoading) {
     return (
@@ -87,7 +91,7 @@ export default function BookingSummary() {
         </div>
         <div className="border-t pt-3 mt-3">
           <div className="flex justify-between mb-2">
-            <span className="text-gray-600">Price per seat:</span>
+            <span className="text-gray-600">Base price per seat:</span>
             <span className="font-medium">${pricePerSeat.toFixed(2)}</span>
           </div>
           <div className="flex justify-between mb-2">

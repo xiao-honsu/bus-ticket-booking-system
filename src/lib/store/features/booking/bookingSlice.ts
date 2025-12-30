@@ -28,6 +28,7 @@ interface PromotionInfo {
 interface BookingState {
   tripId: string | null;
   selectedSeats: string[];
+  selectedSeatDetails: SeatDetail[]; // New: Store seat details including price
   passengers: Passenger[];
   payment: PaymentInfo | null;
   contactInfo: {
@@ -43,6 +44,7 @@ interface BookingState {
 const initialState: BookingState = {
   tripId: null,
   selectedSeats: [],
+  selectedSeatDetails: [],
   passengers: [],
   payment: null,
   contactInfo: null,
@@ -65,10 +67,24 @@ const bookingSlice = createSlice({
 
       if (index > -1) {
         state.selectedSeats.splice(index, 1);
+        state.selectedSeatDetails = state.selectedSeatDetails.filter((s) => s.seatNumber !== seatNumber);
         state.passengers = state.passengers.filter((p) => p.seatNumber !== seatNumber);
       } else {
         state.selectedSeats.push(seatNumber);
+        // Note: Seat details should be added via setSeatDetails action
       }
+    },
+    setSeatDetails: (state, action: PayloadAction<SeatDetail[]>) => {
+      state.selectedSeatDetails = action.payload;
+    },
+    addSeatDetail: (state, action: PayloadAction<SeatDetail>) => {
+      const exists = state.selectedSeatDetails.find((s) => s.seatNumber === action.payload.seatNumber);
+      if (!exists) {
+        state.selectedSeatDetails.push(action.payload);
+      }
+    },
+    removeSeatDetail: (state, action: PayloadAction<string>) => {
+      state.selectedSeatDetails = state.selectedSeatDetails.filter((s) => s.seatNumber !== action.payload);
     },
     setSelectedSeats: (state, action: PayloadAction<string[]>) => {
       state.selectedSeats = action.payload;
@@ -115,6 +131,9 @@ const bookingSlice = createSlice({
 export const {
   setTripId,
   toggleSeat,
+  setSeatDetails,
+  addSeatDetail,
+  removeSeatDetail,
   setSelectedSeats,
   addPassenger,
   updatePassenger,
