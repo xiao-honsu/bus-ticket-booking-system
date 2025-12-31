@@ -95,6 +95,23 @@ export default function LocationAutocomplete({
     onSelect('', '');
   };
 
+  // Handle manual input - update parent when user finishes typing
+  const handleBlur = () => {
+    if (searchQuery && !selectedLocation) {
+      // User typed something but didn't select from dropdown
+      // Pass the typed value as-is to parent
+      onSelect(searchQuery, searchQuery);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery && !selectedLocation) {
+      // User pressed Enter with typed text
+      onSelect(searchQuery, searchQuery);
+      setShowDropdown(false);
+    }
+  };
+
   return (
     <div className={cn('flex flex-col space-y-2 relative', className)} ref={wrapperRef}>
       <label className="text-sm font-medium text-gray-700">{label}</label>
@@ -114,6 +131,8 @@ export default function LocationAutocomplete({
             }
           }}
           onFocus={() => setShowDropdown(true)}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           disabled={disabled}
           className="pl-10 pr-10"
         />
@@ -130,7 +149,7 @@ export default function LocationAutocomplete({
 
       {/* Dropdown */}
       {showDropdown && searchQuery.length >= 2 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto min-w-[300px] w-max max-w-xl">
           {isLoading || isFetching ? (
             <div className="py-4 text-center text-sm text-gray-500">Searching...</div>
           ) : locations.length === 0 ? (
@@ -142,14 +161,14 @@ export default function LocationAutocomplete({
                   key={location.id}
                   onClick={() => handleSelect(location)}
                   className={cn(
-                    'px-4 py-3 cursor-pointer hover:bg-blue-50 flex items-start gap-3',
+                    'px-4 py-4 cursor-pointer hover:bg-blue-50 flex items-start gap-3',
                     selectedLocation?.id === location.id && 'bg-blue-100'
                   )}
                 >
-                  <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <MapPin className="h-5 w-5 text-gray-400 mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate">{location.city}</div>
-                    <div className="text-xs text-gray-500 truncate">
+                    <div className="font-medium text-gray-900 whitespace-nowrap text-base">{location.city}</div>
+                    <div className="text-sm text-gray-500 whitespace-nowrap">
                       {location.state}
                       {location.country && `, ${location.country}`}
                       {location.code && ` (${location.code})`}
@@ -163,7 +182,7 @@ export default function LocationAutocomplete({
       )}
 
       {showDropdown && searchQuery.length > 0 && searchQuery.length < 2 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 py-4 text-center text-sm text-gray-500">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 py-4 text-center text-sm text-gray-500 min-w-[300px] w-max max-w-xl">
           Type at least 2 characters to search
         </div>
       )}

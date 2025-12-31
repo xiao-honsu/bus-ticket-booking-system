@@ -47,7 +47,7 @@ function SearchContent() {
   const queryParams = useMemo(() => {
     const params: any = {};
 
-    // Add search criteria if present
+    // Add search criteria if present - IMPORTANT: origin and destination are city names
     if (searchForm.origin) params.origin = searchForm.origin;
     if (searchForm.destination) params.destination = searchForm.destination;
     if (searchForm.departureDate) params.departureDate = searchForm.departureDate;
@@ -70,6 +70,14 @@ function SearchContent() {
     params.limit = ITEMS_PER_PAGE;
 
     console.log('🔍 Search Query Params:', params);
+    console.log(
+      '📍 Origin:',
+      searchForm.origin,
+      '| Destination:',
+      searchForm.destination,
+      '| Date:',
+      searchForm.departureDate
+    );
     return params;
   }, [
     searchForm.origin,
@@ -89,15 +97,26 @@ function SearchContent() {
   ]);
 
   // Reactive query - automatically fetches when queryParams change
-  const { data, isLoading, error, refetch } = useSearchTripsQuery(queryParams);
+  const { data, isLoading, error, refetch } = useSearchTripsQuery(queryParams, {
+    // Skip initial query if no search criteria
+    skip: false, // Always fetch to show all trips initially
+  });
 
   const trips = data?.results || [];
   const totalPages = data?.totalPages || 1;
   const totalResults = data?.totalResults || 0;
 
   const handleSearch = () => {
-    // Force refetch with current params when button is clicked
-    refetch();
+    console.log('🔍 Search button clicked');
+    console.log('Search form state:', searchForm);
+
+    // Reset to first page when new search is performed
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      // If already on page 1, manually trigger refetch
+      refetch();
+    }
   };
 
   const handleResetFilters = () => {

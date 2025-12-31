@@ -228,6 +228,7 @@ export const api = createApi({
         busType?: string;
         amenities?: string;
         minAvailableSeats?: number;
+        status?: string;
         sortBy?: string;
         sortOrder?: 'asc' | 'desc';
         page?: number;
@@ -285,6 +286,22 @@ export const api = createApi({
         url: `/trips/${tripId}/seatpricing`,
         method: 'PATCH',
         body: { seatPricing },
+      }),
+      invalidatesTags: ['Trip'],
+    }),
+    updateTripStatus: builder.mutation({
+      query: ({
+        tripId,
+        status,
+        cancellationReason,
+      }: {
+        tripId: string;
+        status: string;
+        cancellationReason?: string;
+      }) => ({
+        url: `/trips/${tripId}`,
+        method: 'PATCH',
+        body: { status, ...(cancellationReason && { cancellationReason }) },
       }),
       invalidatesTags: ['Trip'],
     }),
@@ -765,6 +782,7 @@ export const {
   useGetTripSeatMapQuery,
   useReleaseLocksMutation,
   useExtendLocksMutation,
+  useUpdateTripStatusMutation,
   useUniversalSearchQuery,
   useLazyUniversalSearchQuery,
   useGetSearchSuggestionsQuery,
