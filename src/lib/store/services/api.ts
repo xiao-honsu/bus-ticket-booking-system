@@ -735,6 +735,35 @@ export const api = createApi({
         body: data,
       }),
     }),
+
+    // Analytics endpoints
+    getAnalytics: builder.query({
+      query: (period: '7d' | '30d' | '90d' = '7d') => ({
+        url: '/analytics',
+        params: { period },
+      }),
+    }),
+
+    getRevenueStats: builder.query({
+      query: (period: '7d' | '30d' | '90d' = '7d') => ({
+        url: '/analytics/revenue',
+        params: { period },
+      }),
+    }),
+
+    getBookingStats: builder.query({
+      query: (period: '7d' | '30d' | '90d' = '30d') => ({
+        url: '/analytics/bookings',
+        params: { period },
+      }),
+    }),
+
+    getPopularRoutes: builder.query({
+      query: (limit: number = 10) => ({
+        url: '/analytics/popular-routes',
+        params: { limit },
+      }),
+    }),
   }),
 });
 
@@ -796,4 +825,8 @@ export const {
   useCollectPromotionMutation,
   useGetMyPromotionsQuery,
   useValidatePromotionMutation,
+  useGetAnalyticsQuery,
+  useGetRevenueStatsQuery,
+  useGetBookingStatsQuery,
+  useGetPopularRoutesQuery,
 } = api;

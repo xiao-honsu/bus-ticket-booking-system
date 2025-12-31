@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,7 +15,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, Ticket } from 'lucide-react';
+import { ArrowLeft, Ticket, Search, Filter } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useMemo } from 'react';
 import { useGetBookingsQuery, useCancelBookingMutation } from '@/lib/store/services/api';
@@ -24,26 +25,66 @@ import { vi } from 'date-fns/locale';
 
 export default function BookingMonitoringPage() {
   const router = useRouter();
+
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
+
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
 
-  // Fetch bookings
-  const { data: bookingsData, isLoading } = useGetBookingsQuery({ page: 1, limit: 100 });
+  // Fetch bookings with higher limit to get all recent bookings
+  const { data: bookingsData, isLoading } = useGetBookingsQuery({ page: 1, limit: 500 });
 
   const [cancelBooking] = useCancelBookingMutation();
 
-  // Filter bookings by date
+  // Filter and sort bookings
   const filteredBookings = useMemo(() => {
-    const bookings = bookingsData?.results || [];
-    if (!dateFilter) return bookings;
-    return bookings.filter((bk: any) => {
-      const bookingDate = format(parseISO(bk.createdAt), 'yyyy-MM-dd');
-      return bookingDate === dateFilter;
+    let bookings = bookingsData?.results || [];
+
+    // Default sort by createdAt descending (newest first)
+    bookings = [...bookings].sort((a: any, b: any) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA; // Descending order (newest first)
     });
-  }, [bookingsData?.results, dateFilter]);
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      bookings = bookings.filter((bk: any) => {
+        const referenceNumber = (bk.referenceNumber || bk.id || '').toLowerCase();
+        const userName = (bk.user?.name || '').toLowerCase();
+        const userEmail = (bk.user?.email || '').toLowerCase();
+        const userPhone = (bk.contactInfo?.phone || '').toLowerCase();
+
+        return (
+          referenceNumber.includes(query) ||
+          userName.includes(query) ||
+          userEmail.includes(query) ||
+          userPhone.includes(query)
+        );
+      });
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      bookings = bookings.filter((bk: any) => bk.status === statusFilter);
+    }
+
+    // Date filter (single booking date)
+    if (dateFilter) {
+      bookings = bookings.filter((bk: any) => {
+        const bookingDate = format(parseISO(bk.createdAt), 'yyyy-MM-dd');
+        return bookingDate === dateFilter;
+      });
+    }
+
+    return bookings;
+  }, [bookingsData?.results, searchQuery, statusFilter, dateFilter]);
 
   const statusColor = (status: string) => {
     if (status === 'confirmed') return 'bg-emerald-100 text-emerald-700';
@@ -80,6 +121,12 @@ export default function BookingMonitoringPage() {
     return passengers.map((p) => p.seatNumber).join(', ');
   };
 
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setDateFilter('');
+  };
+
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-8 space-y-6">
@@ -94,19 +141,65 @@ export default function BookingMonitoringPage() {
           </Button>
         </div>
 
+        {/* Filters Section */}
         <Card>
-          <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-blue-600" /> Filters & Search
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Search Box */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                type="text"
+                placeholder="Search by booking ID, passenger name, email, or phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Filter Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Booking Date Filter */}
+              <div>
+                <Input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  placeholder="Booking Date"
+                />
+              </div>
+
+              {/* Clear Filters Button */}
+              <Button variant="outline" onClick={clearFilters} className="w-full">
+                Clear Filters
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        {/* Bookings List */}
+        <Card>
+          <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Ticket className="w-4 h-4 text-blue-600" /> Bookings ({filteredBookings.length})
             </CardTitle>
-            <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="md:w-48"
-              />
-            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
