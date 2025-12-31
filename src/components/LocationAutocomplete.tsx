@@ -95,19 +95,41 @@ export default function LocationAutocomplete({
     onSelect('', '');
   };
 
-  // Handle manual input - update parent when user finishes typing
+  // Handle manual input - DON'T allow search without selecting from dropdown
   const handleBlur = () => {
+    // If user typed but didn't select from dropdown
     if (searchQuery && !selectedLocation) {
-      // User typed something but didn't select from dropdown
-      // Pass the typed value as-is to parent
-      onSelect(searchQuery, searchQuery);
+      // Check if the typed text exactly matches a location in the results
+      const exactMatch = locations.find((loc) => loc.city.toLowerCase() === searchQuery.toLowerCase());
+      if (exactMatch) {
+        // Auto-select the exact match
+        handleSelect(exactMatch);
+      } else {
+        // Clear invalid input after delay to allow dropdown click to complete
+        setTimeout(() => {
+          // Double-check selectedLocation wasn't set by dropdown click
+          if (searchQuery && !selectedLocation) {
+            setSearchQuery('');
+            onSelect('', '');
+          }
+        }, 300);
+      }
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && searchQuery && !selectedLocation) {
-      // User pressed Enter with typed text
-      onSelect(searchQuery, searchQuery);
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // If user pressed Enter, try to find exact match or select first result
+      if (searchQuery && !selectedLocation) {
+        const exactMatch = locations.find((loc) => loc.city.toLowerCase() === searchQuery.toLowerCase());
+        if (exactMatch) {
+          handleSelect(exactMatch);
+        } else if (locations.length > 0) {
+          // Auto-select first result
+          handleSelect(locations[0]);
+        }
+      }
       setShowDropdown(false);
     }
   };
@@ -159,7 +181,10 @@ export default function LocationAutocomplete({
               {locations.map((location) => (
                 <li
                   key={location.id}
-                  onClick={() => handleSelect(location)}
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // Prevent blur from firing
+                    handleSelect(location);
+                  }}
                   className={cn(
                     'px-4 py-4 cursor-pointer hover:bg-blue-50 flex items-start gap-3',
                     selectedLocation?.id === location.id && 'bg-blue-100'

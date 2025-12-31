@@ -35,6 +35,9 @@ function SearchContent() {
   });
 
   const [currentPage, setCurrentPage] = useState(1);
+  // If there are URL params, auto-fetch on initial load
+  const hasInitialParams = searchParams.get('origin') || searchParams.get('destination') || searchParams.get('date');
+  const [shouldFetch, setShouldFetch] = useState(!!hasInitialParams); // Control when to fetch
   const ITEMS_PER_PAGE = 3;
 
   // Extract values before useMemo for proper dependency tracking
@@ -96,10 +99,10 @@ function SearchContent() {
     currentPage,
   ]);
 
-  // Reactive query - automatically fetches when queryParams change
+  // Reactive query - only fetch when shouldFetch is true or on initial load
   const { data, isLoading, error, refetch } = useSearchTripsQuery(queryParams, {
-    // Skip initial query if no search criteria
-    skip: false, // Always fetch to show all trips initially
+    // Skip query until user clicks search button
+    skip: !shouldFetch,
   });
 
   const trips = data?.results || [];
@@ -110,13 +113,14 @@ function SearchContent() {
     console.log('🔍 Search button clicked');
     console.log('Search form state:', searchForm);
 
+    // Enable fetching first
+    setShouldFetch(true);
+
     // Reset to first page when new search is performed
     if (currentPage !== 1) {
       setCurrentPage(1);
-    } else {
-      // If already on page 1, manually trigger refetch
-      refetch();
     }
+    // Note: No need to call refetch() - setting shouldFetch and queryParams change will trigger auto-fetch
   };
 
   const handleResetFilters = () => {
