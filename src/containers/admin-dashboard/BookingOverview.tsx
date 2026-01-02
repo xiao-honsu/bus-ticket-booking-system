@@ -47,7 +47,10 @@ export default function BookingOverview() {
           <CardTitle>Recent Bookings</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-red-500">Failed to load bookings</p>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-2">Unable to load bookings at this time</p>
+            <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
+          </div>
         </CardContent>
       </Card>
     );

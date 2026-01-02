@@ -14,27 +14,6 @@ export default function QuickActions() {
       description: 'Search for available trips',
       variant: 'default' as const,
     },
-    {
-      label: 'View Profile',
-      href: '/dashboard/profile',
-      icon: User,
-      description: 'Manage your account',
-      variant: 'outline' as const,
-    },
-    {
-      label: 'My Bookings',
-      href: '/dashboard/bookings',
-      icon: Calendar,
-      description: 'View all your bookings',
-      variant: 'outline' as const,
-    },
-    {
-      label: 'Help & Support',
-      href: '/support',
-      icon: FileText,
-      description: 'Get help or contact us',
-      variant: 'outline' as const,
-    },
   ];
 
   return (
