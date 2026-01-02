@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { SeatMap, SeatLegend, PassengerForm, BookingPromoCode } from '@/containers/seat-selection';
+import { SeatMap, PassengerForm, BookingPromoCode } from '@/containers/seat-selection';
 import { useGetTripQuery, useReleaseLocksMutation } from '@/lib/store/services/api';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { setTripId } from '@/lib/store/features/booking/bookingSlice';
@@ -9,12 +9,16 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import SeatLockTimer from '@/components/SeatLockTimer';
+import { AnimatedBackground } from '@/components/ui/animated-background';
+import { BorderBeam } from '@/components/ui/border-beam';
 import { getSocket } from '@/lib/services/socket';
 import { SOCKET_EVENTS } from '@/lib/types/socket';
+import { ArrowLeft, Bus, Clock, MapPin, ArrowRight, Route as RouteIcon, CreditCard, Ticket } from 'lucide-react';
 
 interface BookingPageProps {
   params: Promise<{ tripId: string }>;
@@ -113,250 +117,191 @@ export default function BookingPage({ params }: BookingPageProps) {
 
   if (isLoading) {
     return (
-      <main className="container mx-auto px-4 py-8">
-        <Skeleton className="h-10 w-64 mb-6" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <Skeleton className="h-96 w-full" />
-            <Skeleton className="h-64 w-full" />
+      <AnimatedBackground>
+        <main className="container mx-auto px-3 py-4 md:px-4 md:py-6">
+          <Skeleton className="h-8 w-48 mb-4" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 space-y-4">
+              <Skeleton className="h-72 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
+            <aside className="lg:col-span-1 space-y-3">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-40 w-full" />
+            </aside>
           </div>
-          <aside className="lg:col-span-1">
-            <Skeleton className="h-48 w-full" />
-          </aside>
-        </div>
-      </main>
+        </main>
+      </AnimatedBackground>
     );
   }
 
   if (error || !trip) {
     return (
-      <main className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Error Loading Trip</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-red-500">{error ? 'Failed to load trip details' : 'Trip not found'}</p>
-            <Button onClick={() => router.push('/search')} className="mt-4">
-              Back to Search
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
+      <AnimatedBackground>
+        <main className="container mx-auto px-3 py-4 md:px-4 md:py-6">
+          <Card className="py-0">
+            <CardHeader className="pb-2">
+              <CardTitle>Error Loading Trip</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <p className="text-destructive text-sm">Failed to load trip details. Please try again later.</p>
+              <Button onClick={() => router.push('/search')} className="mt-3" size="sm">
+                Back to Search
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+      </AnimatedBackground>
     );
   }
 
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Animated Background Shapes */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-1000" />
-      </div>
+  // Calculate duration
+  const durationHours = Math.round(
+    (new Date(trip.arrivalTime).getTime() - new Date(trip.departureTime).getTime()) / (1000 * 60 * 60)
+  );
 
-      <div className="container mx-auto px-4 py-6 relative z-10">
+  return (
+    <AnimatedBackground>
+      <main className="container mx-auto px-3 py-4 md:px-4 md:py-6">
         {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="mb-4 hover:bg-white/80 backdrop-blur-sm transition-all duration-300 hover:scale-105"
-        >
-          ← Back to Search
+        <Button variant="ghost" size="sm" onClick={() => router.back()} className="mb-3 -ml-2 h-8">
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
         </Button>
 
-        {/* Trip Header Card */}
-        <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-3xl shadow-2xl p-8 mb-6 relative overflow-hidden">
-          {/* Decorative Background Elements */}
-          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24" />
-
-          <div className="relative z-10">
-            {/* Main Route Title */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="bg-white/20 backdrop-blur-md p-4 rounded-2xl shadow-lg">
-                <span className="text-6xl">🚌</span>
-              </div>
-              <div className="flex-1">
-                <h1 className="text-4xl md:text-5xl font-black text-white drop-shadow-lg mb-2 flex items-center gap-3 flex-wrap">
-                  {trip.route?.origin?.city || trip.route?.origin}
-                  <span className="text-yellow-300 animate-pulse">→</span>
-                  {trip.route?.destination?.city || trip.route?.destination}
-                </h1>
-                <div className="flex items-center gap-2 text-white/90">
-                  <span className="text-lg">📍</span>
-                  <p className="text-lg font-medium">
+        {/* Trip Header Card - Compact Redesign */}
+        <Card className="mb-4 relative overflow-hidden py-0 gap-0">
+          <BorderBeam size={200} duration={12} delay={9} />
+          <CardContent className="p-4 md:p-5">
+            {/* Route Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="bg-primary/10 p-2 md:p-2.5 rounded-xl shrink-0">
+                  <Bus className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-lg md:text-xl font-bold flex items-center gap-2 flex-wrap">
+                    <span className="truncate">{trip.route?.origin?.city || trip.route?.origin}</span>
+                    <ArrowRight className="h-4 w-4 text-primary shrink-0" />
+                    <span className="truncate">{trip.route?.destination?.city || trip.route?.destination}</span>
+                  </h1>
+                  <p className="text-xs md:text-sm text-muted-foreground truncate">
                     {trip.route?.routeName || `${trip.route?.origin} - ${trip.route?.destination}`}
                   </p>
                 </div>
               </div>
-              <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/40 px-4 py-2 text-sm font-bold">
+              <Badge variant="secondary" className="text-xs font-medium w-fit shrink-0">
                 ✅ Scheduled
               </Badge>
             </div>
 
-            {/* Journey Timeline */}
-            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-6 border border-white/30 shadow-lg mb-6">
-              <div className="flex items-center justify-between gap-8">
+            {/* Journey Timeline - Compact */}
+            <div className="bg-muted/50 rounded-lg p-3 md:p-4">
+              <div className="flex items-center justify-between gap-2 md:gap-4">
                 {/* Departure */}
-                <div className="flex-1">
-                  <div className="text-white/80 text-sm mb-2 font-semibold">Departure</div>
-                  <div className="text-5xl font-black text-white drop-shadow-md mb-1">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] md:text-xs text-muted-foreground font-medium mb-0.5">Departure</p>
+                  <p className="text-xl md:text-2xl font-bold">
                     {new Date(trip.departureTime).toLocaleTimeString('en-US', {
                       hour: '2-digit',
                       minute: '2-digit',
                       hour12: false,
                     })}
-                  </div>
-                  <div className="text-white/90 font-semibold mb-2">
+                  </p>
+                  <p className="text-xs md:text-sm font-medium">
                     {new Date(trip.departureTime).toLocaleDateString('en-US', {
                       weekday: 'short',
                       month: 'short',
                       day: 'numeric',
                     })}
-                  </div>
-                  <div className="flex items-center gap-1 text-white/80 text-sm">
-                    <span>📍</span>
-                    <span>{trip.route?.origin?.landmark || 'Bus Station'}</span>
+                  </p>
+                  <div className="flex items-center gap-1 text-muted-foreground text-[10px] md:text-xs mt-1">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{trip.route?.origin?.landmark || 'Bus Station'}</span>
                   </div>
                 </div>
 
                 {/* Duration */}
-                <div className="flex flex-col items-center gap-2">
-                  <div className="bg-white/30 backdrop-blur-sm p-3 rounded-full">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+                <div className="flex flex-col items-center gap-1 shrink-0 px-2">
+                  <div className="bg-primary/10 p-1.5 md:p-2 rounded-full">
+                    <Clock className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
                   </div>
-                  <div className="text-xs text-white font-bold whitespace-nowrap">
-                    {Math.round(
-                      (new Date(trip.arrivalTime).getTime() - new Date(trip.departureTime).getTime()) / (1000 * 60 * 60)
-                    )}
-                    h
-                  </div>
-                  <div className="w-32 h-2 bg-gradient-to-r from-yellow-300 via-orange-300 to-pink-300 rounded-full shadow-md animate-pulse" />
-                  <div className="text-xs text-white font-bold bg-white/20 px-3 py-1 rounded-full">
+                  <p className="text-[10px] md:text-xs font-bold whitespace-nowrap">{durationHours}h</p>
+                  <div className="w-12 md:w-20 h-px bg-primary/50" />
+                  <Badge variant="outline" className="text-[10px] font-medium px-1.5 py-0">
                     {trip.route?.distance || 964}km
-                  </div>
+                  </Badge>
                 </div>
 
                 {/* Arrival */}
-                <div className="flex-1 text-right">
-                  <div className="text-white/80 text-sm mb-2 font-semibold">Arrival</div>
-                  <div className="text-5xl font-black text-white drop-shadow-md mb-1">
+                <div className="flex-1 text-right min-w-0">
+                  <p className="text-[10px] md:text-xs text-muted-foreground font-medium mb-0.5">Arrival</p>
+                  <p className="text-xl md:text-2xl font-bold">
                     {new Date(trip.arrivalTime).toLocaleTimeString('en-US', {
                       hour: '2-digit',
                       minute: '2-digit',
                       hour12: false,
                     })}
-                  </div>
-                  <div className="text-white/90 font-semibold mb-2">
+                  </p>
+                  <p className="text-xs md:text-sm font-medium">
                     {new Date(trip.arrivalTime).toLocaleDateString('en-US', {
                       weekday: 'short',
                       month: 'short',
                       day: 'numeric',
                     })}
-                  </div>
-                  <div className="flex items-center gap-1 text-white/80 text-sm justify-end">
-                    <span>🏯</span>
-                    <span>{trip.route?.destination?.landmark || 'Bus Station'}</span>
+                  </p>
+                  <div className="flex items-center gap-1 text-muted-foreground text-[10px] md:text-xs mt-1 justify-end">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{trip.route?.destination?.landmark || 'Bus Station'}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Stops Info */}
+            {/* Stops Info - Compact */}
             {trip.route?.stops && trip.route.stops.length > 0 && (
-              <div className="bg-white/20 backdrop-blur-md p-5 rounded-xl border border-white/30 shadow-md">
-                <p className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                  <span className="text-lg">🛑</span>
-                  Stops on the way:
+              <div className="mt-3 pt-3 border-t">
+                <p className="text-xs font-medium mb-2 flex items-center gap-1.5 text-muted-foreground">
+                  <RouteIcon className="h-3.5 w-3.5" />
+                  Stops: {trip.route.stops.length}
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {trip.route.stops.map((stop: any, idx: number) => (
-                    <Badge
-                      key={idx}
-                      className="text-xs bg-white/30 backdrop-blur-sm text-white border-white/40 hover:bg-white/40 transition-all px-3 py-1.5 font-semibold"
-                    >
-                      📌 {stop.city || stop} ({stop.minutesFromStart || idx * 120}m)
+                    <Badge key={idx} variant="outline" className="text-[10px] px-2 py-0.5 font-medium">
+                      {stop.city || stop}
                     </Badge>
                   ))}
                 </div>
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Seat Map - Left Side */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="transform transition-all duration-500 hover:scale-[1.01]">
-              <SeatMap tripId={tripId} totalSeats={trip.bus?.totalSeats || 40} />
-            </div>
+          <div className="lg:col-span-2">
+            <SeatMap tripId={tripId} totalSeats={trip.bus?.totalSeats || 40} />
           </div>
 
           {/* Booking Summary - Right Side */}
-          <aside className="lg:col-span-1 space-y-4">
+          <aside className="lg:col-span-1 space-y-3">
             {/* Timer */}
-            <div className="transform transition-all duration-300 hover:scale-105">
-              <SeatLockTimer />
-            </div>
-
-            {/* Trip Info Card */}
-            <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white border-0 shadow-xl overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-              <CardHeader className="pb-3 relative z-10">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <span className="text-2xl">✈️</span>
-                  Your Journey
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 relative z-10">
-                <div className="flex justify-between items-center">
-                  <div className="flex-1">
-                    <p className="text-white/70 text-xs mb-1">Departure</p>
-                    <p className="font-bold text-lg">{trip.route?.origin?.city || trip.route?.origin}</p>
-                    <p className="text-sm text-white/90">
-                      {new Date(trip.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                  <div className="px-4">
-                    <div className="text-3xl animate-bounce">→</div>
-                  </div>
-                  <div className="flex-1 text-right">
-                    <p className="text-white/70 text-xs mb-1">Arrival</p>
-                    <p className="font-bold text-lg">{trip.route?.destination?.city || trip.route?.destination}</p>
-                    <p className="text-sm text-white/90">
-                      {new Date(trip.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <SeatLockTimer />
 
             {/* Selected Seats */}
             {selectedSeats.length > 0 && (
-              <Card className="border-2 border-green-200 bg-green-50/50 backdrop-blur-sm shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2 text-green-900">
-                    <span className="text-xl">✅</span>
-                    Your Selected Seats
+              <Card className="border-2 border-primary/20 bg-primary/5 py-0 gap-0">
+                <CardHeader className="p-3 pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Ticket className="h-4 w-4 text-primary" />
+                    Selected Seats ({selectedSeats.length})
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedSeats.map((seat, index) => (
-                      <Badge
-                        key={seat}
-                        className="text-sm px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0 shadow-md animate-in fade-in-50 slide-in-from-bottom-2"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        💺 {seat}
+                <CardContent className="px-3 pb-3">
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedSeats.map((seat) => (
+                      <Badge key={seat} variant="default" className="text-xs px-2 py-1">
+                        {seat}
                       </Badge>
                     ))}
                   </div>
@@ -365,65 +310,59 @@ export default function BookingPage({ params }: BookingPageProps) {
             )}
 
             {/* Fare Details */}
-            <Card className="bg-white/80 backdrop-blur-sm border-2 border-blue-100 shadow-lg">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <span className="text-xl">💳</span>
+            <Card className="py-0 gap-0">
+              <CardHeader className="p-3 pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-primary" />
                   Fare Breakdown
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Base Fare per seat:</span>
-                  <span className="font-semibold">{(trip.pricePerSeat || trip.price)?.toLocaleString()} ₫</span>
+              <CardContent className="px-3 pb-3 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Base Fare/seat:</span>
+                  <span className="font-medium">{(trip.pricePerSeat || trip.price)?.toLocaleString()} ₫</span>
                 </div>
                 {selectedSeats.length > 0 && (
                   <>
                     {/* Show individual seat prices */}
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       {selectedSeatDetails.map((seat) => (
-                        <div key={seat.seatNumber} className="flex justify-between text-sm bg-gray-50 p-2 rounded">
-                          <span className="text-gray-700">
-                            Seat {seat.seatNumber} ({seat.seatType}):
+                        <div key={seat.seatNumber} className="flex justify-between text-xs bg-muted/50 p-1.5 rounded">
+                          <span>
+                            {seat.seatNumber} ({seat.seatType})
                           </span>
-                          <span className="font-semibold text-gray-900">{seat.price.toLocaleString()} ₫</span>
+                          <span className="font-medium">{seat.price.toLocaleString()} ₫</span>
                         </div>
                       ))}
                     </div>
 
-                    <div className="flex justify-between text-sm bg-blue-50 p-3 rounded-lg">
-                      <span className="text-gray-700 font-medium">Total for {selectedSeats.length} seat(s):</span>
-                      <span className="font-semibold text-blue-900">{totalPrice.toLocaleString()} ₫</span>
+                    <Separator className="my-2" />
+
+                    <div className="flex justify-between text-xs">
+                      <span className="font-medium">
+                        Subtotal ({selectedSeats.length} seat{selectedSeats.length > 1 ? 's' : ''}):
+                      </span>
+                      <span className="font-semibold">{totalPrice.toLocaleString()} ₫</span>
                     </div>
+
                     {promotion && (
-                      <div className="flex justify-between text-sm bg-green-50 p-3 rounded-lg border-2 border-green-200">
-                        <span className="text-green-700 font-medium flex items-center gap-1">
-                          <span>🎉</span> Discount ({promotion.code}):
-                        </span>
-                        <span className="font-bold text-green-700">-{promotion.discountAmount.toLocaleString()} ₫</span>
+                      <div className="flex justify-between text-xs bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 p-2 rounded">
+                        <span className="font-medium">Discount ({promotion.code})</span>
+                        <span className="font-bold">-{promotion.discountAmount.toLocaleString()} ₫</span>
                       </div>
                     )}
-                    <div className="border-t-2 border-dashed border-gray-200 pt-4">
-                      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-xl text-white">
-                        <div className="flex justify-between items-center">
-                          <span className="font-bold text-lg">Total Amount:</span>
-                          <span className="text-2xl font-black">
-                            {promotion
-                              ? (
-                                  (trip.pricePerSeat || trip.price) * selectedSeats.length -
-                                  promotion.discountAmount
-                                ).toLocaleString()
-                              : ((trip.pricePerSeat || trip.price) * selectedSeats.length).toLocaleString()}{' '}
-                            ₫
-                          </span>
-                        </div>
-                        <p className="text-xs text-white/80 mt-2">✓ All taxes included</p>
-                        {promotion && (
-                          <p className="text-xs text-yellow-300 mt-1 font-bold">
-                            💰 You saved {promotion.discountAmount.toLocaleString()} ₫ with {promotion.title}!
-                          </p>
-                        )}
+
+                    <div className="bg-primary text-primary-foreground p-3 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-sm">Total:</span>
+                        <span className="text-lg font-bold">
+                          {promotion
+                            ? (totalPrice - promotion.discountAmount).toLocaleString()
+                            : totalPrice.toLocaleString()}{' '}
+                          ₫
+                        </span>
                       </div>
+                      <p className="text-[10px] text-primary-foreground/80 mt-1">✓ All taxes included</p>
                     </div>
                   </>
                 )}
@@ -431,66 +370,47 @@ export default function BookingPage({ params }: BookingPageProps) {
             </Card>
 
             {/* Promo Code Section */}
-            {selectedSeats.length > 0 && (
-              <div className="transform transition-all duration-300 hover:scale-105 animate-in slide-in-from-bottom-2">
-                <BookingPromoCode totalAmount={(trip.pricePerSeat || trip.price) * selectedSeats.length} />
-              </div>
-            )}
-
-            {/* Legend */}
-            <div className="transform transition-all duration-300 hover:scale-105">
-              <SeatLegend />
-            </div>
+            {selectedSeats.length > 0 && <BookingPromoCode totalAmount={totalPrice} />}
 
             {/* Checkout Button */}
             <Button
               onClick={handleContinueToCheckout}
               disabled={selectedSeats.length === 0}
               size="lg"
-              className={`w-full font-bold py-7 text-lg rounded-xl shadow-xl transition-all duration-300 transform hover:scale-105 ${
-                selectedSeats.length === 0
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white animate-pulse hover:animate-none'
-              }`}
+              className="w-full font-semibold py-5 text-sm"
             >
               {selectedSeats.length === 0 ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span>👆</span> Select Your Seats First
-                </span>
+                <>Select Seats to Continue</>
               ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <span>🎉</span> Continue to Checkout ({selectedSeats.length} seat{selectedSeats.length > 1 ? 's' : ''}
-                  )
-                </span>
+                <>
+                  Continue to Checkout ({selectedSeats.length} seat{selectedSeats.length > 1 ? 's' : ''})
+                </>
               )}
             </Button>
 
             {selectedSeats.length === 0 && (
-              <p className="text-sm text-center text-gray-500 animate-pulse">
-                💡 Tip: Click on available seats to select them
-              </p>
+              <p className="text-xs text-center text-muted-foreground">Click on available seats to select them</p>
             )}
           </aside>
         </div>
 
         {/* Passenger Form Below */}
         {selectedSeats.length > 0 && (
-          <div className="mt-8 animate-in slide-in-from-bottom-4 duration-500">
-            <Card className="bg-white/80 backdrop-blur-sm border-2 border-purple-100 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50 border-b">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <span className="text-2xl">👤</span>
-                  Passenger Information
-                </CardTitle>
-                <p className="text-sm text-gray-600 mt-2">📝 Please provide accurate details for all passengers</p>
+          <div className="mt-4">
+            <Card className="py-0 gap-0">
+              <CardHeader className="p-3 md:p-4 bg-muted/50 border-b">
+                <CardTitle className="flex items-center gap-2 text-base">👤 Passenger Information</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Please provide details for all {selectedSeats.length} passenger{selectedSeats.length > 1 ? 's' : ''}
+                </p>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent className="p-3 md:p-4">
                 <PassengerForm />
               </CardContent>
             </Card>
           </div>
         )}
-      </div>
-    </main>
+      </main>
+    </AnimatedBackground>
   );
 }

@@ -87,7 +87,7 @@ export default function AdminPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <main className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
@@ -153,7 +153,7 @@ export default function AdminPage() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div
-                    className={`p-3 rounded-lg bg-gradient-to-br ${item.color} group-hover:scale-110 transition-transform`}
+                    className={`p-3 rounded-lg bg-linear-to-br ${item.color} group-hover:scale-110 transition-transform`}
                   >
                     {item.icon}
                   </div>

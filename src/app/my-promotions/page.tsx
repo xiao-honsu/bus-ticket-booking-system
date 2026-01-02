@@ -55,7 +55,7 @@ export default function MyPromotionsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-12">
+      <div className="bg-linear-to-r from-purple-600 to-pink-600 text-white py-12">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-4">
             <Wallet className="h-12 w-12" />
@@ -104,7 +104,7 @@ export default function MyPromotionsPage() {
                       </Badge>
                     )}
                     <Button
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
+                      className="w-full bg-linear-to-r from-purple-600 to-pink-600"
                       onClick={handleUseNow}
                       size="sm"
                     >
@@ -238,7 +238,7 @@ function PromotionsList({
         return (
           <Card key={userPromotion._id} className="overflow-hidden hover:shadow-lg transition-shadow">
             {/* Header with Code */}
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white">
+            <div className="bg-linear-to-r from-purple-500 to-pink-500 p-4 text-white">
               <div className="text-center">
                 <p className="text-sm opacity-80">DISCOUNT CODE</p>
                 <p className="text-2xl font-bold font-mono mt-1">{promotion.code}</p>

@@ -344,7 +344,7 @@ export default function RouteManagement() {
                       variant={currentPage === page ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setCurrentPage(page)}
-                      className="min-w-[40px]"
+                      className="min-w-10"
                     >
                       {page}
                     </Button>

@@ -5,11 +5,12 @@ import { setPassengers } from '@/lib/store/features/booking/bookingSlice';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
 
 const passengerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -23,9 +24,10 @@ interface PassengerFormProps {
   seatNumber: string;
   onUpdate: (data: z.infer<typeof passengerSchema>) => void;
   initialData?: z.infer<typeof passengerSchema>;
+  index: number;
 }
 
-function SinglePassengerForm({ seatNumber, onUpdate, initialData }: PassengerFormProps) {
+function SinglePassengerForm({ seatNumber, onUpdate, initialData, index }: PassengerFormProps) {
   const form = useForm<z.infer<typeof passengerSchema>>({
     resolver: zodResolver(passengerSchema),
     defaultValues: initialData || {
@@ -40,14 +42,12 @@ function SinglePassengerForm({ seatNumber, onUpdate, initialData }: PassengerFor
   // Update state immediately when form has valid values (including on mount)
   useEffect(() => {
     const validateAndUpdate = async () => {
-      const isValid = await form.trigger(); // Trigger validation
+      const isValid = await form.trigger();
       if (isValid) {
         const values = form.getValues();
         onUpdate(values);
       }
     };
-
-    // Call on mount to capture default/initial values
     validateAndUpdate();
   }, []);
 
@@ -63,96 +63,107 @@ function SinglePassengerForm({ seatNumber, onUpdate, initialData }: PassengerFor
   }, [form, onUpdate]);
 
   return (
-    <div className="mb-6 p-4 border rounded-lg">
-      <h4 className="font-medium mb-3">Seat {seatNumber}</h4>
-      <Form {...form}>
-        <form className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="age"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Age *</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Age"
-                      {...field}
-                      onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gender *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <Card className="py-0 gap-0">
+      <CardHeader className="p-3 pb-2 flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-sm font-medium">Passenger {index + 1}</CardTitle>
+        <Badge variant="outline" className="text-xs font-medium">
+          Seat {seatNumber}
+        </Badge>
+      </CardHeader>
+      <CardContent className="p-3 pt-0">
+        <Form {...form}>
+          <form className="space-y-3">
+            {/* Row 1: Name, Age, Gender */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel className="text-xs">Full Name *</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
+                      <Input placeholder="Enter name" {...field} className="h-8 text-sm" />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phoneNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Optional" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name="documentId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Document ID</FormLabel>
-                <FormControl>
-                  <Input placeholder="Passport/ID Card (optional)" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </form>
-      </Form>
-    </div>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Age *</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Age"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                        className="h-8 text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Gender *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Row 2: Phone & Document ID (Optional) */}
+            <div className="grid grid-cols-2 gap-2">
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs text-muted-foreground">Phone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Optional" {...field} className="h-8 text-sm" />
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="documentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs text-muted-foreground">ID/Passport</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Optional" {...field} className="h-8 text-sm" />
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -181,17 +192,15 @@ export default function PassengerForm() {
 
   if (selectedSeats.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4">Passenger Details</h3>
-        <p className="text-gray-500 text-center py-8">Please select seats to enter passenger details</p>
+      <div className="text-center py-6 text-muted-foreground text-sm">
+        Please select seats to enter passenger details
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-lg font-semibold mb-4">Passenger Details</h3>
-      {selectedSeats.map((seatNumber) => {
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {selectedSeats.map((seatNumber, index) => {
         const existingPassenger = passengers.find((p) => p.seatNumber === seatNumber);
         return (
           <SinglePassengerForm
@@ -199,6 +208,7 @@ export default function PassengerForm() {
             seatNumber={seatNumber}
             onUpdate={handlePassengerUpdate(seatNumber)}
             initialData={existingPassenger}
+            index={index}
           />
         );
       })}

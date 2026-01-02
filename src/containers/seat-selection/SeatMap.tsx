@@ -423,17 +423,17 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
     const status = isSelected ? 'selected' : seat.status;
 
     return cn(
-      'w-14 h-14 rounded-md font-semibold text-sm transition-all relative flex items-center justify-center border-2',
+      'w-10 h-10 md:w-12 md:h-12 rounded-md font-semibold text-xs md:text-sm transition-all relative flex items-center justify-center border-2',
       {
-        // Available - white with green border (matches reference UI)
-        'bg-white border-green-500 hover:bg-green-50 cursor-pointer text-gray-800': status === 'available',
-        // Selected - orange/yellow with hover effect to deselect (matches reference UI)
-        'bg-orange-400 border-orange-500 text-white cursor-pointer hover:bg-orange-500 hover:scale-105':
+        // Available - white with primary border
+        'bg-background border-primary/50 hover:bg-primary/10 cursor-pointer': status === 'available',
+        // Selected - primary color
+        'bg-primary border-primary text-primary-foreground cursor-pointer hover:bg-primary/90 hover:scale-105':
           status === 'selected',
-        // Booked - red (matches reference UI)
-        'bg-red-500 border-red-600 text-white cursor-not-allowed': status === 'booked',
-        // Locked - yellow (locked by others)
-        'bg-yellow-400 border-yellow-500 text-gray-800 cursor-not-allowed': status === 'locked',
+        // Booked - destructive
+        'bg-destructive border-destructive text-destructive-foreground cursor-not-allowed': status === 'booked',
+        // Locked - secondary
+        'bg-secondary border-secondary text-secondary-foreground cursor-not-allowed': status === 'locked',
       }
     );
   };
@@ -453,14 +453,14 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <Skeleton className="h-8 w-48 mb-4" />
-        <Skeleton className="h-12 w-full mb-6" />
+      <div className="rounded-lg p-4 md:p-6 border bg-card">
+        <Skeleton className="h-6 w-40 mb-3" />
+        <Skeleton className="h-10 w-full mb-4" />
         <div className="grid gap-2">
-          {Array.from({ length: 10 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="grid grid-cols-4 gap-2">
               {Array.from({ length: 4 }).map((_, j) => (
-                <Skeleton key={j} className="h-12 w-full" />
+                <Skeleton key={j} className="h-10 w-full" />
               ))}
             </div>
           ))}
@@ -471,9 +471,9 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
 
   if (!seatMapData || (!seatData && seats.length === 0)) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6 text-center">
-        <p className="text-gray-600 mb-2">Seat map not available for this trip</p>
-        <p className="text-sm text-gray-500">Trip ID: {tripId}</p>
+      <div className="rounded-lg p-4 md:p-6 text-center border bg-card">
+        <p className="text-muted-foreground text-sm mb-1">Seat map not available for this trip</p>
+        <p className="text-xs text-muted-foreground">Trip ID: {tripId}</p>
       </div>
     );
   }
@@ -490,83 +490,75 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
   );
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-      {/* WebSocket Connection Status Indicator */}
-      <div className="mb-4 flex items-center justify-between">
+    <div className="rounded-xl p-4 md:p-6 border bg-card">
+      {/* Header with connection status */}
+      <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           {isConnected && isInRoom ? (
             <>
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-xs text-green-700 font-medium">Real-time sync active</span>
+              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+              <span className="text-[10px] md:text-xs font-medium text-primary">Live</span>
             </>
-          ) : isConnected ? (
+          ) : isConnected && !isInRoom ? (
             <>
-              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-              <span className="text-xs text-yellow-700 font-medium">Connecting to room...</span>
+              <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
+              <span className="text-[10px] md:text-xs text-secondary-foreground font-medium">Connecting...</span>
             </>
           ) : (
             <>
-              <div className="w-2 h-2 bg-red-500 rounded-full" />
-              <span className="text-xs text-red-700 font-medium">Offline - Reconnecting...</span>
+              <div className="w-2 h-2 bg-destructive rounded-full" />
+              <span className="text-[10px] md:text-xs text-destructive font-medium">Offline</span>
             </>
           )}
         </div>
+        <Badge variant="outline" className="text-[10px] md:text-xs font-medium">
+          {availableSeatsCount}/{totalSeats} available
+        </Badge>
       </div>
 
+      {/* Instructions */}
+      <p className="text-xs text-muted-foreground mb-4">💡 Click on available seats to select</p>
+
+      {/* Driver Section - Compact */}
       <div className="mb-6">
-        <p className="text-sm text-gray-600 mb-2 flex items-center gap-2">
-          <span className="text-lg">💡</span>
-          <span>Click on available seats to reserve your perfect spot</span>
-        </p>
-        {localSelectedSeats.length > 0 && (
-          <p className="text-xs text-orange-600 ml-7 flex items-center gap-1">
-            <span>✨</span>
-            <span>Click selected seats or refresh the website to deselect them</span>
-          </p>
-        )}
-      </div>
-
-      {/* Driver Section - Front Left Position (Like Real Bus) */}
-      <div className="mb-8">
-        <div className="flex items-center gap-6 max-w-3xl mx-auto">
-          {/* Driver Seat - Left Side */}
-          <div className="relative">
-            <div className="w-20 h-20 bg-gradient-to-br from-slate-600 to-slate-800 rounded-lg shadow-lg flex items-center justify-center border-2 border-slate-500">
-              <span className="text-3xl">👨‍✈️</span>
+        <div className="flex items-center gap-4 max-w-2xl mx-auto">
+          <div className="relative shrink-0">
+            <div className="w-12 h-12 md:w-14 md:h-14 bg-secondary rounded-lg flex items-center justify-center border-2">
+              <span className="text-xl md:text-2xl">👨‍✈️</span>
             </div>
-            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-              <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-full">Driver</span>
-            </div>
+            <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] md:text-[10px] font-medium text-muted-foreground whitespace-nowrap">
+              Driver
+            </span>
           </div>
-
-          {/* Front of Bus Indicator */}
-          <div className="flex-1 border-t-2 border-dashed border-gray-300 relative">
-            <div className="absolute left-1/2 transform -translate-x-1/2 -top-3 bg-white px-3 py-1">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">← Front of Bus →</span>
-            </div>
+          <div className="flex-1 border-t-2 border-dashed border-muted-foreground/30 relative">
+            <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-card px-2 text-[9px] md:text-[10px] font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+              Front
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Seat Grid - Matches Reference UI */}
-      <div className="space-y-8">
+      {/* Seat Grid */}
+      <div className="space-y-6">
         {layout?.decks?.includes('lower') && (
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-sm font-semibold text-gray-700 uppercase flex items-center gap-2">
-                <span className="text-lg">⬇️</span>
-                Lower Deck
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs font-semibold uppercase flex items-center gap-1.5 text-muted-foreground">
+                ⬇️ Lower Deck
               </h4>
-              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+              <Badge
+                variant="outline"
+                className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800"
+              >
                 {seats.filter((s) => s.deck === 'lower' && s.status === 'available').length} available
               </Badge>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {Object.entries(groupedSeats)
                 .filter(([key]) => key.startsWith('lower'))
                 .sort(([a], [b]) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]))
                 .map(([key, rowSeats]) => (
-                  <div key={key} className="flex items-center gap-3 justify-center">
+                  <div key={key} className="flex items-center gap-2 justify-center">
                     {rowSeats
                       .sort((a, b) => a.column - b.column)
                       .map((seat) => (
@@ -581,7 +573,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
                           </button>
                           {seat.position?.isWindow && (
                             <div
-                              className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"
+                              className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-blue-500 rounded-full border border-white"
                               title="Window seat"
                             />
                           )}
@@ -595,21 +587,23 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
 
         {layout?.decks?.includes('upper') && (
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-sm font-semibold text-gray-700 uppercase flex items-center gap-2">
-                <span className="text-lg">⬆️</span>
-                Upper Deck
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs font-semibold uppercase flex items-center gap-1.5 text-muted-foreground">
+                ⬆️ Upper Deck
               </h4>
-              <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+              <Badge
+                variant="outline"
+                className="text-[10px] bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800"
+              >
                 {seats.filter((s) => s.deck === 'upper' && s.status === 'available').length} available
               </Badge>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {Object.entries(groupedSeats)
                 .filter(([key]) => key.startsWith('upper'))
                 .sort(([a], [b]) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]))
                 .map(([key, rowSeats]) => (
-                  <div key={key} className="flex items-center gap-3 justify-center">
+                  <div key={key} className="flex items-center gap-2 justify-center">
                     {rowSeats
                       .sort((a, b) => a.column - b.column)
                       .map((seat) => (
@@ -624,7 +618,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
                           </button>
                           {seat.position?.isWindow && (
                             <div
-                              className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"
+                              className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-blue-500 rounded-full border border-white"
                               title="Window seat"
                             />
                           )}
@@ -638,11 +632,11 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
 
         {/* Single deck layout */}
         {!layout?.decks && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {Object.entries(groupedSeats)
               .sort(([a], [b]) => parseInt(a) - parseInt(b))
               .map(([row, rowSeats]) => (
-                <div key={row} className="flex items-center gap-3 justify-center">
+                <div key={row} className="flex items-center gap-2 justify-center">
                   {rowSeats
                     .sort((a, b) => a.column - b.column)
                     .map((seat, idx) => (
@@ -658,19 +652,53 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
                           </button>
                           {seat.position?.isWindow && (
                             <div
-                              className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"
+                              className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-blue-500 rounded-full border border-white"
                               title="Window seat"
                             />
                           )}
                         </div>
                         {/* Add aisle gap after 2nd column */}
-                        {seat.column === 2 && idx < rowSeats.length - 1 && <div className="w-8" />}
+                        {seat.column === 2 && idx < rowSeats.length - 1 && <div className="w-4 md:w-6" />}
                       </React.Fragment>
                     ))}
                 </div>
               ))}
           </div>
         )}
+      </div>
+
+      {/* Seat Legend - Inline at bottom */}
+      <div className="mt-6 pt-4 border-t">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[10px] md:text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <div className="w-5 h-5 md:w-6 md:h-6 bg-background border-2 border-primary/50 rounded flex items-center justify-center text-[8px] md:text-[10px] font-semibold">
+              A1
+            </div>
+            <span>Available</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-5 h-5 md:w-6 md:h-6 bg-primary border-2 border-primary text-primary-foreground rounded flex items-center justify-center text-[8px] md:text-[10px] font-semibold">
+              A2
+            </div>
+            <span>Selected</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-5 h-5 md:w-6 md:h-6 bg-destructive border-2 border-destructive text-destructive-foreground rounded flex items-center justify-center text-[8px] md:text-[10px] font-semibold">
+              A3
+            </div>
+            <span>Booked</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-5 h-5 md:w-6 md:h-6 bg-secondary border-2 border-secondary text-secondary-foreground rounded flex items-center justify-center text-[8px] md:text-[10px] font-semibold">
+              A4
+            </div>
+            <span>Locked</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 bg-blue-500 rounded-full" />
+            <span>Window</span>
+          </div>
+        </div>
       </div>
     </div>
   );

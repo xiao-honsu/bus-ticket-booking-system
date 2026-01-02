@@ -3,8 +3,10 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchTripsQuery } from '@/lib/store/services/api';
-import { MapPin, DollarSign } from 'lucide-react';
+import { MapPin, DollarSign, Bus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function PopularRoutes() {
   // Fetch trips from API with a reasonable limit
@@ -39,16 +41,18 @@ export default function PopularRoutes() {
 
   if (isLoading) {
     return (
-      <section className="py-16">
+      <section className="py-12 bg-background">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Popular Routes</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 text-foreground">Popular Routes</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-lg shadow-md p-6">
-                <Skeleton className="h-16 w-full mb-4" />
-                <Skeleton className="h-8 w-full mb-2" />
-                <Skeleton className="h-6 w-2/3" />
-              </div>
+              <Card key={i}>
+                <CardContent className="p-6">
+                  <Skeleton className="h-16 w-full mb-4" />
+                  <Skeleton className="h-8 w-full mb-2" />
+                  <Skeleton className="h-6 w-2/3" />
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
@@ -57,53 +61,59 @@ export default function PopularRoutes() {
   }
 
   return (
-    <section className="py-16">
+    <section className="py-12 bg-background">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-8">Popular Routes</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 text-foreground">Popular Routes</h2>
 
         {isError || popularRoutes.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="bg-blue-50 rounded-lg p-8 max-w-md mx-auto">
-              <div className="text-blue-500 text-5xl mb-4">🚌</div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">No Routes Available Yet</h3>
-              <p className="text-gray-600 text-sm">
-                Popular routes will appear here once trips are added to the system. Check back soon!
-              </p>
-            </div>
+          <div className="text-center py-8">
+            <Card className="max-w-md mx-auto gap-0 py-0">
+              <CardContent className="p-6">
+                <Bus className="w-12 h-12 mx-auto mb-4 text-primary" />
+                <h3 className="text-lg font-semibold text-card-foreground mb-2">No Routes Available Yet</h3>
+                <p className="text-muted-foreground text-sm">
+                  Popular routes will appear here once trips are added to the system. Check back soon!
+                </p>
+              </CardContent>
+            </Card>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
             {popularRoutes.map((trip) => (
               <Link href={`/trip-detail/${trip.id || trip._id}`} key={trip.id || trip._id}>
-                <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer h-full flex flex-col justify-between">
-                  <div className="flex items-start justify-between mb-4 gap-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <MapPin className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm font-semibold text-gray-700">{trip.route.origin.city}</span>
+                <Card className="gap-0 py-0 hover:shadow-lg transition-all duration-300 cursor-pointer h-full hover:-translate-y-1">
+                  <CardContent className="p-6 flex flex-col justify-between h-full">
+                    <div className="flex items-start justify-between mb-4 gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-semibold text-card-foreground">{trip.route.origin.city}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-semibold text-card-foreground">
+                            {trip.route.destination.city}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm font-semibold text-gray-700">{trip.route.destination.city}</span>
+                      <span className="text-muted-foreground text-xl">→</span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="w-4 h-4 text-primary" />
+                        <span className="text-primary font-bold text-lg">
+                          {(trip.pricePerSeat / 1000).toFixed(0)}K đ
+                        </span>
                       </div>
+                      <Badge variant="secondary">{`${trip.availableSeats} seats`}</Badge>
                     </div>
-                    <span className="text-gray-300 text-xl">→</span>
-                  </div>
 
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="w-4 h-4 text-blue-600" />
-                      <span className="text-blue-600 font-bold text-lg">
-                        {(trip.pricePerSeat / 1000).toFixed(0)}K đ
-                      </span>
+                    <div className="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
+                      {trip.operator.companyName}
                     </div>
-                    <div className="bg-blue-50 rounded px-2 py-1">
-                      <span className="text-xs font-semibold text-blue-700">{`${trip.availableSeats} seats`}</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 pt-3 border-t text-xs text-gray-500">{trip.operator.companyName}</div>
-                </div>
+                  </CardContent>
+                </Card>
               </Link>
             ))}
           </div>

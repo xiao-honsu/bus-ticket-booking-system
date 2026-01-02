@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Search } from 'lucide-react';
 import { useAppDispatch } from '@/lib/hooks';
 import { setSearchParams } from '@/lib/store/features/trip/tripSlice';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import LocationAutocomplete from '@/components/LocationAutocomplete';
+import { Card, CardContent } from '@/components/ui/card';
+import LocationCombobox from '@/components/LocationCombobox';
+import DepartureDatePicker from '@/components/DepartureDatePicker';
 import { toast } from 'sonner';
 
 export default function SearchForm() {
@@ -27,8 +29,8 @@ export default function SearchForm() {
     // Always allow navigation to search page
     // If all fields are empty, show all trips
     try {
-      // Build search params with filled fields (using exact city names from autocomplete)
-      const searchParamsObj: any = {};
+      // Build search params with filled fields (using exact city names from combobox)
+      const searchParamsObj: Record<string, string> = {};
       if (searchData.origin && searchData.origin.trim()) searchParamsObj.origin = searchData.origin.trim();
       if (searchData.destination && searchData.destination.trim())
         searchParamsObj.destination = searchData.destination.trim();
@@ -54,43 +56,42 @@ export default function SearchForm() {
     }
   };
 
-  // Get today's date for min attribute
-  const today = new Date().toISOString().split('T')[0];
-
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 -mt-10 relative z-10 max-w-4xl mx-auto">
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <LocationAutocomplete
-          label="From"
-          placeholder="Select origin city"
-          value={searchData.origin}
-          onSelect={(cityName, displayName) =>
-            setSearchData({ ...searchData, origin: cityName, originDisplay: displayName })
-          }
-        />
-        <LocationAutocomplete
-          label="To"
-          placeholder="Select destination city"
-          value={searchData.destination}
-          onSelect={(cityName, displayName) =>
-            setSearchData({ ...searchData, destination: cityName, destinationDisplay: displayName })
-          }
-        />
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium">Date</label>
-          <Input
-            type="date"
-            value={searchData.date}
-            min={new Date().toISOString().split('T')[0]}
-            onChange={(e) => setSearchData({ ...searchData, date: e.target.value })}
+    <Card className="shadow-lg -mt-10 relative z-10 max-w-4xl mx-auto border-border bg-card">
+      <CardContent className="p-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <LocationCombobox
+            label="From"
+            placeholder="Select origin city"
+            value={searchData.origin}
+            onSelect={(cityName, displayName) =>
+              setSearchData({ ...searchData, origin: cityName, originDisplay: displayName })
+            }
+            excludeCity={searchData.destination}
           />
-        </div>
-        <div className="flex items-end">
-          <Button type="submit" className="w-full">
-            Search
-          </Button>
-        </div>
-      </form>
-    </div>
+          <LocationCombobox
+            label="To"
+            placeholder="Select destination city"
+            value={searchData.destination}
+            onSelect={(cityName, displayName) =>
+              setSearchData({ ...searchData, destination: cityName, destinationDisplay: displayName })
+            }
+            excludeCity={searchData.origin}
+          />
+          <DepartureDatePicker
+            label="Date"
+            placeholder="Select date"
+            value={searchData.date}
+            onChange={(dateString) => setSearchData({ ...searchData, date: dateString })}
+          />
+          <div className="flex items-end">
+            <Button type="submit" className="w-full gap-2">
+              <Search className="h-4 w-4" />
+              Search
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

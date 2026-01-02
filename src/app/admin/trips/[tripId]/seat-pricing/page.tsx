@@ -181,7 +181,7 @@ export default function TripSeatPricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
       {/* Header */}
       <div className="bg-white border-b shadow-sm sticky top-0 z-10">
         <div className="max-w-[1800px] mx-auto px-6 py-4">
@@ -218,7 +218,7 @@ export default function TripSeatPricingPage() {
           {/* Left Sidebar - Controls */}
           <div className="col-span-3 space-y-6">
             {/* Base Price */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border-2 border-blue-200 p-6">
+            <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border-2 border-blue-200 p-6">
               <h3 className="text-sm font-semibold mb-2 text-blue-900 flex items-center gap-2">
                 <DollarSign className="w-4 h-4" />
                 Base Price
@@ -229,7 +229,7 @@ export default function TripSeatPricingPage() {
 
             {/* Selected Seat */}
             {selectedSeat && (
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-sm border-2 border-green-200 p-6">
+              <div className="bg-linear-to-br from-green-50 to-emerald-50 rounded-xl shadow-sm border-2 border-green-200 p-6">
                 <h3 className="text-sm font-semibold mb-3 text-green-900">🎯 Selected: {selectedSeat.seatNumber}</h3>
                 <Badge className="mb-3">{selectedSeat.seatType}</Badge>
                 <div className="space-y-3">
@@ -261,7 +261,7 @@ export default function TripSeatPricingPage() {
             )}
 
             {/* Bulk Pricing */}
-            <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl shadow-sm border-2 border-purple-200 p-6">
+            <div className="bg-linear-to-br from-purple-50 to-violet-50 rounded-xl shadow-sm border-2 border-purple-200 p-6">
               <h3 className="text-sm font-semibold mb-3 text-purple-900">🎨 Bulk Pricing</h3>
               <div className="space-y-3">
                 <div>
@@ -318,7 +318,7 @@ export default function TripSeatPricingPage() {
           <div className="col-span-9">
             <div className="bg-white rounded-xl shadow-lg border-2 border-gray-300 p-10">
               {/* Bus Front Indicator */}
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-center py-4 px-6 rounded-xl mb-8 font-semibold text-lg shadow-md">
+              <div className="bg-linear-to-r from-blue-500 to-indigo-600 text-white text-center py-4 px-6 rounded-xl mb-8 font-semibold text-lg shadow-md">
                 🚍 Front of Bus
               </div>
 
@@ -378,7 +378,7 @@ export default function TripSeatPricingPage() {
               </div>
 
               {/* Statistics */}
-              <div className="mt-8 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-300 shadow-sm">
+              <div className="mt-8 p-6 bg-linear-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-300 shadow-sm">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div>
                     <div className="text-lg font-bold text-gray-800 mb-1">📊 Pricing Summary</div>

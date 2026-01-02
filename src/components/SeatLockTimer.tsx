@@ -44,32 +44,24 @@ export default function SeatLockTimer() {
 
     try {
       const response = await extendLocks({ sessionId, minutes: 10 }).unwrap();
-
-      // Use newExpiresAt from response (matches new API)
       dispatch(setLockExpiresAt(response.newExpiresAt));
-
       toast.success(`Lock extended by 10 minutes (${response.extendedCount} locks)`);
     } catch (error: any) {
-      // RTK Query error structure: { status, data }
       const errorMsg =
-        error?.data?.message || // RTK Query: error.data.message
-        error?.data?.error?.message || // Backend nested error
-        error?.response?.data?.message || // Axios format (fallback)
+        error?.data?.message ||
+        error?.data?.error?.message ||
+        error?.response?.data?.message ||
         error?.error?.message ||
         error?.message ||
         'Unable to extend lock time';
 
-      const statusCode = error?.status || error?.data?.statusCode || error?.statusCode || 0;
-
-      // Debug logging (only in development)
       if (process.env.NODE_ENV === 'development') {
         console.log('⚠️ Extend lock failed:', {
           message: errorMsg,
-          statusCode: statusCode,
+          statusCode: error?.status || error?.data?.statusCode || error?.statusCode || 0,
         });
       }
 
-      // User-friendly notification
       if (errorMsg && errorMsg !== 'Unable to extend lock time') {
         toast.error(errorMsg, {
           description: 'Your seat lock could not be extended.',
@@ -93,31 +85,38 @@ export default function SeatLockTimer() {
   const isLowTime = timeLeft < 120; // Less than 2 minutes
 
   return (
-    <Card className={cn('border-2', isLowTime ? 'border-red-500 bg-red-50' : 'border-blue-500 bg-blue-50')}>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          {isLowTime ? <AlertCircle className="h-5 w-5 text-red-600" /> : <Clock className="h-5 w-5 text-blue-600" />}
-          <div className="flex-1">
-            <p className={cn('text-sm font-medium', isLowTime ? 'text-red-900' : 'text-blue-900')}>
-              {isLowTime ? 'Hurry up! Your seats will be released soon' : 'Seats locked for you'}
+    <Card
+      className={cn(
+        'border py-0 gap-0',
+        isLowTime ? 'border-destructive bg-destructive/10' : 'border-primary/50 bg-primary/5'
+      )}
+    >
+      <CardContent className="p-3">
+        <div className="flex items-center gap-2">
+          {isLowTime ? (
+            <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+          ) : (
+            <Clock className="h-4 w-4 text-primary shrink-0" />
+          )}
+          <div className="flex-1 min-w-0">
+            <p className={cn('text-xs font-medium truncate', isLowTime ? 'text-destructive' : '')}>
+              {isLowTime ? 'Hurry! Seats releasing soon' : 'Seats locked for you'}
             </p>
-            <p className={cn('text-2xl font-bold', isLowTime ? 'text-red-600' : 'text-blue-600')}>
+            <p className={cn('text-lg font-bold', isLowTime ? 'text-destructive' : '')}>
               {minutes}:{seconds.toString().padStart(2, '0')}
             </p>
           </div>
           <Button
-            variant="outline"
+            variant={isLowTime ? 'destructive' : 'outline'}
             size="sm"
             onClick={handleExtendLock}
-            disabled={isExtending || timeLeft > 480} // Can't extend if more than 8 minutes left
-            className="whitespace-nowrap"
+            disabled={isExtending || timeLeft > 480}
+            className="text-xs h-7 px-2 shrink-0"
           >
-            {isExtending ? 'Extending...' : 'Extend +10min'}
+            {isExtending ? '...' : '+10min'}
           </Button>
         </div>
-        {timeLeft < 60 && (
-          <p className="text-xs text-red-600 mt-2">⚠️ Less than 1 minute remaining! Complete your booking now.</p>
-        )}
+        {timeLeft < 60 && <p className="text-[10px] text-destructive mt-1">⚠️ Less than 1 min! Complete now.</p>}
       </CardContent>
     </Card>
   );

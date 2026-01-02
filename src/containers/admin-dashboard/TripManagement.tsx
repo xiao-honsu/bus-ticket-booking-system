@@ -379,7 +379,7 @@ export default function TripManagement() {
                     variant={currentPage === page ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setCurrentPage(page)}
-                    className="min-w-[40px]"
+                    className="min-w-10"
                   >
                     {page}
                   </Button>

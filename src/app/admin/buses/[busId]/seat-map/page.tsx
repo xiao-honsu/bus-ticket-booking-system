@@ -140,7 +140,7 @@ export default function BusSeatMapConfigPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
       {/* Header */}
       <div className="bg-white border-b shadow-sm sticky top-0 z-10">
         <div className="max-w-[1800px] mx-auto px-6 py-4">
@@ -243,7 +243,7 @@ export default function BusSeatMapConfigPage() {
             </div>
 
             {/* Seat Type Selector */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border-2 border-blue-200 p-6">
+            <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border-2 border-blue-200 p-6">
               <h3 className="text-lg font-semibold mb-4 text-blue-900 flex items-center gap-2">🎨 Painting Mode</h3>
               <div className="space-y-3">
                 <Label className="text-sm mb-2 block text-gray-700">Select Seat Type</Label>
@@ -310,19 +310,19 @@ export default function BusSeatMapConfigPage() {
               <h3 className="text-sm font-semibold mb-4">Color Legend:</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-200 rounded-lg border-2 border-gray-400 flex-shrink-0"></div>
+                  <div className="w-12 h-12 bg-gray-200 rounded-lg border-2 border-gray-400 shrink-0"></div>
                   <span className="text-sm font-medium">Standard</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-yellow-300 rounded-lg border-2 border-yellow-500 flex-shrink-0"></div>
+                  <div className="w-12 h-12 bg-yellow-300 rounded-lg border-2 border-yellow-500 shrink-0"></div>
                   <span className="text-sm font-medium">VIP</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-200 rounded-lg border-2 border-blue-400 flex-shrink-0"></div>
+                  <div className="w-12 h-12 bg-blue-200 rounded-lg border-2 border-blue-400 shrink-0"></div>
                   <span className="text-sm font-medium">Window</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-green-200 rounded-lg border-2 border-green-400 flex-shrink-0"></div>
+                  <div className="w-12 h-12 bg-green-200 rounded-lg border-2 border-green-400 shrink-0"></div>
                   <span className="text-sm font-medium">Aisle</span>
                 </div>
               </div>
@@ -333,7 +333,7 @@ export default function BusSeatMapConfigPage() {
           <div className="col-span-9">
             <div className="bg-white rounded-xl shadow-lg border-2 border-gray-300 p-10">
               {/* Bus Front Indicator */}
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-center py-4 px-6 rounded-xl mb-8 font-semibold text-lg shadow-md">
+              <div className="bg-linear-to-r from-blue-500 to-indigo-600 text-white text-center py-4 px-6 rounded-xl mb-8 font-semibold text-lg shadow-md">
                 🚍 Front of Bus
               </div>
 
@@ -386,7 +386,7 @@ export default function BusSeatMapConfigPage() {
               </div>
 
               {/* Statistics */}
-              <div className="mt-8 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-300 shadow-sm">
+              <div className="mt-8 p-6 bg-linear-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-300 shadow-sm">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="text-lg font-bold text-gray-800">
                     💺 Total Seats: <span className="text-blue-600 text-2xl">{seats.length}</span>
