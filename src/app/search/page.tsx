@@ -37,6 +37,9 @@ function SearchContent() {
   });
 
   const [currentPage, setCurrentPage] = useState(1);
+  // If there are URL params, auto-fetch on initial load
+  const hasInitialParams = searchParams.get('origin') || searchParams.get('destination') || searchParams.get('date');
+  const [shouldFetch, setShouldFetch] = useState(!!hasInitialParams); // Control when to fetch
   const ITEMS_PER_PAGE = 3;
 
   // Extract values before useMemo for proper dependency tracking
@@ -49,7 +52,7 @@ function SearchContent() {
   const queryParams = useMemo(() => {
     const params: any = {};
 
-    // Add search criteria if present
+    // Add search criteria if present - IMPORTANT: origin and destination are city names
     if (searchForm.origin) params.origin = searchForm.origin;
     if (searchForm.destination) params.destination = searchForm.destination;
     if (searchForm.departureDate) params.departureDate = searchForm.departureDate;
@@ -72,6 +75,14 @@ function SearchContent() {
     params.limit = ITEMS_PER_PAGE;
 
     console.log('🔍 Search Query Params:', params);
+    console.log(
+      '📍 Origin:',
+      searchForm.origin,
+      '| Destination:',
+      searchForm.destination,
+      '| Date:',
+      searchForm.departureDate
+    );
     return params;
   }, [
     searchForm.origin,
@@ -90,16 +101,28 @@ function SearchContent() {
     currentPage,
   ]);
 
-  // Reactive query - automatically fetches when queryParams change
-  const { data, isLoading, error, refetch } = useSearchTripsQuery(queryParams);
+  // Reactive query - only fetch when shouldFetch is true or on initial load
+  const { data, isLoading, error, refetch } = useSearchTripsQuery(queryParams, {
+    // Skip query until user clicks search button
+    skip: !shouldFetch,
+  });
 
   const trips = data?.results || [];
   const totalPages = data?.totalPages || 1;
   const totalResults = data?.totalResults || 0;
 
   const handleSearch = () => {
-    // Force refetch with current params when button is clicked
-    refetch();
+    console.log('🔍 Search button clicked');
+    console.log('Search form state:', searchForm);
+
+    // Enable fetching first
+    setShouldFetch(true);
+
+    // Reset to first page when new search is performed
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+    // Note: No need to call refetch() - setting shouldFetch and queryParams change will trigger auto-fetch
   };
 
   const handleResetFilters = () => {

@@ -9,6 +9,7 @@ import {
   useSearchTripsQuery,
   useCreateTripMutation,
   useDeleteTripMutation,
+  useUpdateTripStatusMutation,
 } from '@/lib/store/services/api';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -33,12 +34,24 @@ export default function TripManagement() {
 
   const { data: routesData } = useGetRoutesQuery({ page: 1, limit: 100 });
   const { data: busesData } = useGetBusesQuery({ page: 1, limit: 100 });
+
+  // Default filters: scheduled trips, newest first
+  const [filters, setFilters] = useState({
+    status: 'scheduled' as string,
+    sortBy: 'departureTime',
+    sortOrder: 'desc' as 'asc' | 'desc',
+  });
+
   const { data: tripsData, isLoading: isLoadingTrips } = useSearchTripsQuery({
     page: currentPage,
     limit,
+    status: filters.status !== 'all' ? filters.status : undefined,
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder,
   });
   const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
   const [deleteTrip, { isLoading: isDeleting }] = useDeleteTripMutation();
+  const [updateTripStatus] = useUpdateTripStatusMutation();
 
   const routes = routesData?.results || [];
   const buses = busesData?.results || [];
@@ -48,17 +61,13 @@ export default function TripManagement() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [selectedTripForStatus, setSelectedTripForStatus] = useState<any>(null);
+  const [newStatus, setNewStatus] = useState<string>('');
+  const [cancellationReason, setCancellationReason] = useState('');
   const [conflictMessage, setConflictMessage] = useState('');
   const [hasConflict, setHasConflict] = useState(false);
-
-  const [filters, setFilters] = useState({
-    routeId: 'all',
-    busId: 'all',
-    status: 'all',
-    date: '',
-    search: '',
-  });
 
   const [formData, setFormData] = useState({
     routeId: '',
@@ -161,6 +170,27 @@ export default function TripManagement() {
     }
   };
 
+  const handleUpdateStatus = async () => {
+    if (!selectedTripForStatus) return;
+
+    try {
+      const tripId = selectedTripForStatus._id || selectedTripForStatus.id;
+      await updateTripStatus({
+        tripId,
+        status: newStatus,
+        ...(newStatus === 'cancelled' && cancellationReason && { cancellationReason }),
+      }).unwrap();
+
+      toast.success('Trip status updated successfully');
+      setStatusDialogOpen(false);
+      setSelectedTripForStatus(null);
+      setNewStatus('');
+      setCancellationReason('');
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to update trip status');
+    }
+  };
+
   const checkConflicts = () => {
     if (formData.busId && formData.departureDate && formData.departureTime) {
       setHasConflict(false);
@@ -170,18 +200,7 @@ export default function TripManagement() {
     }
   };
 
-  const filteredTrips = trips.filter((trip: any) => {
-    const matchesRoute =
-      filters.routeId === 'all' || trip.route?.id === filters.routeId || trip.route === filters.routeId;
-    const matchesBus = filters.busId === 'all' || trip.bus?.id === filters.busId || trip.bus === filters.busId;
-    const matchesStatus = filters.status === 'all' || trip.status === filters.status;
-    const matchesDate = filters.date ? new Date(trip.departureTime).toISOString().slice(0, 10) === filters.date : true;
-    const matchesSearch = filters.search
-      ? (trip.route?.routeName || '').toLowerCase().includes(filters.search.toLowerCase()) ||
-        (trip.bus?.licensePlate || '').toLowerCase().includes(filters.search.toLowerCase())
-      : true;
-    return matchesRoute && matchesBus && matchesStatus && matchesDate && matchesSearch;
-  });
+  const filteredTrips = trips;
 
   return (
     <>
@@ -201,33 +220,7 @@ export default function TripManagement() {
           <Button onClick={() => setDialogOpen(true)}>+ Add Trip</Button>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
-            <Select value={filters.routeId} onValueChange={(value) => setFilters({ ...filters, routeId: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by route" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All routes</SelectItem>
-                {routes.map((route: any) => (
-                  <SelectItem key={route.id} value={route.id}>
-                    {route.routeName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filters.busId} onValueChange={(value) => setFilters({ ...filters, busId: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by bus" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All buses</SelectItem>
-                {buses.map((bus: any) => (
-                  <SelectItem key={bus.id} value={bus.id}>
-                    {bus.licensePlate}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
             <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
@@ -235,29 +228,29 @@ export default function TripManagement() {
               <SelectContent>
                 <SelectItem value="all">All status</SelectItem>
                 <SelectItem value="scheduled">Scheduled</SelectItem>
-                <SelectItem value="ongoing">Ongoing</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
-            <Input
-              type="date"
-              value={filters.date}
-              onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-            />
-            <div className="flex gap-2">
-              <Input
-                placeholder="Search route or bus"
-                value={filters.search}
-                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              />
-              <Button
-                variant="outline"
-                onClick={() => setFilters({ routeId: 'all', busId: 'all', status: 'all', date: '', search: '' })}
-              >
-                Reset
-              </Button>
-            </div>
+            <Select
+              value={filters.sortOrder}
+              onValueChange={(value) => setFilters({ ...filters, sortOrder: value as 'asc' | 'desc' })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sort order" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="desc">Newest First</SelectItem>
+                <SelectItem value="asc">Oldest First</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              onClick={() => setFilters({ status: 'scheduled', sortBy: 'departureTime', sortOrder: 'desc' })}
+            >
+              Reset Filters
+            </Button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -311,18 +304,31 @@ export default function TripManagement() {
                             className={`px-2 py-1 rounded-full text-sm ${
                               trip.status === 'scheduled'
                                 ? 'bg-green-100 text-green-800'
-                                : trip.status === 'ongoing'
+                                : trip.status === 'in_progress'
                                   ? 'bg-blue-100 text-blue-800'
                                   : trip.status === 'completed'
                                     ? 'bg-gray-100 text-gray-800'
                                     : 'bg-red-100 text-red-800'
                             }`}
                           >
-                            {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
+                            {trip.status === 'in_progress'
+                              ? 'In Progress'
+                              : trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
                           </span>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTripForStatus(trip);
+                                setNewStatus(trip.status);
+                                setStatusDialogOpen(true);
+                              }}
+                            >
+                              Change Status
+                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
@@ -658,6 +664,68 @@ export default function TripManagement() {
               onClick={() => selectedTripId && handleDeleteTrip(selectedTripId)}
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Update Status Dialog */}
+      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Trip Status</DialogTitle>
+            <DialogDescription>
+              Change the status of this trip. Current status: <strong>{selectedTripForStatus?.status}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="newStatus" className="mb-2 block">
+                New Status
+              </Label>
+              <Select value={newStatus} onValueChange={setNewStatus}>
+                <SelectTrigger id="newStatus">
+                  <SelectValue placeholder="Select new status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {newStatus === 'cancelled' && (
+              <div>
+                <Label htmlFor="cancellationReason" className="mb-2 block">
+                  Cancellation Reason *
+                </Label>
+                <Input
+                  id="cancellationReason"
+                  placeholder="Enter reason for cancellation"
+                  value={cancellationReason}
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setStatusDialogOpen(false);
+                setNewStatus('');
+                setCancellationReason('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateStatus}
+              disabled={!newStatus || (newStatus === 'cancelled' && !cancellationReason)}
+            >
+              Update Status
             </Button>
           </DialogFooter>
         </DialogContent>
