@@ -33,9 +33,9 @@ export default function PopularRoutes() {
       }
     });
 
-    // Get top 4 routes sorted by available seats
+    // Get top 4 routes sorted by available seats (least available first - most popular)
     return Array.from(routeMap.values())
-      .sort((a, b) => b.availableSeats - a.availableSeats)
+      .sort((a, b) => a.availableSeats - b.availableSeats)
       .slice(0, 4);
   }, [data]);
 
