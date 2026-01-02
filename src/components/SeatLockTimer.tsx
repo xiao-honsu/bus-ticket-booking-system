@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAppSelector, useAppDispatch } from '@/lib/hooks';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useExtendLocksMutation } from '@/lib/store/services/api';
@@ -11,15 +12,19 @@ import { Clock, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function SeatLockTimer() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const lockExpiresAt = useAppSelector((state) => state.booking.lockExpiresAt);
   const sessionId = useAppSelector((state) => state.booking.sessionId);
+  const tripId = useAppSelector((state) => state.booking.tripId);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [extendLocks, { isLoading: isExtending }] = useExtendLocksMutation();
+  const hasRedirected = useRef(false); // Prevent multiple redirects
 
   useEffect(() => {
     if (!lockExpiresAt) {
       setTimeLeft(0);
+      hasRedirected.current = false; // Reset redirect flag when timer clears
       return;
     }
 
@@ -27,14 +32,41 @@ export default function SeatLockTimer() {
       const now = new Date().getTime();
       const expiry = new Date(lockExpiresAt).getTime();
       const diff = expiry - now;
-      setTimeLeft(Math.max(0, Math.floor(diff / 1000)));
+      const newTimeLeft = Math.max(0, Math.floor(diff / 1000));
+      setTimeLeft(newTimeLeft);
+
+      // FORCE REDIRECT when timer reaches 0 - ABSOLUTE, NO EXCEPTIONS
+      if (newTimeLeft <= 0 && !hasRedirected.current) {
+        hasRedirected.current = true;
+
+        console.log('⏱️⏱️⏱️ [TIMER EXPIRED - FORCE REDIRECT]');
+        console.log('Time expired at:', new Date().toLocaleTimeString());
+
+        // Show immediate toast
+        toast.error('⏱️ Time Expired!', {
+          description: 'Your seat selection has been released. Redirecting...',
+          duration: 2000,
+        });
+
+        // Clear lock state immediately
+        dispatch(setLockExpiresAt(null));
+
+        // GUARANTEED REDIRECT - Use window.location for hard reload
+        const redirectUrl = tripId ? `/booking/${tripId}` : '/search';
+        console.log('🔄 [REDIRECT] Target:', redirectUrl);
+
+        setTimeout(() => {
+          console.log('🚀 [EXECUTING REDIRECT NOW]');
+          window.location.href = redirectUrl; // Hard redirect, bypasses Next.js router
+        }, 1000); // 1 second delay for toast visibility
+      }
     };
 
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [lockExpiresAt]);
+  }, [lockExpiresAt, dispatch, tripId]);
 
   const handleExtendLock = async () => {
     if (!sessionId) {
@@ -77,9 +109,20 @@ export default function SeatLockTimer() {
   };
 
   if (!lockExpiresAt || timeLeft <= 0) {
-    // Auto-cleanup: When timer expires, user should see seats released
-    // Backend TTL index will auto-delete, frontend just hides timer
-    return null;
+    // Show placeholder when no timer is active
+    return (
+      <Card className="border py-0 gap-0 border-muted bg-muted/20">
+        <CardContent className="p-3">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-muted-foreground truncate">Select seats to start timer</p>
+              <p className="text-lg font-bold text-muted-foreground">3:00</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   const minutes = Math.floor(timeLeft / 60);
