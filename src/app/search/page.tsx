@@ -39,7 +39,8 @@ function SearchContent() {
   const [currentPage, setCurrentPage] = useState(1);
   // If there are URL params, auto-fetch on initial load
   const hasInitialParams = searchParams.get('origin') || searchParams.get('destination') || searchParams.get('date');
-  const [shouldFetch, setShouldFetch] = useState(!!hasInitialParams); // Control when to fetch
+  // Always fetch by default to show all trips when page loads
+  const [shouldFetch, setShouldFetch] = useState(true); // Control when to fetch
   const ITEMS_PER_PAGE = 3;
 
   // Extract values before useMemo for proper dependency tracking

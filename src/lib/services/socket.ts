@@ -25,19 +25,34 @@ let socketInstance: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socketInstance) {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    // Socket.IO connects to BASE server URL only (no /api/v1 path)
+    // Backend runs Socket.IO on default namespace (/)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
-    // Log environment variable for debugging
-    console.log('[Socket.IO] API URL:', process.env.NEXT_PUBLIC_API_URL);
-    console.log('[Socket.IO] Connecting to:', backendUrl);
+    // Extract base URL: http://localhost:4000/api/v1 -> http://localhost:4000
+    // Also handles: https://api.dsa-bus-booking.io.vn/api/v1 -> https://api.dsa-bus-booking.io.vn
+    const backendUrl = apiUrl.replace(/\/api\/v\d+\/?$/, '').replace(/\/$/, '');
+
+    // Validation: Ensure we have a valid URL
+    if (!backendUrl.startsWith('http')) {
+      console.error('❌ [Socket.IO] Invalid backend URL:', backendUrl);
+      throw new Error('Invalid Socket.IO backend URL');
+    }
+
+    // Log for debugging
+    console.log('[Socket.IO] ENV API URL:', process.env.NEXT_PUBLIC_API_URL);
+    console.log('[Socket.IO] Stripped Base URL:', backendUrl);
+    console.log('[Socket.IO] ✅ Connecting to default namespace (/)');
 
     socketInstance = io(backendUrl, {
       withCredentials: true,
-      transports: ['websocket', 'polling'],
+      transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
       autoConnect: true,
+      // Additional options for production
+      path: '/socket.io/', // Default Socket.IO path (backend must serve here)
     });
 
     // Global connection event listeners

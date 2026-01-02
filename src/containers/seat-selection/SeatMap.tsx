@@ -48,6 +48,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
   const dispatch = useAppDispatch();
   const [localSelectedSeats, setLocalSelectedSeats] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false); // Track if user has clicked any seat
   const sessionId = useAppSelector((state) => state.booking.sessionId);
   const reduxSelectedSeats = useAppSelector((state) => state.booking.selectedSeats);
 
@@ -168,19 +169,19 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
     }
   }, [sessionId, dispatch]);
 
-  // Extract selected seats from API response (status === 'selected')
-  // Only sync when initializing, not when user is actively selecting/deselecting
+  // Extract selected seats from API response on initial load
   useEffect(() => {
     const selectedFromAPI = seats.filter((s) => s.status === 'selected').map((s) => s.seatNumber);
 
-    // Only sync if we don't have any local selection yet (initial load)
-    if (selectedFromAPI.length > 0 && localSelectedSeats.length === 0) {
+    // Only sync on initial load (before user has interacted with seats)
+    if (selectedFromAPI.length > 0 && localSelectedSeats.length === 0 && !isProcessing && !hasUserInteracted) {
+      console.log('📥 [Init] Loading selected seats from API:', selectedFromAPI);
       setLocalSelectedSeats(selectedFromAPI);
-      // Sync with Redux and store seat details
+
+      // Sync with Redux
       selectedFromAPI.forEach((seatNum) => {
         if (!reduxSelectedSeats.includes(seatNum)) {
           dispatch(toggleSeat(seatNum));
-          // Add seat detail with price
           const seatInfo = seats.find((s) => s.seatNumber === seatNum);
           if (seatInfo) {
             dispatch(
@@ -195,19 +196,14 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
         }
       });
     }
-
-    // Clear local state if API says no seats selected (after release)
-    if (selectedFromAPI.length === 0 && localSelectedSeats.length > 0) {
-      // Check if this is after a release operation (not during active selection)
-      const hasLockedSeats = seats.some((s) => localSelectedSeats.includes(s.seatNumber) && s.status !== 'selected');
-      if (hasLockedSeats) {
-        // Seats were released, clear local state
-        setLocalSelectedSeats([]);
-      }
-    }
-  }, [seats, dispatch]);
+  }, [seats, isProcessing]);
 
   const handleSeatClick = async (seat: Seat) => {
+    // Mark that user has interacted
+    if (!hasUserInteracted) {
+      setHasUserInteracted(true);
+    }
+
     // Prevent double click/concurrent operations
     if (isProcessing) {
       if (process.env.NODE_ENV === 'development') {
@@ -251,7 +247,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
             console.log('✅ [DONE] All locks released');
             toast.info('All seats deselected');
             dispatch(setLockExpiresAt(null));
-            refetch();
+            // No need to refetch - local state already updated
           } catch (error: any) {
             // Silent fail - locks will auto-expire anyway
             if (process.env.NODE_ENV === 'development') {
@@ -288,7 +284,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
         // Save expiration time
         dispatch(setLockExpiresAt(response.expiresAt));
         console.log('✅ [DONE] Lock updated successfully');
-        refetch();
+        // No need to refetch - local state already updated
       } catch (error: any) {
         console.error('Failed to update lock:', error);
 
@@ -367,7 +363,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
         dispatch(setLockExpiresAt(response.expiresAt));
         console.log('✅ [DONE] Seat locked successfully');
         toast.success(`Seat ${seat.seatNumber} locked for you`);
-        refetch();
+        // No need to refetch - local state already updated
       } catch (error: any) {
         // RTK Query error structure: { status, data }
         // Backend response in error.data: { success, statusCode, message, error: {...} }
@@ -411,6 +407,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
         // Revert selection
         setLocalSelectedSeats(newSelection.filter((s) => s !== seat.seatNumber));
         dispatch(toggleSeat(seat.seatNumber));
+        // Refetch to get updated seat status from server
         refetch();
       } finally {
         setIsProcessing(false);
@@ -419,8 +416,20 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
   };
 
   const getSeatClassName = (seat: Seat) => {
+    // Priority: local state > server state
     const isSelected = localSelectedSeats.includes(seat.seatNumber);
-    const status = isSelected ? 'selected' : seat.status;
+
+    // Determine actual status
+    let status: 'available' | 'booked' | 'locked' | 'selected';
+    if (isSelected) {
+      status = 'selected';
+    } else if (seat.status === 'booked') {
+      status = 'booked';
+    } else if (seat.status === 'locked') {
+      status = 'locked';
+    } else {
+      status = 'available';
+    }
 
     return cn(
       'w-10 h-10 md:w-12 md:h-12 rounded-md font-semibold text-xs md:text-sm transition-all relative flex items-center justify-center border-2',

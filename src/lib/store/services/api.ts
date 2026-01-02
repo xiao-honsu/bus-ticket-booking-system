@@ -15,7 +15,7 @@ import {
 } from '@/lib/types';
 import { toast } from 'sonner';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 // Create a mutex to prevent multiple simultaneous refresh token calls
 const mutex = new Mutex();

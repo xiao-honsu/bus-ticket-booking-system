@@ -43,9 +43,9 @@ export default function SeatLockTimer() {
     }
 
     try {
-      const response = await extendLocks({ sessionId, minutes: 10 }).unwrap();
+      const response = await extendLocks({ sessionId, minutes: 3 }).unwrap();
       dispatch(setLockExpiresAt(response.newExpiresAt));
-      toast.success(`Lock extended by 10 minutes (${response.extendedCount} locks)`);
+      toast.success(`Lock extended by 3 minutes (${response.extendedCount} locks)`);
     } catch (error: any) {
       const errorMsg =
         error?.data?.message ||
@@ -77,6 +77,8 @@ export default function SeatLockTimer() {
   };
 
   if (!lockExpiresAt || timeLeft <= 0) {
+    // Auto-cleanup: When timer expires, user should see seats released
+    // Backend TTL index will auto-delete, frontend just hides timer
     return null;
   }
 
@@ -110,10 +112,10 @@ export default function SeatLockTimer() {
             variant={isLowTime ? 'destructive' : 'outline'}
             size="sm"
             onClick={handleExtendLock}
-            disabled={isExtending || timeLeft > 480}
+            disabled={isExtending || timeLeft > 120} // Disable if > 2 minutes (only allow extend in last minute)
             className="text-xs h-7 px-2 shrink-0"
           >
-            {isExtending ? '...' : '+10min'}
+            {isExtending ? '...' : '+3min'}
           </Button>
         </div>
         {timeLeft < 60 && <p className="text-[10px] text-destructive mt-1">⚠️ Less than 1 min! Complete now.</p>}
