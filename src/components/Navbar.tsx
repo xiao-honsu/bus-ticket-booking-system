@@ -23,7 +23,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { clearAuthCookies } from '@/lib/utils/cookies';
-import { Menu, Home, Search, Tag, Shield, LayoutDashboard, Ticket, LogOut } from 'lucide-react';
+import { Menu, Home, Search, Tag, Shield, LayoutDashboard, Ticket, LogOut, Settings } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function Navbar() {
@@ -158,12 +158,6 @@ export default function Navbar() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href="/dashboard" className="cursor-pointer">
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard" className="cursor-pointer">
                         <Ticket className="mr-2 h-4 w-4" />
                         My Bookings
                       </Link>
@@ -172,6 +166,12 @@ export default function Navbar() {
                       <Link href="/my-promotions" className="cursor-pointer">
                         <Tag className="mr-2 h-4 w-4" />
                         My Promotions
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings" className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -285,12 +285,6 @@ export default function Navbar() {
                       <>
                         <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                           <Button variant="ghost" className="w-full justify-start gap-3">
-                            <LayoutDashboard className="h-5 w-5" />
-                            Dashboard
-                          </Button>
-                        </Link>
-                        <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                          <Button variant="ghost" className="w-full justify-start gap-3">
                             <Ticket className="h-5 w-5" />
                             My Bookings
                           </Button>
@@ -299,6 +293,12 @@ export default function Navbar() {
                           <Button variant="ghost" className="w-full justify-start gap-3">
                             <Tag className="h-5 w-5" />
                             My Promotions
+                          </Button>
+                        </Link>
+                        <Link href="/settings" onClick={() => setMobileMenuOpen(false)}>
+                          <Button variant="ghost" className="w-full justify-start gap-3">
+                            <Settings className="h-5 w-5" />
+                            Settings
                           </Button>
                         </Link>
                         <Separator />

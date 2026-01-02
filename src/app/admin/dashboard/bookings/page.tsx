@@ -235,9 +235,7 @@ export default function BookingMonitoringPage() {
                       >
                         <td className="px-4 py-3 font-medium dark:text-gray-200">{bk.referenceNumber || bk.id}</td>
                         <td className="px-4 py-3 dark:text-gray-300">{bk.user?.name || 'Guest'}</td>
-                        <td className="px-4 py-3 text-sm dark:text-gray-300">
-                          {bk.trip?.origin || 'N/A'} → {bk.trip?.destination || 'N/A'}
-                        </td>
+                        <td className="px-4 py-3 text-sm dark:text-gray-300">{bk.tripSnapshot?.routeName || 'N/A'}</td>
                         <td className="px-4 py-3 text-sm dark:text-gray-300">
                           {bk.passengers?.length} ({formatSeats(bk.passengers)})
                         </td>
@@ -287,65 +285,40 @@ export default function BookingMonitoringPage() {
                 <h3 className="font-semibold mb-3 dark:text-gray-200">Trip Information</h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-slate-600 dark:text-slate-400">Origin</p>
-                    <p className="font-medium dark:text-gray-200">{selectedBooking.trip?.origin || 'N/A'}</p>
+                    <p className="text-slate-600 dark:text-slate-400">Route</p>
+                    <p className="font-medium dark:text-gray-200">{selectedBooking.tripSnapshot?.routeName || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-slate-600 dark:text-slate-400">Destination</p>
-                    <p className="font-medium dark:text-gray-200">{selectedBooking.trip?.destination || 'N/A'}</p>
+                    <p className="text-slate-600 dark:text-slate-400">Operator</p>
+                    <p className="font-medium dark:text-gray-200">
+                      {selectedBooking.tripSnapshot?.operatorName || 'N/A'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-slate-600 dark:text-slate-400">Departure</p>
                     <p className="font-medium dark:text-gray-200">
-                      {selectedBooking.trip?.departureTime
-                        ? format(parseISO(selectedBooking.trip.departureTime), 'dd MMM yyyy HH:mm', { locale: vi })
+                      {selectedBooking.tripSnapshot?.departureTime
+                        ? format(parseISO(selectedBooking.tripSnapshot.departureTime), 'dd MMM yyyy HH:mm', {
+                            locale: vi,
+                          })
                         : 'N/A'}
                     </p>
                   </div>
                   <div>
                     <p className="text-slate-600 dark:text-slate-400">Arrival</p>
                     <p className="font-medium dark:text-gray-200">
-                      {selectedBooking.trip?.arrivalTime
-                        ? format(parseISO(selectedBooking.trip.arrivalTime), 'dd MMM yyyy HH:mm', { locale: vi })
+                      {selectedBooking.tripSnapshot?.arrivalTime
+                        ? format(parseISO(selectedBooking.tripSnapshot.arrivalTime), 'dd MMM yyyy HH:mm', {
+                            locale: vi,
+                          })
                         : 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-slate-600 dark:text-slate-400">Base Price</p>
+                    <p className="text-slate-600 dark:text-slate-400">Bus License Plate</p>
                     <p className="font-medium dark:text-gray-200">
-                      {selectedBooking.trip?.basePrice?.toLocaleString('vi-VN') || 'N/A'} đ
+                      {selectedBooking.tripSnapshot?.busPlateNumber || 'N/A'}
                     </p>
-                  </div>
-                  <div>
-                    <p className="text-slate-600 dark:text-slate-400">Duration</p>
-                    <p className="font-medium dark:text-gray-200">
-                      {selectedBooking.trip?.estimatedDuration || 'N/A'} hours
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bus Info */}
-              <div className="border dark:border-slate-700 rounded-lg p-4">
-                <h3 className="font-semibold mb-3 dark:text-gray-200">Bus Information</h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-slate-600 dark:text-slate-400">License Plate</p>
-                    <p className="font-medium dark:text-gray-200">
-                      {selectedBooking.trip?.busId?.licensePlate || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-slate-600 dark:text-slate-400">Model</p>
-                    <p className="font-medium dark:text-gray-200">{selectedBooking.trip?.busId?.model || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-600 dark:text-slate-400">Total Seats</p>
-                    <p className="font-medium dark:text-gray-200">{selectedBooking.trip?.busId?.totalSeats || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-600 dark:text-slate-400">Operator</p>
-                    <p className="font-medium dark:text-gray-200">{selectedBooking.trip?.operatorId?.name || 'N/A'}</p>
                   </div>
                 </div>
               </div>

@@ -284,22 +284,25 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             {routesLoading ? (
-              <div className="text-center py-4">Loading routes...</div>
+              <div className="text-center py-4 text-muted-foreground">Loading routes...</div>
             ) : !popularRoutes || popularRoutes.length === 0 ? (
-              <div className="text-center py-4 text-slate-500">No route data available</div>
+              <div className="text-center py-4 text-muted-foreground">No route data available</div>
             ) : (
               <div className="space-y-3">
                 {popularRoutes.map((route: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-muted rounded-lg border border-border hover:bg-muted/80 transition-colors"
+                  >
                     <div className="flex-1">
-                      <p className="font-medium text-sm">
+                      <p className="font-medium text-sm text-foreground">
                         {route.origin} → {route.destination}
                       </p>
-                      <p className="text-xs text-slate-600">{route.bookings} bookings</p>
+                      <p className="text-xs text-muted-foreground">{route.bookings} bookings</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-sm">{route.revenue.toLocaleString('vi-VN')} đ</p>
-                      <p className="text-xs text-slate-500">Revenue</p>
+                      <p className="font-semibold text-sm text-foreground">{route.revenue.toLocaleString('vi-VN')} đ</p>
+                      <p className="text-xs text-muted-foreground">Revenue</p>
                     </div>
                   </div>
                 ))}
