@@ -80,7 +80,10 @@ export default function BookingHistory() {
           <CardTitle>Booking History</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-red-500">Failed to load bookings</p>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-2"> Loading your booking history is in progress</p>
+            <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
+          </div>
         </CardContent>
       </Card>
     );

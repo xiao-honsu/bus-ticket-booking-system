@@ -115,23 +115,26 @@ export default function UserManagementPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="container mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-500">User Management</p>
-            <h1 className="text-2xl font-bold">Users & Roles</h1>
-            <p className="text-slate-600">Manage accounts and access state</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">User Management</p>
+            <h1 className="text-2xl font-bold dark:text-gray-100">Users & Roles</h1>
+            <p className="text-slate-600 dark:text-slate-400">Manage accounts and access state</p>
           </div>
           <Button variant="outline" onClick={() => router.push('/admin')} className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-4 h-4 dark:text-gray-300" /> Back
           </Button>
         </div>
 
         <Card>
           <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Users className="w-4 h-4" /> Users ({filtered.length})
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              Users ({filtered.length})
             </CardTitle>
             <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
               <Input
@@ -141,7 +144,7 @@ export default function UserManagementPage() {
                 className="md:w-64"
               />
               <select
-                className="border rounded-md px-3 py-2 text-sm bg-white"
+                className="border dark:border-slate-700 rounded-md px-3 py-2 text-sm bg-white dark:bg-slate-900 dark:text-gray-200"
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
               >
@@ -154,24 +157,27 @@ export default function UserManagementPage() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-center py-8 text-slate-500">Loading users...</div>
+              <div className="text-center py-8 text-slate-500 dark:text-slate-400">Loading users...</div>
             ) : filtered.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">No users found</div>
+              <div className="text-center py-8 text-slate-500 dark:text-slate-400">No users found</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-100">
+                  <thead className="bg-slate-100 dark:bg-slate-800">
                     <tr>
-                      <th className="text-left px-4 py-2">User</th>
-                      <th className="text-left px-4 py-2">Email</th>
-                      <th className="text-left px-4 py-2">Role</th>
-                      <th className="text-left px-4 py-2">Status</th>
-                      <th className="text-left px-4 py-2">Actions</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">User</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Email</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Role</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Status</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map((user: any) => (
-                      <tr key={user.id} className="border-b last:border-none hover:bg-slate-50">
+                      <tr
+                        key={user.id}
+                        className="border-b dark:border-slate-700 last:border-none hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                      >
                         <td className="px-4 py-3 font-medium">{user.name}</td>
                         <td className="px-4 py-3 text-sm">{user.email}</td>
                         <td className="px-4 py-3 capitalize text-sm">{user.role}</td>

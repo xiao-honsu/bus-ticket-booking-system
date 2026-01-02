@@ -47,7 +47,10 @@ export default function BookingOverview() {
           <CardTitle>Recent Bookings</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-red-500">Failed to load bookings</p>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-2">Unable to load bookings at this time</p>
+            <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -62,7 +65,7 @@ export default function BookingOverview() {
       </CardHeader>
       <CardContent>
         {bookings.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No bookings yet</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center py-8">No bookings yet</p>
         ) : (
           <Table>
             <TableHeader>

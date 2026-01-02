@@ -207,17 +207,17 @@ export default function PromotionsManagementPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="container mx-auto px-4 py-8 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-500">Promotion Management</p>
-            <h1 className="text-2xl font-bold">Promotions</h1>
-            <p className="text-slate-600">Manage discount codes and promotional offers</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Promotion Management</p>
+            <h1 className="text-2xl font-bold dark:text-gray-100">Promotions</h1>
+            <p className="text-slate-600 dark:text-slate-400">Manage discount codes and promotional offers</p>
           </div>
           <Button variant="outline" onClick={() => router.push('/admin')} className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-4 h-4 dark:text-gray-300" /> Back
           </Button>
         </div>
 
@@ -225,11 +225,14 @@ export default function PromotionsManagementPage() {
         <Card>
           <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Tag className="w-5 h-5 text-purple-600" /> Promotions ({filteredPromotions.length})
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                <Tag className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              Promotions ({filteredPromotions.length})
             </CardTitle>
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <Input
                   placeholder="Search code or title..."
                   value={searchTerm}
@@ -238,7 +241,7 @@ export default function PromotionsManagementPage() {
                 />
               </div>
               <Button onClick={handleCreateClick} className="gap-2">
-                <Plus className="w-4 h-4" /> Create Promotion
+                <Plus className="w-4 h-4 dark:text-white" /> Create Promotion
               </Button>
             </div>
           </CardHeader>
@@ -246,62 +249,73 @@ export default function PromotionsManagementPage() {
           <CardContent>
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-slate-500" />
               </div>
             ) : filteredPromotions.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                <Tag className="w-12 h-12 mx-auto mb-4 opacity-20" />
+              <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+                <Tag className="w-12 h-12 mx-auto mb-4 opacity-20 dark:text-slate-500" />
                 <p>No promotions found</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-3 font-semibold text-sm">Code</th>
-                      <th className="text-left p-3 font-semibold text-sm">Title</th>
-                      <th className="text-left p-3 font-semibold text-sm">Discount</th>
-                      <th className="text-left p-3 font-semibold text-sm">Usage</th>
-                      <th className="text-left p-3 font-semibold text-sm">Valid Period</th>
-                      <th className="text-left p-3 font-semibold text-sm">Status</th>
-                      <th className="text-right p-3 font-semibold text-sm">Actions</th>
+                    <tr className="border-b dark:border-slate-700">
+                      <th className="text-left p-3 font-semibold text-sm dark:text-gray-300">Code</th>
+                      <th className="text-left p-3 font-semibold text-sm dark:text-gray-300">Title</th>
+                      <th className="text-left p-3 font-semibold text-sm dark:text-gray-300">Discount</th>
+                      <th className="text-left p-3 font-semibold text-sm dark:text-gray-300">Usage</th>
+                      <th className="text-left p-3 font-semibold text-sm dark:text-gray-300">Valid Period</th>
+                      <th className="text-left p-3 font-semibold text-sm dark:text-gray-300">Status</th>
+                      <th className="text-right p-3 font-semibold text-sm dark:text-gray-300">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredPromotions.map((promotion: any) => (
-                      <tr key={promotion._id} className="border-b hover:bg-slate-50">
+                      <tr
+                        key={promotion._id}
+                        className="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                      >
                         <td className="p-3">
-                          <span className="font-mono font-semibold text-sm bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                          <span className="font-mono font-semibold text-sm bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 px-2 py-1 rounded">
                             {promotion.code}
                           </span>
                         </td>
                         <td className="p-3">
                           <div>
-                            <p className="font-medium text-sm">{promotion.title}</p>
-                            <p className="text-xs text-slate-500 line-clamp-1">{promotion.description}</p>
+                            <p className="font-medium text-sm dark:text-gray-200">{promotion.title}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+                              {promotion.description}
+                            </p>
                           </div>
                         </td>
                         <td className="p-3">
                           <div>
-                            <p className="font-semibold text-sm">
+                            <p className="font-semibold text-sm dark:text-gray-200">
                               {promotion.discountType === 'fixed'
                                 ? `${promotion.discountValue.toLocaleString()}₫`
                                 : `${promotion.discountValue}%`}
                             </p>
                             {promotion.minOrderValue > 0 && (
-                              <p className="text-xs text-slate-500">Min: {promotion.minOrderValue.toLocaleString()}₫</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Min: {promotion.minOrderValue.toLocaleString()}₫
+                              </p>
                             )}
                           </div>
                         </td>
                         <td className="p-3">
-                          <p className="text-sm">
+                          <p className="text-sm dark:text-gray-300">
                             {promotion.usedCount} / {promotion.usageLimit}
                           </p>
-                          <p className="text-xs text-slate-500">Per user: {promotion.perUserLimit}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Per user: {promotion.perUserLimit}
+                          </p>
                         </td>
                         <td className="p-3">
-                          <p className="text-sm">{formatDate(promotion.startDate)}</p>
-                          <p className="text-xs text-slate-500">to {formatDate(promotion.endDate)}</p>
+                          <p className="text-sm dark:text-gray-300">{formatDate(promotion.startDate)}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            to {formatDate(promotion.endDate)}
+                          </p>
                         </td>
                         <td className="p-3">{getStatusBadge(promotion)}</td>
                         <td className="p-3">

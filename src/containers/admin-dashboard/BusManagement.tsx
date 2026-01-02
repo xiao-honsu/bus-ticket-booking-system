@@ -196,11 +196,11 @@ export default function BusManagement() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold mb-1">Bus Management</h2>
-          <p className="text-gray-600">Manage your fleet of buses</p>
+          <h2 className="text-2xl font-bold mb-1 dark:text-gray-100">Bus Management</h2>
+          <p className="text-gray-600 dark:text-gray-400">Manage your fleet of buses</p>
         </div>
         <Button variant="outline" onClick={() => router.push('/admin')} className="gap-2">
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 dark:text-gray-300" />
           Back to Dashboard
         </Button>
       </div>
@@ -267,7 +267,7 @@ export default function BusManagement() {
               return matchesSearch && matchesOperator && matchesType;
             });
             return filtered.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No buses match the filters</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No buses match the filters</p>
             ) : (
               <>
                 <Table>
@@ -342,7 +342,7 @@ export default function BusManagement() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
                 Showing {buses.length} of {totalResults} buses
               </div>
               <div className="flex items-center gap-2">
@@ -523,7 +523,7 @@ export default function BusManagement() {
                 onChange={(e) => setFormData({ ...formData, amenities: e.target.value })}
                 placeholder="AC, WiFi, USB Charging, Water"
               />
-              <p className="text-xs text-gray-500 mt-1">Example: AC, WiFi, USB Charging</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Example: AC, WiFi, USB Charging</p>
             </div>
           </div>
           <DialogFooter>
