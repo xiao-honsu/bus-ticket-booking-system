@@ -25,10 +25,10 @@ interface SeatMap {
 }
 
 const seatTypeColors = {
-  standard: 'bg-gray-200 hover:bg-gray-300',
-  vip: 'bg-yellow-300 hover:bg-yellow-400',
-  window: 'bg-blue-200 hover:bg-blue-300',
-  aisle: 'bg-green-200 hover:bg-green-300',
+  standard: 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500',
+  vip: 'bg-yellow-300 hover:bg-yellow-400 dark:bg-yellow-600 dark:hover:bg-yellow-500',
+  window: 'bg-blue-200 hover:bg-blue-300 dark:bg-blue-600 dark:hover:bg-blue-500',
+  aisle: 'bg-green-200 hover:bg-green-300 dark:bg-green-600 dark:hover:bg-green-500',
 };
 
 export default function TripSeatPricingPage() {
@@ -146,10 +146,10 @@ export default function TripSeatPricingPage() {
 
   if (isLoadingTrip) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading trip information...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading trip information...</p>
         </div>
       </div>
     );
@@ -157,11 +157,11 @@ export default function TripSeatPricingPage() {
 
   if (!seatMap || !seatMap.seats || seatMap.seats.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="text-6xl mb-4">🚌</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Seat Map Available</h2>
-          <p className="text-gray-600 mb-4">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">No Seat Map Available</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
             This bus doesn&apos;t have a seat map configured yet. Please configure the seat map first.
           </p>
           <Button onClick={() => router.push('/admin/trips')}>
@@ -181,9 +181,9 @@ export default function TripSeatPricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b shadow-sm sticky top-0 z-10">
+      <div className="bg-card border-b border-border shadow-sm sticky top-0 z-10">
         <div className="max-w-[1800px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -191,10 +191,10 @@ export default function TripSeatPricingPage() {
                 <ArrowLeft className="w-4 h-4" />
                 Back to Trip Management
               </Button>
-              <div className="h-6 w-px bg-gray-300"></div>
+              <div className="h-6 w-px bg-border"></div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Configure Seat Pricing</h1>
-                <p className="text-sm text-gray-600">
+                <h1 className="text-2xl font-bold text-foreground">Configure Seat Pricing</h1>
+                <p className="text-sm text-muted-foreground">
                   {trip?.route?.routeName} • {bus?.licensePlate} • {new Date(trip?.departureTime).toLocaleDateString()}
                 </p>
               </div>
@@ -218,19 +218,21 @@ export default function TripSeatPricingPage() {
           {/* Left Sidebar - Controls */}
           <div className="col-span-3 space-y-6">
             {/* Base Price */}
-            <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border-2 border-blue-200 p-6">
-              <h3 className="text-sm font-semibold mb-2 text-blue-900 flex items-center gap-2">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-xl shadow-sm border-2 border-blue-200 dark:border-blue-800 p-6">
+              <h3 className="text-sm font-semibold mb-2 text-blue-900 dark:text-blue-300 flex items-center gap-2">
                 <DollarSign className="w-4 h-4" />
                 Base Price
               </h3>
-              <div className="text-3xl font-bold text-blue-900">${basePricePerSeat}</div>
-              <p className="text-xs text-gray-600 mt-2">Default price per seat</p>
+              <div className="text-3xl font-bold text-blue-900 dark:text-blue-200">${basePricePerSeat}</div>
+              <p className="text-xs text-muted-foreground mt-2">Default price per seat</p>
             </div>
 
             {/* Selected Seat */}
             {selectedSeat && (
-              <div className="bg-linear-to-br from-green-50 to-emerald-50 rounded-xl shadow-sm border-2 border-green-200 p-6">
-                <h3 className="text-sm font-semibold mb-3 text-green-900">🎯 Selected: {selectedSeat.seatNumber}</h3>
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-xl shadow-sm border-2 border-green-200 dark:border-green-800 p-6">
+                <h3 className="text-sm font-semibold mb-3 text-green-900 dark:text-green-300">
+                  🎯 Selected: {selectedSeat.seatNumber}
+                </h3>
                 <Badge className="mb-3">{selectedSeat.seatType}</Badge>
                 <div className="space-y-3">
                   <div>
@@ -261,8 +263,8 @@ export default function TripSeatPricingPage() {
             )}
 
             {/* Bulk Pricing */}
-            <div className="bg-linear-to-br from-purple-50 to-violet-50 rounded-xl shadow-sm border-2 border-purple-200 p-6">
-              <h3 className="text-sm font-semibold mb-3 text-purple-900">🎨 Bulk Pricing</h3>
+            <div className="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950 rounded-xl shadow-sm border-2 border-purple-200 dark:border-purple-800 p-6">
+              <h3 className="text-sm font-semibold mb-3 text-purple-900 dark:text-purple-300">🎨 Bulk Pricing</h3>
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="bulkPrice" className="text-sm mb-1.5 block">
@@ -304,9 +306,9 @@ export default function TripSeatPricingPage() {
             </Button>
 
             {/* Instructions */}
-            <div className="bg-amber-50 rounded-xl border-2 border-amber-200 p-6">
-              <h3 className="text-sm font-semibold mb-3 text-amber-900">💡 How to Use:</h3>
-              <ol className="text-sm text-gray-700 space-y-2 list-decimal list-inside">
+            <div className="bg-amber-50 dark:bg-amber-950 rounded-xl border-2 border-amber-200 dark:border-amber-800 p-6">
+              <h3 className="text-sm font-semibold mb-3 text-amber-900 dark:text-amber-300">💡 How to Use:</h3>
+              <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
                 <li>Click a seat to set its individual price</li>
                 <li>Or use bulk pricing to set all seats of same type</li>
                 <li>Unpriced seats use base price (${basePricePerSeat})</li>
@@ -316,9 +318,9 @@ export default function TripSeatPricingPage() {
 
           {/* Main Grid Area */}
           <div className="col-span-9">
-            <div className="bg-white rounded-xl shadow-lg border-2 border-gray-300 p-10">
+            <div className="bg-card rounded-xl shadow-lg border-2 border-border p-10">
               {/* Bus Front Indicator */}
-              <div className="bg-linear-to-r from-blue-500 to-indigo-600 text-white text-center py-4 px-6 rounded-xl mb-8 font-semibold text-lg shadow-md">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-center py-4 px-6 rounded-xl mb-8 font-semibold text-lg shadow-md">
                 🚍 Front of Bus
               </div>
 
@@ -328,7 +330,9 @@ export default function TripSeatPricingPage() {
                   const row = rowIndex + 1;
                   return (
                     <div key={row} className="flex justify-center gap-4">
-                      <div className="w-12 flex items-center justify-center text-lg font-bold text-gray-700">{row}</div>
+                      <div className="w-12 flex items-center justify-center text-lg font-bold text-muted-foreground">
+                        {row}
+                      </div>
                       {Array.from({ length: seatMap.columns }, (_, colIndex) => {
                         const column = colIndex + 1;
                         const seat = getSeatAtPosition(row, column);
@@ -347,12 +351,12 @@ export default function TripSeatPricingPage() {
                               onClick={() => handleSeatClick(seat)}
                               className={`w-20 h-20 rounded-xl border-2 transition-all relative shadow-sm ${
                                 seatTypeColors[seat.seatType]
-                              } ${isSelected ? 'border-blue-600 ring-4 ring-blue-300' : 'border-gray-400'}`}
+                              } ${isSelected ? 'border-blue-600 ring-4 ring-blue-300 dark:border-blue-400 dark:ring-blue-500' : 'border-border'}`}
                               title={`${seat.seatNumber} - $${price}`}
                             >
                               <div className="text-sm font-bold">{seat.seatNumber}</div>
                               <div
-                                className={`text-xs ${hasCustomPrice ? 'text-green-700 font-bold' : 'text-gray-600'}`}
+                                className={`text-xs ${hasCustomPrice ? 'text-green-700 dark:text-green-300 font-bold' : 'text-muted-foreground'}`}
                               >
                                 ${price}
                               </div>
@@ -378,11 +382,11 @@ export default function TripSeatPricingPage() {
               </div>
 
               {/* Statistics */}
-              <div className="mt-8 p-6 bg-linear-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-300 shadow-sm">
+              <div className="mt-8 p-6 bg-muted rounded-xl border-2 border-border shadow-sm">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div>
-                    <div className="text-lg font-bold text-gray-800 mb-1">📊 Pricing Summary</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-lg font-bold text-foreground mb-1">📊 Pricing Summary</div>
+                    <div className="text-sm text-muted-foreground">
                       Seats with custom pricing:{' '}
                       <span className="font-bold text-green-600">{Object.keys(seatPricing).length}</span> / Using base
                       price:{' '}
@@ -393,20 +397,20 @@ export default function TripSeatPricingPage() {
                   </div>
                   <div className="flex gap-6">
                     <div className="text-center">
-                      <div className="text-sm text-gray-600 mb-1">Min Price</div>
-                      <div className="text-xl font-bold text-gray-800">
+                      <div className="text-sm text-muted-foreground mb-1">Min Price</div>
+                      <div className="text-xl font-bold text-foreground">
                         ${Math.min(...seatMap.seats.map((s) => getSeatPrice(s.seatNumber)))}
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm text-gray-600 mb-1">Max Price</div>
-                      <div className="text-xl font-bold text-gray-800">
+                      <div className="text-sm text-muted-foreground mb-1">Max Price</div>
+                      <div className="text-xl font-bold text-foreground">
                         ${Math.max(...seatMap.seats.map((s) => getSeatPrice(s.seatNumber)))}
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm text-gray-600 mb-1">Avg Price</div>
-                      <div className="text-xl font-bold text-gray-800">
+                      <div className="text-sm text-muted-foreground mb-1">Avg Price</div>
+                      <div className="text-xl font-bold text-foreground">
                         $
                         {(
                           seatMap.seats.reduce((sum, s) => sum + getSeatPrice(s.seatNumber), 0) / seatMap.seats.length

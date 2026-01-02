@@ -53,9 +53,9 @@ export default function MyPromotionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-linear-to-r from-purple-600 to-pink-600 text-white py-12">
+      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-12">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-4">
             <Wallet className="h-12 w-12" />
@@ -104,7 +104,7 @@ export default function MyPromotionsPage() {
                       </Badge>
                     )}
                     <Button
-                      className="w-full bg-linear-to-r from-purple-600 to-pink-600"
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
                       onClick={handleUseNow}
                       size="sm"
                     >
@@ -127,7 +127,7 @@ export default function MyPromotionsPage() {
               emptyDescription="Promotions you've used will appear here"
               renderActions={(userPromotion: any) => (
                 <>
-                  <div className="text-sm text-gray-600 mb-2">
+                  <div className="text-sm text-muted-foreground mb-2">
                     <p>
                       <strong>Used on:</strong> {formatDate(userPromotion.usedAt)}
                     </p>
@@ -224,9 +224,9 @@ function PromotionsList({
   if (promotions.length === 0) {
     return (
       <div className="text-center py-12">
-        <Wallet className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-        <p className="text-xl text-gray-600 font-semibold">{emptyMessage}</p>
-        <p className="text-gray-500 mt-2">{emptyDescription}</p>
+        <Wallet className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+        <p className="text-xl text-foreground font-semibold">{emptyMessage}</p>
+        <p className="text-muted-foreground mt-2">{emptyDescription}</p>
       </div>
     );
   }
@@ -238,7 +238,7 @@ function PromotionsList({
         return (
           <Card key={userPromotion._id} className="overflow-hidden hover:shadow-lg transition-shadow">
             {/* Header with Code */}
-            <div className="bg-linear-to-r from-purple-500 to-pink-500 p-4 text-white">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white">
               <div className="text-center">
                 <p className="text-sm opacity-80">DISCOUNT CODE</p>
                 <p className="text-2xl font-bold font-mono mt-1">{promotion.code}</p>
@@ -247,38 +247,40 @@ function PromotionsList({
 
             <CardContent className="p-6">
               {/* Title & Description */}
-              <h3 className="text-lg font-bold text-gray-900 mb-2">{promotion.title}</h3>
-              <p className="text-sm text-gray-600 mb-4 line-clamp-2">{promotion.description}</p>
+              <h3 className="text-lg font-bold text-foreground mb-2">{promotion.title}</h3>
+              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{promotion.description}</p>
 
               {/* Discount Details */}
-              <div className="space-y-2 mb-4 pb-4 border-b">
+              <div className="space-y-2 mb-4 pb-4 border-b border-border">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Discount</span>
-                  <span className="text-lg font-bold text-green-600">{getDiscountDisplay(promotion)}</span>
+                  <span className="text-sm text-muted-foreground">Discount</span>
+                  <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {getDiscountDisplay(promotion)}
+                  </span>
                 </div>
 
                 {promotion.minOrderValue > 0 && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Min order</span>
+                    <span className="text-muted-foreground">Min order</span>
                     <span className="font-semibold">{promotion.minOrderValue.toLocaleString()}₫</span>
                   </div>
                 )}
 
                 {promotion.maxDiscount && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Max discount</span>
+                    <span className="text-muted-foreground">Max discount</span>
                     <span className="font-semibold">{promotion.maxDiscount.toLocaleString()}₫</span>
                   </div>
                 )}
 
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Valid until</span>
+                  <span className="text-muted-foreground">Valid until</span>
                   <span className="font-semibold">{formatDate(promotion.endDate).split(',')[0]}</span>
                 </div>
               </div>
 
               {/* Collection Info */}
-              <div className="mb-4 text-xs text-gray-500">
+              <div className="mb-4 text-xs text-muted-foreground">
                 <p>
                   <Calendar className="inline h-3 w-3 mr-1" />
                   Collected on {formatDate(userPromotion.collectedAt)}
