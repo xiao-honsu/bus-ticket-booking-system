@@ -1,37 +1,46 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Info } from 'lucide-react';
+
 export default function SeatLegend() {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-base font-semibold mb-4">Seat Legend</h3>
-      <div className="space-y-3">
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Info className="h-5 w-5 text-primary" />
+          Seat Legend
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white border-2 border-green-500 rounded flex items-center justify-center text-xs font-semibold">
+          <div className="w-10 h-10 bg-background border-2 border-primary/50 rounded flex items-center justify-center text-xs font-semibold">
             A1
           </div>
           <span className="text-sm">Available</span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-orange-400 border-2 border-orange-500 rounded flex items-center justify-center text-xs font-semibold text-white">
+          <Badge variant="default" className="w-10 h-10 flex items-center justify-center text-xs">
             A2
-          </div>
+          </Badge>
           <span className="text-sm">Selected</span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-red-500 border-2 border-red-600 rounded flex items-center justify-center text-xs font-semibold text-white">
+          <Badge variant="destructive" className="w-10 h-10 flex items-center justify-center text-xs">
             A3
-          </div>
+          </Badge>
           <span className="text-sm">Booked</span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-yellow-400 border-2 border-yellow-500 rounded flex items-center justify-center text-xs font-semibold">
+          <Badge variant="secondary" className="w-10 h-10 flex items-center justify-center text-xs">
             A4
-          </div>
+          </Badge>
           <span className="text-sm">Locked</span>
         </div>
         <div className="flex items-center gap-3 pt-2 border-t">
-          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+          <div className="w-3 h-3 bg-primary rounded-full"></div>
           <span className="text-sm">Window Seat</span>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -70,11 +70,19 @@ export default function LoginForm() {
 
       toast.success('Login successful!');
 
-      // Redirect based on role
-      if (resultData.user.role === 'admin') {
-        router.push('/admin');
+      // Check for redirect parameter (from protected route middleware)
+      const redirectUrl = params.get('redirect');
+
+      if (redirectUrl) {
+        // Redirect to the originally requested page
+        router.push(redirectUrl);
       } else {
-        router.push('/dashboard');
+        // Default redirect based on role
+        if (resultData.user.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
       }
     } catch (error: any) {
       console.log('Login error:', error);

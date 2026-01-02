@@ -11,6 +11,7 @@ import {
   LoginRequest,
   CreateBookingRequest,
   CreateBookingResponse,
+  CreateGuestBookingRequest,
 } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -313,6 +314,21 @@ export const api = createApi({
         };
       },
     }),
+    // Guest booking endpoint (no authentication required)
+    createGuestBooking: builder.mutation<CreateBookingResponse, CreateGuestBookingRequest>({
+      query: (bookingData) => ({
+        url: '/bookings/guest',
+        method: 'POST',
+        body: bookingData,
+      }),
+      invalidatesTags: ['Trip'],
+      transformErrorResponse: (response: any) => {
+        return {
+          status: response.status,
+          data: response.data,
+        };
+      },
+    }),
     getBookings: builder.query({
       query: (params?: { page?: number; limit?: number }) => ({
         url: '/bookings',
@@ -514,6 +530,12 @@ export const api = createApi({
     }),
 
     // Location endpoints
+    getAllLocations: builder.query<Array<{ value: string; label: string; city: string; state: string }>, void>({
+      query: () => '/locations',
+      // Cache for 5 minutes since locations rarely change
+      keepUnusedDataFor: 300,
+    }),
+
     searchLocations: builder.query({
       query: (searchQuery: string) => ({
         url: '/locations/search',
@@ -741,6 +763,7 @@ export const {
   useDeleteTripMutation,
   useUpdateTripSeatPricingMutation,
   useCreateBookingMutation,
+  useCreateGuestBookingMutation,
   useGetBookingsQuery,
   useGetBookingQuery,
   useUpdateBookingMutation,
@@ -760,6 +783,7 @@ export const {
   useCreateOperatorMutation,
   useUpdateOperatorMutation,
   useDeleteOperatorMutation,
+  useGetAllLocationsQuery,
   useSearchLocationsQuery,
   useLockSeatsMutation,
   useGetTripSeatMapQuery,

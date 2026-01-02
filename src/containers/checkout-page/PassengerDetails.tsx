@@ -5,12 +5,14 @@ import { setContactInfo } from '@/lib/store/features/booking/bookingSlice';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Mail, Phone, User, Users, CheckCircle2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const contactSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -31,10 +33,12 @@ export default function PassengerDetails() {
     },
   });
 
+  const isFormValid = form.formState.isValid;
+
   // Update state immediately when form has valid values (including on mount)
   useEffect(() => {
     const validateAndUpdate = async () => {
-      const isValid = await form.trigger(); // Trigger validation
+      const isValid = await form.trigger();
       if (isValid) {
         const values = form.getValues();
         if (values.email && values.phone) {
@@ -48,7 +52,6 @@ export default function PassengerDetails() {
       }
     };
 
-    // Call on mount to capture default/initial values
     validateAndUpdate();
   }, []);
 
@@ -69,25 +72,50 @@ export default function PassengerDetails() {
   }, [form, dispatch]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Contact & Passenger Information</CardTitle>
+    <Card className="border-2 overflow-hidden">
+      <CardHeader className="bg-linear-to-r from-muted/50 to-transparent">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Contact & Passenger Info</CardTitle>
+              <CardDescription>Booking confirmation will be sent to your email</CardDescription>
+            </div>
+          </div>
+          {isFormValid && passengers.length > 0 && (
+            <Badge className="bg-green-500/10 text-green-600 border-green-200">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              Complete
+            </Badge>
+          )}
+        </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-6">
+        {/* Contact Information */}
         <div>
-          <h4 className="font-medium mb-3">Contact Information</h4>
+          <h4 className="font-semibold mb-4 flex items-center gap-2 text-sm">📧 Contact Information</h4>
           <Form {...form}>
-            <form className="space-y-4">
+            <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email Address *</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      Email Address
+                    </FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="your@email.com" {...field} />
+                      <Input
+                        type="email"
+                        placeholder="your@email.com"
+                        className="border-2 focus:ring-2 focus:ring-primary/20"
+                        {...field}
+                      />
                     </FormControl>
-                    <FormDescription>Booking confirmation will be sent to this email</FormDescription>
+                    <FormDescription className="text-xs">Booking confirmation sent here</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -97,11 +125,19 @@ export default function PassengerDetails() {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number *</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      Phone Number
+                    </FormLabel>
                     <FormControl>
-                      <Input type="tel" placeholder="+84 xxx xxx xxx" {...field} />
+                      <Input
+                        type="tel"
+                        placeholder="+84 xxx xxx xxx"
+                        className="border-2 focus:ring-2 focus:ring-primary/20"
+                        {...field}
+                      />
                     </FormControl>
-                    <FormDescription>For important updates about your trip</FormDescription>
+                    <FormDescription className="text-xs">For trip updates & emergencies</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -112,23 +148,50 @@ export default function PassengerDetails() {
 
         <Separator />
 
+        {/* Passengers List */}
         <div>
-          <h4 className="font-medium mb-3">Passengers ({passengers.length})</h4>
-          <div className="space-y-3">
-            {passengers.map((passenger, index) => (
-              <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium">{passenger.name}</div>
-                    <div className="text-sm text-gray-600">
-                      Age: {passenger.age} • {passenger.gender}
-                    </div>
-                  </div>
-                  <Badge>Seat {passenger.seatNumber}</Badge>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-semibold flex items-center gap-2 text-sm">👥 Passengers</h4>
+            <Badge variant="outline">
+              {passengers.length} passenger{passengers.length !== 1 ? 's' : ''}
+            </Badge>
           </div>
+
+          {passengers.length === 0 ? (
+            <div className="text-center py-8 bg-muted/30 rounded-lg border-2 border-dashed">
+              <User className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Passenger details will appear here after seat selection</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {passengers.map((passenger, index) => (
+                <div
+                  key={index}
+                  className={cn(
+                    'p-4 rounded-lg border-2 bg-linear-to-r from-muted/30 to-transparent',
+                    'hover:border-primary/30 transition-colors'
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{passenger.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {passenger.age} years • {passenger.gender}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="font-mono">
+                      Seat {passenger.seatNumber}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

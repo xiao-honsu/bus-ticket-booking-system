@@ -196,7 +196,7 @@ const SeatMapConfigurator: React.FC<SeatMapConfiguratorProps> = ({ busId, curren
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200 p-4">
+              <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200 p-4">
                 <div className="text-base font-semibold mb-3 text-blue-900">🎨 Painting Mode</div>
                 <div className="space-y-3">
                   <div>
@@ -265,19 +265,19 @@ const SeatMapConfigurator: React.FC<SeatMapConfiguratorProps> = ({ busId, curren
                 <div className="text-sm font-semibold mb-3">Color Legend:</div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-lg border-2 border-gray-400 flex-shrink-0"></div>
+                    <div className="w-10 h-10 bg-gray-200 rounded-lg border-2 border-gray-400 shrink-0"></div>
                     <span className="text-sm font-medium">Standard</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-yellow-300 rounded-lg border-2 border-yellow-500 flex-shrink-0"></div>
+                    <div className="w-10 h-10 bg-yellow-300 rounded-lg border-2 border-yellow-500 shrink-0"></div>
                     <span className="text-sm font-medium">VIP</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-200 rounded-lg border-2 border-blue-400 flex-shrink-0"></div>
+                    <div className="w-10 h-10 bg-blue-200 rounded-lg border-2 border-blue-400 shrink-0"></div>
                     <span className="text-sm font-medium">Window</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-200 rounded-lg border-2 border-green-400 flex-shrink-0"></div>
+                    <div className="w-10 h-10 bg-green-200 rounded-lg border-2 border-green-400 shrink-0"></div>
                     <span className="text-sm font-medium">Aisle</span>
                   </div>
                 </div>
@@ -286,8 +286,8 @@ const SeatMapConfigurator: React.FC<SeatMapConfiguratorProps> = ({ busId, curren
 
             {/* Seat Grid */}
             <div className="lg:col-span-4">
-              <div className="border-2 border-gray-300 rounded-xl p-8 bg-gradient-to-br from-gray-50 to-gray-100 shadow-inner">
-                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-center py-3 px-4 rounded-lg mb-6 font-semibold text-base shadow-md">
+              <div className="border-2 border-gray-300 rounded-xl p-8 bg-linear-to-br from-gray-50 to-gray-100 shadow-inner">
+                <div className="bg-linear-to-r from-blue-500 to-indigo-600 text-white text-center py-3 px-4 rounded-lg mb-6 font-semibold text-base shadow-md">
                   🚍 Front of Bus
                 </div>
 

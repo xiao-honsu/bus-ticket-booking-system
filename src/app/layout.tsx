@@ -5,9 +5,9 @@ import StoreProvider from './providers';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Toaster } from '@/components/ui/sonner';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cookies } from 'next/headers';
 import { InitialAuthState } from '@/lib/store';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -70,14 +70,16 @@ export default async function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <StoreProvider initialAuth={initialAuth}>
-          <ScrollArea className="h-screen">
-            <Navbar />
-            <div className="flex-1">{children}</div>
-            <Footer />
-          </ScrollArea>
-          <Toaster />
-        </StoreProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <StoreProvider initialAuth={initialAuth}>
+            <div className="h-screen overflow-auto">
+              <Navbar />
+              <div className="flex-1">{children}</div>
+              <Footer />
+            </div>
+            <Toaster />
+          </StoreProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

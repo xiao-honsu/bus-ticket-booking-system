@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { clearAuthCookies } from '@/lib/utils/cookies';
 import { Menu, Home, Search, Tag, Shield, LayoutDashboard, Ticket, LogOut } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function Navbar() {
   const router = useRouter();
@@ -115,6 +116,7 @@ export default function Navbar() {
                     </Button>
                   </Link>
                 )}
+                <ThemeToggle />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full ml-2">
@@ -182,6 +184,7 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex items-center gap-2 ml-2">
+                <ThemeToggle />
                 <Link href="/auth/login">
                   <Button variant="ghost">Login</Button>
                 </Link>

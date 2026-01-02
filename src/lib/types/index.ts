@@ -264,8 +264,7 @@ export interface CreateBookingRequest {
     age: number;
     gender: 'male' | 'female' | 'other';
     seatNumber: string;
-    // Note: Only these 4 fields are allowed by backend validation
-    // documentId, phoneNumber, seatPrice are NOT in validation schema
+    seatPrice: number; // Required by Mongoose passengerSchema
   }>;
   contactEmail: string;
   contactPhone: string;

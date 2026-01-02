@@ -14,13 +14,12 @@ function CancelPageContent() {
   const orderCode = searchParams.get('orderCode');
   const bookingId = searchParams.get('bookingId');
 
+  // Countdown timer effect
   useEffect(() => {
-    // Auto redirect after 10 seconds
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          router.push('/search');
           return 0;
         }
         return prev - 1;
@@ -28,7 +27,14 @@ function CancelPageContent() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [router]);
+  }, []);
+
+  // Separate effect to handle redirect when countdown reaches 0
+  useEffect(() => {
+    if (countdown === 0) {
+      router.push('/search');
+    }
+  }, [countdown, router]);
 
   const handleTryAgain = () => {
     if (bookingId) {

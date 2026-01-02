@@ -59,7 +59,8 @@ export function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(route + '/'));
 
   // Protected routes that require authentication
-  const protectedRoutes = ['/dashboard', '/checkout', '/booking'];
+  // Note: /checkout and /booking are NOT protected - guests can book without login
+  const protectedRoutes = ['/dashboard'];
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
   // Admin routes that require admin role

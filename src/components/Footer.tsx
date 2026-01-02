@@ -1,53 +1,207 @@
 import Link from 'next/link';
+import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-gray-800 text-white mt-16">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="text-xl font-bold mb-4">BusTicket</h3>
-            <p className="text-gray-400">Your trusted partner for bus ticket booking in Vietnam</p>
+    <footer className="bg-linear-to-b from-gray-900 to-gray-950 text-gray-300 mt-auto">
+      <div className="container mx-auto px-4 py-12 lg:py-16">
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          {/* Brand Section */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-3">BusTicket</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Your trusted partner for safe and comfortable bus ticket booking across Vietnam
+              </p>
+            </div>
+            {/* Social Media */}
+            <div className="flex items-center gap-3 pt-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full bg-gray-800 hover:bg-primary hover:text-primary-foreground transition-colors"
+                asChild
+              >
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                  <Facebook className="h-4 w-4" />
+                </a>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full bg-gray-800 hover:bg-primary hover:text-primary-foreground transition-colors"
+                asChild
+              >
+                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+                  <Twitter className="h-4 w-4" />
+                </a>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full bg-gray-800 hover:bg-primary hover:text-primary-foreground transition-colors"
+                asChild
+              >
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                  <Instagram className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
           </div>
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/" className="text-gray-400 hover:text-white">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link href="/search" className="text-gray-400 hover:text-white">
-                  Search Trips
-                </Link>
-              </li>
-              <li>
-                <Link href="/dashboard" className="text-gray-400 hover:text-white">
-                  My Bookings
-                </Link>
-              </li>
-            </ul>
+
+          {/* Quick Links */}
+          <div className="space-y-4">
+            <h4 className="text-base font-semibold text-white">Quick Links</h4>
+            <nav>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    href="/"
+                    className="text-sm text-gray-400 hover:text-white transition-colors inline-flex items-center group"
+                  >
+                    <span className="relative">
+                      Home
+                      <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/search"
+                    className="text-sm text-gray-400 hover:text-white transition-colors inline-flex items-center group"
+                  >
+                    <span className="relative">
+                      Search Trips
+                      <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/dashboard"
+                    className="text-sm text-gray-400 hover:text-white transition-colors inline-flex items-center group"
+                  >
+                    <span className="relative">
+                      My Bookings
+                      <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/about"
+                    className="text-sm text-gray-400 hover:text-white transition-colors inline-flex items-center group"
+                  >
+                    <span className="relative">
+                      About Us
+                      <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+                    </span>
+                  </Link>
+                </li>
+              </ul>
+            </nav>
           </div>
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Support</h4>
-            <ul className="space-y-2">
-              <li className="text-gray-400">Help Center</li>
-              <li className="text-gray-400">Terms of Service</li>
-              <li className="text-gray-400">Privacy Policy</li>
-            </ul>
+
+          {/* Support */}
+          <div className="space-y-4">
+            <h4 className="text-base font-semibold text-white">Support</h4>
+            <nav>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    href="/help"
+                    className="text-sm text-gray-400 hover:text-white transition-colors inline-flex items-center group"
+                  >
+                    <span className="relative">
+                      Help Center
+                      <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/terms"
+                    className="text-sm text-gray-400 hover:text-white transition-colors inline-flex items-center group"
+                  >
+                    <span className="relative">
+                      Terms of Service
+                      <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/privacy"
+                    className="text-sm text-gray-400 hover:text-white transition-colors inline-flex items-center group"
+                  >
+                    <span className="relative">
+                      Privacy Policy
+                      <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/faq"
+                    className="text-sm text-gray-400 hover:text-white transition-colors inline-flex items-center group"
+                  >
+                    <span className="relative">
+                      FAQs
+                      <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+                    </span>
+                  </Link>
+                </li>
+              </ul>
+            </nav>
           </div>
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Contact</h4>
-            <ul className="space-y-2">
-              <li className="text-gray-400">Email: support@busticket.vn</li>
-              <li className="text-gray-400">Phone: 1900 xxxx</li>
-              <li className="text-gray-400">Ho Chi Minh City, Vietnam</li>
+
+          {/* Contact */}
+          <div className="space-y-4">
+            <h4 className="text-base font-semibold text-white">Contact Us</h4>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3 text-sm text-gray-400">
+                <Mail className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <a href="mailto:support@busticket.vn" className="hover:text-white transition-colors">
+                  support@busticket.vn
+                </a>
+              </li>
+              <li className="flex items-start gap-3 text-sm text-gray-400">
+                <Phone className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <a href="tel:1900xxxx" className="hover:text-white transition-colors">
+                  1900 xxxx
+                </a>
+              </li>
+              <li className="flex items-start gap-3 text-sm text-gray-400">
+                <MapPin className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <span>Ho Chi Minh City, Vietnam</span>
+              </li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; 2025 BusTicket. All rights reserved.</p>
+
+        {/* Footer Bottom */}
+        <Separator className="my-8 bg-gray-800" />
+
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-gray-500 text-center md:text-left">
+            &copy; {currentYear} BusTicket. All rights reserved.
+          </p>
+          <div className="flex items-center gap-6 text-sm text-gray-500">
+            <Link href="/sitemap" className="hover:text-white transition-colors">
+              Sitemap
+            </Link>
+            <Link href="/cookies" className="hover:text-white transition-colors">
+              Cookie Policy
+            </Link>
+            <Link href="/accessibility" className="hover:text-white transition-colors">
+              Accessibility
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
