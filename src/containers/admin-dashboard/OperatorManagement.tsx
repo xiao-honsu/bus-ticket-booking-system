@@ -127,10 +127,10 @@ export default function OperatorManagement() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold mb-1">Operator Management</h2>
-          <p className="text-gray-600">Manage bus operators and approve applications</p>
+          <p className="text-gray-600 dark:text-gray-400">Manage bus operators and approve applications</p>
         </div>
         <Button variant="outline" onClick={() => router.push('/admin')} className="gap-2">
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 dark:text-gray-300" />
           Back to Dashboard
         </Button>
       </div>
@@ -150,7 +150,7 @@ export default function OperatorManagement() {
           ) : error ? (
             <p className="text-red-500 text-center py-8">Failed to load operators</p>
           ) : operators.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No operators yet</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No operators yet</p>
           ) : (
             <>
               <Table>
@@ -194,7 +194,7 @@ export default function OperatorManagement() {
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="mt-6 flex items-center justify-between">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     Page {currentPage} of {totalPages}
                   </p>
                   <div className="flex gap-2">

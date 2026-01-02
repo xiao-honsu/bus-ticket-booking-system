@@ -87,14 +87,14 @@ export default function AdminPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100">
+    <main className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <div className="bg-white dark:bg-slate-900 shadow-sm border-b dark:border-slate-800 sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-sm text-gray-600 mt-1">Bus Ticket Booking System Management</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Bus Ticket Booking System Management</p>
             </div>
           </div>
         </div>
@@ -107,36 +107,44 @@ export default function AdminPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <TrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-1">Total Bookings</p>
-                <p className="text-2xl font-bold">{bookingsData?.totalResults || 0}</p>
+                <div className="inline-flex p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-2">
+                  <TrendingUp className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Bookings</p>
+                <p className="text-2xl font-bold dark:text-gray-100">{bookingsData?.totalResults || 0}</p>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <Bus className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-1">Total Buses</p>
-                <p className="text-2xl font-bold">{busesData?.totalResults || 0}</p>
+                <div className="inline-flex p-3 rounded-full bg-green-100 dark:bg-green-900/30 mb-2">
+                  <Bus className="w-8 h-8 text-green-600 dark:text-green-400" />
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Buses</p>
+                <p className="text-2xl font-bold dark:text-gray-100">{busesData?.totalResults || 0}</p>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <MapPin className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-1">Total Routes</p>
-                <p className="text-2xl font-bold">{routesData?.totalResults || 0}</p>
+                <div className="inline-flex p-3 rounded-full bg-purple-100 dark:bg-purple-900/30 mb-2">
+                  <MapPin className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Routes</p>
+                <p className="text-2xl font-bold dark:text-gray-100">{routesData?.totalResults || 0}</p>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <UserCheck className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-1">Total Operators</p>
-                <p className="text-2xl font-bold">{operatorsData?.totalResults || 0}</p>
+                <div className="inline-flex p-3 rounded-full bg-indigo-100 dark:bg-indigo-900/30 mb-2">
+                  <UserCheck className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Operators</p>
+                <p className="text-2xl font-bold dark:text-gray-100">{operatorsData?.totalResults || 0}</p>
               </div>
             </CardContent>
           </Card>
@@ -147,19 +155,17 @@ export default function AdminPage() {
           {menuItems.map((item, index) => (
             <Card
               key={index}
-              className={`border-l-4 ${item.borderColor} hover:shadow-lg transition-all cursor-pointer group`}
+              className={`border-l-4 ${item.borderColor} dark:${item.borderColor} hover:shadow-lg transition-all cursor-pointer group`}
               onClick={() => router.push(item.href)}
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div
-                    className={`p-3 rounded-lg bg-linear-to-br ${item.color} group-hover:scale-110 transition-transform`}
-                  >
-                    {item.icon}
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-white to-gray-50 dark:from-slate-800 dark:to-slate-900 shadow-md group-hover:scale-110 transition-transform border border-gray-200 dark:border-slate-700">
+                    <div className="text-gray-700 dark:text-gray-200">{item.icon}</div>
                   </div>
                 </div>
-                <CardTitle className="mt-4">{item.title}</CardTitle>
-                <CardDescription>{item.description}</CardDescription>
+                <CardTitle className="mt-4 dark:text-gray-100">{item.title}</CardTitle>
+                <CardDescription className="dark:text-gray-400">{item.description}</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button
@@ -178,23 +184,23 @@ export default function AdminPage() {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-12 p-6 bg-white rounded-lg border shadow-sm">
-          <h3 className="font-semibold text-gray-900 mb-2">System Information</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+        <div className="mt-12 p-6 bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-800 shadow-sm">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">System Information</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 dark:text-gray-400">
             <div>
-              <p className="font-medium text-gray-900">API Status</p>
+              <p className="font-medium text-gray-900 dark:text-gray-200">API Status</p>
               <p>🟢 Online</p>
             </div>
             <div>
-              <p className="font-medium text-gray-900">Database</p>
+              <p className="font-medium text-gray-900 dark:text-gray-200">Database</p>
               <p>🟢 Connected</p>
             </div>
             <div>
-              <p className="font-medium text-gray-900">Last Updated</p>
+              <p className="font-medium text-gray-900 dark:text-gray-200">Last Updated</p>
               <p>2 minutes ago</p>
             </div>
             <div>
-              <p className="font-medium text-gray-900">Version</p>
+              <p className="font-medium text-gray-900 dark:text-gray-200">Version</p>
               <p>1.0.0</p>
             </div>
           </div>

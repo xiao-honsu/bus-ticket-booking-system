@@ -194,10 +194,10 @@ export default function RouteManagement() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold mb-1">Route Management</h2>
-          <p className="text-gray-600">Manage travel routes and stops</p>
+          <p className="text-gray-600 dark:text-gray-400">Manage travel routes and stops</p>
         </div>
         <Button variant="outline" onClick={() => router.push('/admin')} className="gap-2">
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 dark:text-gray-300" />
           Back to Dashboard
         </Button>
       </div>
@@ -221,7 +221,9 @@ export default function RouteManagement() {
               value={filters.search}
               onChange={(e) => setFilters({ search: e.target.value })}
             />
-            <div className="text-sm text-gray-600 flex items-center">Showing {routes.length} loaded routes</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
+              Showing {routes.length} loaded routes
+            </div>
             <Button variant="outline" onClick={() => setFilters({ search: '' })}>
               Reset Filters
             </Button>
@@ -239,7 +241,7 @@ export default function RouteManagement() {
             });
 
             if (filtered.length === 0) {
-              return <p className="text-gray-500 text-center py-8">No routes match the filters</p>;
+              return <p className="text-gray-500 dark:text-gray-400 text-center py-8">No routes match the filters</p>;
             }
 
             return (
@@ -320,7 +322,7 @@ export default function RouteManagement() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
                 Showing {routes.length} of {totalResults} routes
               </div>
               <div className="flex items-center gap-2">
@@ -552,7 +554,7 @@ export default function RouteManagement() {
                   }
                   placeholder="1800"
                 />
-                <p className="text-xs text-gray-500 mt-1">1800 minutes = 30 hours</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">1800 minutes = 30 hours</p>
               </div>
             </div>
 

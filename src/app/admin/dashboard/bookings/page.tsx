@@ -128,16 +128,16 @@ export default function BookingMonitoringPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="container mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-500">Booking Monitoring</p>
-            <h1 className="text-2xl font-bold">Bookings</h1>
-            <p className="text-slate-600">Monitor and manage customer bookings</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Booking Monitoring</p>
+            <h1 className="text-2xl font-bold dark:text-gray-100">Bookings</h1>
+            <p className="text-slate-600 dark:text-slate-400">Monitor and manage customer bookings</p>
           </div>
           <Button variant="outline" onClick={() => router.push('/admin')} className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-4 h-4 dark:text-gray-300" /> Back
           </Button>
         </div>
 
@@ -145,13 +145,16 @@ export default function BookingMonitoringPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-blue-600" /> Filters & Search
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                <Filter className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              Filters & Search
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Search Box */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
               <Input
                 type="text"
                 placeholder="Search by booking ID, passenger name, email, or phone..."
@@ -198,41 +201,49 @@ export default function BookingMonitoringPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Ticket className="w-4 h-4 text-blue-600" /> Bookings ({filteredBookings.length})
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                <Ticket className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              Bookings ({filteredBookings.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-center py-8 text-slate-500">Loading bookings...</div>
+              <div className="text-center py-8 text-slate-500 dark:text-slate-400">Loading bookings...</div>
             ) : filteredBookings.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">No bookings found</div>
+              <div className="text-center py-8 text-slate-500 dark:text-slate-400">No bookings found</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-100">
+                  <thead className="bg-slate-100 dark:bg-slate-800">
                     <tr>
-                      <th className="text-left px-4 py-2">Booking ID</th>
-                      <th className="text-left px-4 py-2">Passenger</th>
-                      <th className="text-left px-4 py-2">Trip</th>
-                      <th className="text-left px-4 py-2">Seats</th>
-                      <th className="text-left px-4 py-2">Amount</th>
-                      <th className="text-left px-4 py-2">Booking Date</th>
-                      <th className="text-left px-4 py-2">Status</th>
-                      <th className="text-left px-4 py-2">Actions</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Booking ID</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Passenger</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Trip</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Seats</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Amount</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Booking Date</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Status</th>
+                      <th className="text-left px-4 py-2 dark:text-gray-300">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredBookings.map((bk: any) => (
-                      <tr key={bk.id} className="border-b last:border-none hover:bg-slate-50">
-                        <td className="px-4 py-3 font-medium">{bk.referenceNumber || bk.id}</td>
-                        <td className="px-4 py-3">{bk.user?.name || 'Guest'}</td>
-                        <td className="px-4 py-3 text-sm">
+                      <tr
+                        key={bk.id}
+                        className="border-b dark:border-slate-700 last:border-none hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                      >
+                        <td className="px-4 py-3 font-medium dark:text-gray-200">{bk.referenceNumber || bk.id}</td>
+                        <td className="px-4 py-3 dark:text-gray-300">{bk.user?.name || 'Guest'}</td>
+                        <td className="px-4 py-3 text-sm dark:text-gray-300">
                           {bk.trip?.origin || 'N/A'} → {bk.trip?.destination || 'N/A'}
                         </td>
-                        <td className="px-4 py-3 text-sm">
+                        <td className="px-4 py-3 text-sm dark:text-gray-300">
                           {bk.passengers?.length} ({formatSeats(bk.passengers)})
                         </td>
-                        <td className="px-4 py-3 font-medium">{bk.totalAmount?.toLocaleString('vi-VN')} đ</td>
+                        <td className="px-4 py-3 font-medium dark:text-gray-200">
+                          {bk.totalAmount?.toLocaleString('vi-VN')} đ
+                        </td>
                         <td className="px-4 py-3 text-sm">
                           {bk.createdAt ? format(parseISO(bk.createdAt), 'dd MMM yyyy', { locale: vi }) : 'N/A'}
                         </td>
@@ -272,81 +283,89 @@ export default function BookingMonitoringPage() {
           {selectedBooking && (
             <div className="space-y-6">
               {/* Trip Info */}
-              <div className="border rounded-lg p-4">
-                <h3 className="font-semibold mb-3">Trip Information</h3>
+              <div className="border dark:border-slate-700 rounded-lg p-4">
+                <h3 className="font-semibold mb-3 dark:text-gray-200">Trip Information</h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-slate-600">Origin</p>
-                    <p className="font-medium">{selectedBooking.trip?.origin || 'N/A'}</p>
+                    <p className="text-slate-600 dark:text-slate-400">Origin</p>
+                    <p className="font-medium dark:text-gray-200">{selectedBooking.trip?.origin || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-slate-600">Destination</p>
-                    <p className="font-medium">{selectedBooking.trip?.destination || 'N/A'}</p>
+                    <p className="text-slate-600 dark:text-slate-400">Destination</p>
+                    <p className="font-medium dark:text-gray-200">{selectedBooking.trip?.destination || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-slate-600">Departure</p>
-                    <p className="font-medium">
+                    <p className="text-slate-600 dark:text-slate-400">Departure</p>
+                    <p className="font-medium dark:text-gray-200">
                       {selectedBooking.trip?.departureTime
                         ? format(parseISO(selectedBooking.trip.departureTime), 'dd MMM yyyy HH:mm', { locale: vi })
                         : 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-slate-600">Arrival</p>
-                    <p className="font-medium">
+                    <p className="text-slate-600 dark:text-slate-400">Arrival</p>
+                    <p className="font-medium dark:text-gray-200">
                       {selectedBooking.trip?.arrivalTime
                         ? format(parseISO(selectedBooking.trip.arrivalTime), 'dd MMM yyyy HH:mm', { locale: vi })
                         : 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-slate-600">Base Price</p>
-                    <p className="font-medium">{selectedBooking.trip?.basePrice?.toLocaleString('vi-VN') || 'N/A'} đ</p>
+                    <p className="text-slate-600 dark:text-slate-400">Base Price</p>
+                    <p className="font-medium dark:text-gray-200">
+                      {selectedBooking.trip?.basePrice?.toLocaleString('vi-VN') || 'N/A'} đ
+                    </p>
                   </div>
                   <div>
-                    <p className="text-slate-600">Duration</p>
-                    <p className="font-medium">{selectedBooking.trip?.estimatedDuration || 'N/A'} hours</p>
+                    <p className="text-slate-600 dark:text-slate-400">Duration</p>
+                    <p className="font-medium dark:text-gray-200">
+                      {selectedBooking.trip?.estimatedDuration || 'N/A'} hours
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Bus Info */}
-              <div className="border rounded-lg p-4">
-                <h3 className="font-semibold mb-3">Bus Information</h3>
+              <div className="border dark:border-slate-700 rounded-lg p-4">
+                <h3 className="font-semibold mb-3 dark:text-gray-200">Bus Information</h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-slate-600">License Plate</p>
-                    <p className="font-medium">{selectedBooking.trip?.busId?.licensePlate || 'N/A'}</p>
+                    <p className="text-slate-600 dark:text-slate-400">License Plate</p>
+                    <p className="font-medium dark:text-gray-200">
+                      {selectedBooking.trip?.busId?.licensePlate || 'N/A'}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-slate-600">Model</p>
-                    <p className="font-medium">{selectedBooking.trip?.busId?.model || 'N/A'}</p>
+                    <p className="text-slate-600 dark:text-slate-400">Model</p>
+                    <p className="font-medium dark:text-gray-200">{selectedBooking.trip?.busId?.model || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-slate-600">Total Seats</p>
-                    <p className="font-medium">{selectedBooking.trip?.busId?.totalSeats || 'N/A'}</p>
+                    <p className="text-slate-600 dark:text-slate-400">Total Seats</p>
+                    <p className="font-medium dark:text-gray-200">{selectedBooking.trip?.busId?.totalSeats || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-slate-600">Operator</p>
-                    <p className="font-medium">{selectedBooking.trip?.operatorId?.name || 'N/A'}</p>
+                    <p className="text-slate-600 dark:text-slate-400">Operator</p>
+                    <p className="font-medium dark:text-gray-200">{selectedBooking.trip?.operatorId?.name || 'N/A'}</p>
                   </div>
                 </div>
               </div>
 
               {/* Booking Details */}
-              <div className="border rounded-lg p-4">
-                <h3 className="font-semibold mb-3">Booking Details</h3>
+              <div className="border dark:border-slate-700 rounded-lg p-4">
+                <h3 className="font-semibold mb-3 dark:text-gray-200">Booking Details</h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-slate-600">Seats Booked</p>
-                    <p className="font-medium">{formatSeats(selectedBooking.passengers)}</p>
+                    <p className="text-slate-600 dark:text-slate-400">Seats Booked</p>
+                    <p className="font-medium dark:text-gray-200">{formatSeats(selectedBooking.passengers)}</p>
                   </div>
                   <div>
-                    <p className="text-slate-600">Total Price</p>
-                    <p className="font-medium">{selectedBooking.totalAmount?.toLocaleString('vi-VN') || 'N/A'} đ</p>
+                    <p className="text-slate-600 dark:text-slate-400">Total Price</p>
+                    <p className="font-medium dark:text-gray-200">
+                      {selectedBooking.totalAmount?.toLocaleString('vi-VN') || 'N/A'} đ
+                    </p>
                   </div>
                   <div>
-                    <p className="text-slate-600">Status</p>
+                    <p className="text-slate-600 dark:text-slate-400">Status</p>
                     <Badge className={statusColor(selectedBooking.status)}>{selectedBooking.status}</Badge>
                   </div>
                 </div>

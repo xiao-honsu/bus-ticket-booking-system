@@ -207,10 +207,10 @@ export default function TripManagement() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold mb-1">Trip Management</h2>
-          <p className="text-gray-600">Manage trips and schedules</p>
+          <p className="text-gray-600 dark:text-gray-400">Manage trips and schedules</p>
         </div>
         <Button variant="outline" onClick={() => router.push('/admin')} className="gap-2">
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 dark:text-gray-300" />
           Back to Dashboard
         </Button>
       </div>
@@ -254,26 +254,26 @@ export default function TripManagement() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-slate-800">
                 <tr>
-                  <th className="px-4 py-3 text-left">Route</th>
-                  <th className="px-4 py-3 text-left">Date</th>
-                  <th className="px-4 py-3 text-left">Time</th>
-                  <th className="px-4 py-3 text-left">Available Seats</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Actions</th>
+                  <th className="px-4 py-3 text-left dark:text-gray-300">Route</th>
+                  <th className="px-4 py-3 text-left dark:text-gray-300">Date</th>
+                  <th className="px-4 py-3 text-left dark:text-gray-300">Time</th>
+                  <th className="px-4 py-3 text-left dark:text-gray-300">Available Seats</th>
+                  <th className="px-4 py-3 text-left dark:text-gray-300">Status</th>
+                  <th className="px-4 py-3 text-left dark:text-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoadingTrips ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                       Loading trips...
                     </td>
                   </tr>
                 ) : filteredTrips.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                       No trips match the current filters.
                     </td>
                   </tr>
@@ -281,9 +281,12 @@ export default function TripManagement() {
                   filteredTrips.map((trip: any) => {
                     const tripId = trip._id || trip.id;
                     return (
-                      <tr key={tripId} className="border-t">
-                        <td className="px-4 py-3">{trip.route?.routeName || 'N/A'}</td>
-                        <td className="px-4 py-3">
+                      <tr
+                        key={tripId}
+                        className="border-t dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                      >
+                        <td className="px-4 py-3 dark:text-gray-300">{trip.route?.routeName || 'N/A'}</td>
+                        <td className="px-4 py-3 dark:text-gray-300">
                           {new Date(trip.departureTime).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
@@ -303,12 +306,12 @@ export default function TripManagement() {
                           <span
                             className={`px-2 py-1 rounded-full text-sm ${
                               trip.status === 'scheduled'
-                                ? 'bg-green-100 text-green-800'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                 : trip.status === 'in_progress'
-                                  ? 'bg-blue-100 text-blue-800'
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                                   : trip.status === 'completed'
-                                    ? 'bg-gray-100 text-gray-800'
-                                    : 'bg-red-100 text-red-800'
+                                    ? 'bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400'
+                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                             }`}
                           >
                             {trip.status === 'in_progress'
@@ -342,7 +345,7 @@ export default function TripManagement() {
                                 setDeleteDialogOpen(true);
                               }}
                               disabled={isDeleting}
-                              className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
                             >
                               {isDeleting ? 'Deleting...' : 'Delete'}
                             </button>
@@ -360,7 +363,7 @@ export default function TripManagement() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 pb-6">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
               Showing {filteredTrips.length} of {totalResults} trips
             </div>
             <div className="flex items-center gap-2">
@@ -550,7 +553,9 @@ export default function TripManagement() {
                 }
                 placeholder="500000"
               />
-              <p className="text-xs text-gray-500 mt-1">Base price, modifiers will apply based on seat type</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Base price, modifiers will apply based on seat type
+              </p>
             </div>
 
             <Separator />

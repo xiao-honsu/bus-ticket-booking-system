@@ -26,9 +26,9 @@ export default function AnalyticsPage() {
 
   if (analyticsLoading) {
     return (
-      <main className="min-h-screen bg-slate-50">
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-8">Loading analytics...</div>
+          <div className="text-center py-8 dark:text-gray-300">Loading analytics...</div>
         </div>
       </main>
     );
@@ -36,9 +36,11 @@ export default function AnalyticsPage() {
 
   if (analyticsError) {
     return (
-      <main className="min-h-screen bg-slate-50">
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-8 text-red-600">Error loading analytics: {JSON.stringify(analyticsError)}</div>
+          <div className="text-center py-8 text-red-600 dark:text-red-400">
+            Error loading analytics: {JSON.stringify(analyticsError)}
+          </div>
         </div>
       </main>
     );
@@ -72,18 +74,18 @@ export default function AnalyticsPage() {
   const maxRevenue = Math.max(...revenueByDay.map((d: any) => d.revenue), 1);
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-500">Analytics</p>
-            <h1 className="text-2xl font-bold">Analytics & Revenue</h1>
-            <p className="text-slate-600">Traffic, revenue, and booking performance</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Analytics</p>
+            <h1 className="text-2xl font-bold dark:text-gray-100">Analytics & Revenue</h1>
+            <p className="text-slate-600 dark:text-slate-400">Traffic, revenue, and booking performance</p>
           </div>
           <div className="flex gap-3">
             <Select value={period} onValueChange={(val: any) => setPeriod(val)}>
               <SelectTrigger className="w-[150px]">
-                <Calendar className="w-4 h-4 mr-2" />
+                <Calendar className="w-4 h-4 mr-2 dark:text-gray-300" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -93,7 +95,7 @@ export default function AnalyticsPage() {
               </SelectContent>
             </Select>
             <Button variant="outline" className="gap-2" onClick={() => router.push('/admin')}>
-              <ArrowLeft className="w-4 h-4" /> Back
+              <ArrowLeft className="w-4 h-4 dark:text-gray-300" /> Back
             </Button>
           </div>
         </div>
@@ -102,12 +104,16 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Total Revenue</CardTitle>
-              <DollarSign className="w-4 h-4 text-emerald-600" />
+              <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Revenue</CardTitle>
+              <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                <DollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">{summary.totalRevenue.toLocaleString('vi-VN')} đ</p>
-              <p className="text-xs text-slate-600 mt-1">
+              <p className="text-2xl font-semibold dark:text-gray-200">
+                {summary.totalRevenue.toLocaleString('vi-VN')} đ
+              </p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                 {period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : 'Last 90 days'}
               </p>
             </CardContent>
@@ -115,34 +121,42 @@ export default function AnalyticsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Total Bookings</CardTitle>
-              <BarChart3 className="w-4 h-4 text-blue-600" />
+              <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Bookings</CardTitle>
+              <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">{summary.totalBookings}</p>
-              <p className="text-xs text-slate-600 mt-1">Total tickets sold</p>
+              <p className="text-2xl font-semibold dark:text-gray-200">{summary.totalBookings}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Total tickets sold</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Conversion Rate</CardTitle>
-              <LineChart className="w-4 h-4 text-indigo-600" />
+              <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">Conversion Rate</CardTitle>
+              <div className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30">
+                <LineChart className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">{summary.conversionRate}%</p>
-              <p className="text-xs text-slate-600 mt-1">Completed bookings</p>
+              <p className="text-2xl font-semibold dark:text-gray-200">{summary.conversionRate}%</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Completed bookings</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Avg Ticket Price</CardTitle>
-              <DollarSign className="w-4 h-4 text-amber-600" />
+              <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">Avg Ticket Price</CardTitle>
+              <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                <DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">{summary.avgTicketPrice.toLocaleString('vi-VN')} đ</p>
-              <p className="text-xs text-slate-600 mt-1">Per booking</p>
+              <p className="text-2xl font-semibold dark:text-gray-200">
+                {summary.avgTicketPrice.toLocaleString('vi-VN')} đ
+              </p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Per booking</p>
             </CardContent>
           </Card>
         </div>
@@ -151,8 +165,11 @@ export default function AnalyticsPage() {
           {/* Revenue Chart */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-blue-600" /> Revenue Trend
+              <CardTitle className="flex items-center gap-2 dark:text-gray-100">
+                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                  <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                Revenue Trend
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -168,7 +185,9 @@ export default function AnalyticsPage() {
                           title={`${format(parseISO(item.date), 'MMM dd')}: ${item.revenue.toLocaleString('vi-VN')} đ`}
                         />
                       </div>
-                      <p className="text-xs text-slate-600 mt-2">{format(parseISO(item.date), 'MMM dd')}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
+                        {format(parseISO(item.date), 'MMM dd')}
+                      </p>
                     </div>
                   );
                 })}
@@ -179,15 +198,21 @@ export default function AnalyticsPage() {
           {/* Status Breakdown */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-emerald-600" /> Booking Status
+              <CardTitle className="flex items-center gap-2 dark:text-gray-100">
+                <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                  <BarChart3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                Booking Status
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-700">Completed</span>
-                  <Badge className="bg-green-100 text-green-700" variant="secondary">
+                  <span className="text-slate-700 dark:text-slate-300">Completed</span>
+                  <Badge
+                    className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                    variant="secondary"
+                  >
                     {statusPercentages.completed}%
                   </Badge>
                 </div>
@@ -198,8 +223,11 @@ export default function AnalyticsPage() {
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-700">Confirmed</span>
-                  <Badge className="bg-blue-100 text-blue-700" variant="secondary">
+                  <span className="text-slate-700 dark:text-slate-300">Confirmed</span>
+                  <Badge
+                    className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                    variant="secondary"
+                  >
                     {statusPercentages.confirmed}%
                   </Badge>
                 </div>
@@ -210,8 +238,11 @@ export default function AnalyticsPage() {
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-700">Pending</span>
-                  <Badge className="bg-amber-100 text-amber-700" variant="secondary">
+                  <span className="text-slate-700 dark:text-slate-300">Pending</span>
+                  <Badge
+                    className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                    variant="secondary"
+                  >
                     {statusPercentages.pending}%
                   </Badge>
                 </div>
@@ -222,8 +253,11 @@ export default function AnalyticsPage() {
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-700">Cancelled</span>
-                  <Badge className="bg-rose-100 text-rose-700" variant="secondary">
+                  <span className="text-slate-700 dark:text-slate-300">Cancelled</span>
+                  <Badge
+                    className="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
+                    variant="secondary"
+                  >
                     {statusPercentages.cancelled}%
                   </Badge>
                 </div>
@@ -233,7 +267,7 @@ export default function AnalyticsPage() {
               </div>
 
               <Separator />
-              <div className="text-xs text-slate-500">Total bookings: {total}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">Total bookings: {total}</div>
             </CardContent>
           </Card>
         </div>
@@ -241,8 +275,11 @@ export default function AnalyticsPage() {
         {/* Popular Routes */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-indigo-600" /> Popular Routes
+            <CardTitle className="flex items-center gap-2 dark:text-gray-100">
+              <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/30">
+                <TrendingUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              Popular Routes
             </CardTitle>
           </CardHeader>
           <CardContent>
