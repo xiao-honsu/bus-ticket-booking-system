@@ -53,32 +53,32 @@ function CancelPageContent() {
           <div className="flex justify-center mb-4">
             <XCircle className="h-20 w-20 text-red-600" />
           </div>
-          <CardTitle className="text-3xl font-bold text-red-600">Thanh toán bị hủy</CardTitle>
+          <CardTitle className="text-3xl font-bold text-red-600">Payment Cancelled</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-center text-red-800">
-              Giao dịch thanh toán của bạn đã bị hủy. Không có khoản phí nào được trừ từ tài khoản của bạn.
+              Your payment transaction has been cancelled. No charges were made to your account.
             </p>
           </div>
 
           {orderCode && (
             <div className="space-y-2">
-              <h2 className="font-semibold text-lg border-b pb-2">Thông tin giao dịch</h2>
+              <h2 className="font-semibold text-lg border-b pb-2">Transaction Information</h2>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-sm text-gray-500">Mã đơn hàng</p>
+                  <p className="text-sm text-gray-500">Order Code</p>
                   <p className="font-medium">{orderCode}</p>
                 </div>
                 {bookingId && (
                   <div>
-                    <p className="text-sm text-gray-500">Mã booking</p>
+                    <p className="text-sm text-gray-500">Booking ID</p>
                     <p className="font-medium">{bookingId}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-sm text-gray-500">Trạng thái</p>
-                  <p className="font-medium text-red-600">Đã hủy</p>
+                  <p className="text-sm text-gray-500">Status</p>
+                  <p className="font-medium text-red-600">Cancelled</p>
                 </div>
               </div>
             </div>
@@ -86,8 +86,8 @@ function CancelPageContent() {
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
-              <strong>Lưu ý:</strong> Ghế đã chọn của bạn đang được giữ trong thời gian giới hạn. Vui lòng hoàn tất
-              thanh toán trước khi hết thời gian để giữ chỗ.
+              <strong>Note:</strong> Your selected seats are being held for a limited time. Please complete payment
+              before the time expires to secure your reservation.
             </p>
           </div>
 
@@ -95,21 +95,21 @@ function CancelPageContent() {
             <div className="flex flex-col sm:flex-row gap-3">
               <Button onClick={handleTryAgain} className="flex-1" size="lg">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Thử lại thanh toán
+                Try Payment Again
               </Button>
               <Button onClick={() => router.push('/search')} variant="outline" className="flex-1" size="lg">
                 <Search className="mr-2 h-4 w-4" />
-                Tìm chuyến mới
+                Search New Trip
               </Button>
             </div>
 
             <Button onClick={() => router.push('/dashboard')} variant="ghost" className="w-full">
-              Về Dashboard
+              Go to Dashboard
             </Button>
           </div>
 
           <div className="text-center text-sm text-gray-500">
-            Tự động chuyển về trang tìm kiếm sau {countdown} giây...
+            Automatically redirecting to search page in {countdown} seconds...
           </div>
         </CardContent>
       </Card>

@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { cookies } from 'next/headers';
 import { InitialAuthState } from '@/lib/store';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ChatWidget } from '@/components/ChatWidget';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -78,6 +79,7 @@ export default async function RootLayout({
               <Footer />
             </div>
             <Toaster />
+            <ChatWidget />
           </StoreProvider>
         </ThemeProvider>
       </body>
