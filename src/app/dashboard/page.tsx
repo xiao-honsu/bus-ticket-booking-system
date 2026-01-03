@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/lib/hooks';
-import { useGetMyBookingsQuery } from '@/lib/store/services/api';
+import { useGetBookingsQuery } from '@/lib/store/services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,15 @@ import Link from 'next/link';
 export default function DashboardPage() {
   const user = useAppSelector((state) => state.auth.user);
   const router = useRouter();
-  const { data: bookingsData, isLoading, error } = useGetMyBookingsQuery({ page: 1, limit: 50 });
+  const {
+    data: bookingsData,
+    isLoading,
+    error,
+  } = useGetBookingsQuery({
+    page: 1,
+    limit: 50,
+    user: user?.id,
+  });
 
   const bookings = bookingsData?.results || [];
 

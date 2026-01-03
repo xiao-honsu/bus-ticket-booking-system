@@ -355,7 +355,7 @@ export const api = createApi({
     }),
     // Admin: Get all bookings
     getBookings: builder.query({
-      query: (params?: { page?: number; limit?: number }) => ({
+      query: (params?: { page?: number; limit?: number; user?: string }) => ({
         url: '/bookings',
         params,
       }),
