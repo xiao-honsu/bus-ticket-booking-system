@@ -48,7 +48,6 @@ interface PromotionFormData {
   startDate: string;
   endDate: string;
   usageLimit: number;
-  perUserLimit: number;
   isActive: boolean;
   imageUrl?: string;
   terms?: string;
@@ -73,7 +72,6 @@ export default function PromotionsManagementPage() {
     startDate: '',
     endDate: '',
     usageLimit: 100,
-    perUserLimit: 1,
     isActive: true,
     imageUrl: '',
     terms: '',
@@ -111,7 +109,6 @@ export default function PromotionsManagementPage() {
       startDate: '',
       endDate: '',
       usageLimit: 100,
-      perUserLimit: 1,
       isActive: true,
       imageUrl: '',
       terms: '',
@@ -132,7 +129,6 @@ export default function PromotionsManagementPage() {
       startDate: new Date(promotion.startDate).toISOString().split('T')[0],
       endDate: new Date(promotion.endDate).toISOString().split('T')[0],
       usageLimit: promotion.usageLimit,
-      perUserLimit: promotion.perUserLimit,
       isActive: promotion.isActive,
       imageUrl: promotion.imageUrl || '',
       terms: promotion.terms || '',
@@ -306,9 +302,6 @@ export default function PromotionsManagementPage() {
                         <td className="p-3">
                           <p className="text-sm dark:text-gray-300">
                             {promotion.usedCount} / {promotion.usageLimit}
-                          </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
-                            Per user: {promotion.perUserLimit}
                           </p>
                         </td>
                         <td className="p-3">
@@ -540,20 +533,6 @@ function PromotionFormDialog({
               value={formData.usageLimit}
               onChange={(e) => setFormData({ ...formData, usageLimit: parseInt(e.target.value) })}
               placeholder="100"
-              className="col-span-3"
-            />
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="perUserLimit" className="text-right">
-              Per User Limit *
-            </Label>
-            <Input
-              id="perUserLimit"
-              type="number"
-              value={formData.perUserLimit}
-              onChange={(e) => setFormData({ ...formData, perUserLimit: parseInt(e.target.value) })}
-              placeholder="1"
               className="col-span-3"
             />
           </div>

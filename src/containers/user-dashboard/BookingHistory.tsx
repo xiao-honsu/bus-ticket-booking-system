@@ -117,7 +117,7 @@ export default function BookingHistory() {
                     <div>Date: {new Date(booking.trip?.departureTime).toLocaleDateString()}</div>
                     <div>Seats: {booking.seatNumbers?.join(', ')}</div>
                     <div>Passengers: {booking.passengers?.length || 0}</div>
-                    <div className="font-bold text-gray-900">${booking.totalAmount}</div>
+                    <div className="font-bold text-gray-900">{booking.totalAmount?.toLocaleString()} ₫</div>
                   </div>
                   {booking.status === 'confirmed' && (
                     <Button

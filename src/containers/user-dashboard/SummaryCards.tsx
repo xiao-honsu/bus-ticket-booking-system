@@ -66,7 +66,7 @@ export default function SummaryCards() {
     },
     {
       title: 'Total Spent',
-      value: `$${totalSpent.toFixed(2)}`,
+      value: `${totalSpent.toLocaleString()} ₫`,
       icon: DollarSign,
       description: 'Lifetime spending',
     },

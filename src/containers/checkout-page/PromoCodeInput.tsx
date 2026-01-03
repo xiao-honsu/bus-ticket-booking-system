@@ -65,7 +65,9 @@ export default function PromoCodeInput() {
         );
 
         const discountText =
-          promoData.discountType === 'percentage' ? `${promoData.discountValue}%` : `$${promoData.discountValue}`;
+          promoData.discountType === 'percentage'
+            ? `${promoData.discountValue}%`
+            : `${promoData.discountValue.toLocaleString()} ₫`;
 
         toast.success(`Promo code applied! Save ${discountText}`);
         setPromoCode('');
@@ -109,7 +111,7 @@ export default function PromoCodeInput() {
                   <span className="text-sm text-green-700 font-medium">
                     {promotion.discountType === 'percentage'
                       ? `${promotion.discountValue}% off`
-                      : `$${promotion.discountValue} off`}
+                      : `${promotion.discountValue.toLocaleString()} ₫ off`}
                   </span>
                 </div>
                 <span className="text-xs text-green-600">{promotion.title}</span>

@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { useGetActivePromotionsQuery, useCollectPromotionMutation } from '@/lib/store/services/api';
+import { useGetActivePromotionsQuery } from '@/lib/store/services/api';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -34,29 +34,6 @@ export default function PromotionsPage() {
     page: currentPage,
     limit: 12,
   });
-
-  const [collectPromotion, { isLoading: isCollecting }] = useCollectPromotionMutation();
-
-  const handleCollect = async (promotionId: string, code: string) => {
-    try {
-      await collectPromotion(promotionId).unwrap();
-      toast.success(`Collected ${code} successfully!`, {
-        description: 'Check your promotions in My Promotions page',
-      });
-    } catch (error: unknown) {
-      const err = error as { status?: number; data?: { message?: string } };
-      if (err?.status === 401) {
-        toast.error('Please login to collect promotions', {
-          action: {
-            label: 'Login',
-            onClick: () => router.push('/login'),
-          },
-        });
-      } else {
-        toast.error(err?.data?.message || 'Failed to collect promotion');
-      }
-    }
-  };
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -115,7 +92,7 @@ export default function PromotionsPage() {
 
             {/* Subheading */}
             <p className="text-base md:text-lg lg:text-xl mb-6 text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Collect amazing discounts and save big on your next journey!
+              Get amazing discounts on your next journey! Copy the code and use it at checkout.
             </p>
 
             {/* Stats Badges */}
@@ -315,28 +292,6 @@ export default function PromotionsPage() {
                               </p>
                             )}
                           </div>
-
-                          {/* Action Button */}
-                          <Button
-                            className={cn(
-                              'w-full font-semibold transition-all',
-                              remainingUsage === 0 && 'opacity-50 cursor-not-allowed'
-                            )}
-                            onClick={() => handleCollect(promotion._id, promotion.code)}
-                            disabled={isCollecting || remainingUsage === 0}
-                            size="sm"
-                          >
-                            {isCollecting ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : remainingUsage === 0 ? (
-                              'Sold Out'
-                            ) : (
-                              <>
-                                <Gift className="h-4 w-4 mr-2" />
-                                Collect Now
-                              </>
-                            )}
-                          </Button>
 
                           {/* Terms & Conditions */}
                           {promotion.terms && (

@@ -184,12 +184,6 @@ export default function Navbar() {
                               My Bookings
                             </Button>
                           </Link>
-                          <Link href="/my-promotions" onClick={() => setMobileMenuOpen(false)}>
-                            <Button variant="ghost" className="w-full justify-start gap-3">
-                              <Tag className="h-5 w-5" />
-                              My Promotions
-                            </Button>
-                          </Link>
                           <Link href="/settings" onClick={() => setMobileMenuOpen(false)}>
                             <Button variant="ghost" className="w-full justify-start gap-3">
                               <Settings className="h-5 w-5" />
@@ -299,12 +293,6 @@ export default function Navbar() {
                       <Link href="/dashboard" className="cursor-pointer">
                         <Ticket className="mr-2 h-4 w-4" />
                         My Bookings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/my-promotions" className="cursor-pointer">
-                        <Tag className="mr-2 h-4 w-4" />
-                        My Promotions
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>

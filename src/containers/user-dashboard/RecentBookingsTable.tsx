@@ -90,7 +90,9 @@ export default function RecentBookingsTable() {
                       {booking.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right font-medium">${booking.totalPrice?.toFixed(2) || '0.00'}</TableCell>
+                  <TableCell className="text-right font-medium">
+                    {booking.totalPrice?.toLocaleString() || '0'} ₫
+                  </TableCell>
                 </TableRow>
               );
             })}

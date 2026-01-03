@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchTripsQuery } from '@/lib/store/services/api';
-import { MapPin, DollarSign, Bus } from 'lucide-react';
+import { MapPin, Banknote, Bus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -105,7 +105,7 @@ export default function PopularRoutes() {
 
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
-                        <DollarSign className="w-4 h-4 text-primary" />
+                        <Banknote className="w-4 h-4 text-primary" />
                         <span className="text-primary font-bold text-lg">
                           {(trip.pricePerSeat / 1000).toFixed(0)}K đ
                         </span>
