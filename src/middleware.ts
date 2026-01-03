@@ -60,14 +60,14 @@ export function middleware(request: NextRequest) {
 
   // Protected routes that require authentication
   // Note: /checkout and /booking are NOT protected - guests can book without login
-  const protectedRoutes = ['/dashboard'];
-  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+  // const protectedRoutes = ['/dashboard'];
+  // const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
   // Admin routes that require admin role
   const isAdminRoute = pathname.startsWith('/admin');
 
   // Redirect to login if accessing protected route without refreshToken
-  if ((isProtectedRoute || isAdminRoute) && !refreshToken) {
+  if (isAdminRoute && !refreshToken) {
     const loginUrl = new URL('/auth/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);

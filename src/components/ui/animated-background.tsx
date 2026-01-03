@@ -19,7 +19,7 @@ export function AnimatedBackground({ children, className, variant = 'default' }:
   }
 
   return (
-    <div className={cn('relative min-h-screen bg-background', className)}>
+    <div className={cn('relative min-h-screen overflow-hidden bg-background', className)}>
       {/* Animated grid pattern background */}
       {variant === 'default' && (
         <AnimatedGridPattern
