@@ -418,6 +418,31 @@ export const api = createApi({
       },
       providesTags: ['Bus'],
     }),
+    getBusesByOperator: builder.query({
+      query: ({ operatorId, page = 1, limit = 10 }: { operatorId: string; page?: number; limit?: number }) => {
+        const queryParams = { operator: operatorId, page, limit };
+        console.log('Fetching buses for operator:', operatorId);
+        console.log('Query params:', queryParams);
+        console.log('Full URL:', `/buses?operator=${operatorId}&page=${page}&limit=${limit}`);
+        return {
+          url: '/buses',
+          params: queryParams,
+        };
+      },
+      transformResponse: (response: any) => {
+        console.log('Raw buses response:', response);
+        const transformed = {
+          results: response.docs || response.results || [],
+          page: response.page,
+          limit: response.limit,
+          totalPages: response.totalPages,
+          totalResults: response.totalDocs || response.totalResults,
+        };
+        console.log('Transformed buses:', transformed);
+        return transformed;
+      },
+      providesTags: ['Bus'],
+    }),
     getBus: builder.query({
       query: (busId: string) => `/buses/${busId}`,
       providesTags: ['Bus'],
@@ -835,6 +860,7 @@ export const {
   useUpdateBookingMutation,
   useCancelBookingMutation,
   useGetBusesQuery,
+  useGetBusesByOperatorQuery,
   useGetBusQuery,
   useCreateBusMutation,
   useUpdateBusMutation,

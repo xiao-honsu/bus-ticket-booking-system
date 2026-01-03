@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Bus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +20,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useGetOperatorsQuery, useCreateOperatorMutation, useDeleteOperatorMutation } from '@/lib/store/services/api';
+import {
+  useGetOperatorsQuery,
+  useCreateOperatorMutation,
+  useDeleteOperatorMutation,
+  useGetBusesByOperatorQuery,
+} from '@/lib/store/services/api';
 
 export default function OperatorManagement() {
   const router = useRouter();
@@ -40,6 +45,7 @@ export default function OperatorManagement() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [busesDialogOpen, setBusesDialogOpen] = useState(false);
   const [selectedOperatorId, setSelectedOperatorId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -106,6 +112,36 @@ export default function OperatorManagement() {
     }
   };
 
+  const handleViewBuses = (operatorId: string) => {
+    console.log('Opening buses dialog for operator:', operatorId);
+    setSelectedOperatorId(operatorId);
+    setBusesDialogOpen(true);
+  };
+
+  // Fetch buses for selected operator
+  const {
+    data: busesData,
+    isLoading: isBusesLoading,
+    error: busesError,
+    refetch: refetchBuses,
+  } = useGetBusesByOperatorQuery(
+    { operatorId: selectedOperatorId || '', page: 1, limit: 100 },
+    { skip: !selectedOperatorId || !busesDialogOpen }
+  );
+
+  // Refetch when dialog opens
+  React.useEffect(() => {
+    if (busesDialogOpen && selectedOperatorId) {
+      refetchBuses();
+    }
+  }, [busesDialogOpen, selectedOperatorId, refetchBuses]);
+
+  console.log('Buses data:', busesData);
+  console.log('Buses loading:', isBusesLoading);
+  console.log('Buses error:', busesError);
+
+  const operatorBuses = busesData?.results || [];
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -168,16 +204,27 @@ export default function OperatorManagement() {
                       <TableCell>{operator.phoneNumber}</TableCell>
                       <TableCell className="text-sm">{operator.licenseNumber}</TableCell>
                       <TableCell>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedOperatorId(operator.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          Delete
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewBuses(operator.id)}
+                            className="gap-1"
+                          >
+                            <Bus className="w-3 h-3" />
+                            View Buses
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedOperatorId(operator.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -300,6 +347,108 @@ export default function OperatorManagement() {
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
               {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Buses Dialog */}
+      <Dialog open={busesDialogOpen} onOpenChange={setBusesDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bus className="w-5 h-5" />
+              Operator Buses
+            </DialogTitle>
+            <DialogDescription>
+              {selectedOperatorId && operators.find((op: any) => op.id === selectedOperatorId)?.companyName
+                ? `List of buses for ${operators.find((op: any) => op.id === selectedOperatorId)?.companyName}`
+                : 'List of buses for this operator'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            {!selectedOperatorId ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No operator selected</p>
+              </div>
+            ) : isBusesLoading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : busesError ? (
+              <div className="text-center py-8 text-red-500">
+                <p>Error loading buses</p>
+                <p className="text-sm mt-2">{JSON.stringify(busesError)}</p>
+              </div>
+            ) : operatorBuses.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <Bus className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p className="font-medium">No buses found for this operator</p>
+                <div className="mt-4 text-xs text-left max-w-md mx-auto p-4 bg-gray-100 dark:bg-gray-800 rounded">
+                  <p className="mb-1">
+                    <strong>Debug Info:</strong>
+                  </p>
+                  <p>Operator ID: {selectedOperatorId}</p>
+                  <p>Total Results: {busesData?.totalResults || 0}</p>
+                  <p>Response: {JSON.stringify(busesData)}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {operatorBuses.map((bus: any) => (
+                  <div
+                    key={bus.id}
+                    className="p-4 border dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold">{bus.busNumber}</h4>
+                          <Badge variant="secondary" className="text-xs">
+                            {bus.busType}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <div>
+                            <span className="font-medium">License:</span> {bus.licensePlate}
+                          </div>
+                          <div>
+                            <span className="font-medium">Seats:</span> {bus.totalSeats}
+                          </div>
+                          {bus.model && (
+                            <div>
+                              <span className="font-medium">Model:</span> {bus.model}
+                            </div>
+                          )}
+                          {bus.yearOfManufacture && (
+                            <div>
+                              <span className="font-medium">Year:</span> {bus.yearOfManufacture}
+                            </div>
+                          )}
+                        </div>
+                        {bus.amenities && bus.amenities.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {bus.amenities.map((amenity: string, idx: number) => (
+                              <Badge key={idx} variant="outline" className="text-xs">
+                                {amenity}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBusesDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

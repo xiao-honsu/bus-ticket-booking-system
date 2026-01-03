@@ -150,7 +150,6 @@ export default function UserManagementPage() {
               >
                 <option value="all">All roles</option>
                 <option value="admin">Admin</option>
-                <option value="operator">Operator</option>
                 <option value="user">User</option>
               </select>
             </div>
