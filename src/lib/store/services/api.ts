@@ -794,6 +794,17 @@ export const api = createApi({
         params: { limit },
       }),
     }),
+
+    getTodayBookings: builder.query<{ count: number }, void>({
+      query: () => '/analytics/today-bookings',
+    }),
+
+    getBookingsByStatus: builder.query({
+      query: (period: '7d' | '30d' | '90d' = '7d') => ({
+        url: '/analytics/bookings-by-status',
+        params: { period },
+      }),
+    }),
   }),
 });
 
@@ -862,4 +873,6 @@ export const {
   useGetRevenueStatsQuery,
   useGetBookingStatsQuery,
   useGetPopularRoutesQuery,
+  useGetTodayBookingsQuery,
+  useGetBookingsByStatusQuery,
 } = api;
