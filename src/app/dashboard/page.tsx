@@ -41,6 +41,12 @@ export default function DashboardPage() {
 
   const bookings = bookingsData?.results || [];
 
+  // Helper to format seat numbers from passengers
+  const formatSeats = (passengers: any[]) => {
+    if (!Array.isArray(passengers) || passengers.length === 0) return 'N/A';
+    return passengers.map((p) => p.seatNumber).join(', ');
+  };
+
   // Helper to get trip info (fallback to trip if tripSnapshot not available)
   const getTripInfo = (booking: any) => {
     if (booking.tripSnapshot) return booking.tripSnapshot;
@@ -188,7 +194,7 @@ export default function DashboardPage() {
                               </div>
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 <Ticket className="h-4 w-4" />
-                                <span>Seats: {booking.seatNumbers?.join(', ') || 'N/A'}</span>
+                                <span>Seats: {formatSeats(booking.passengers)}</span>
                               </div>
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 <User className="h-4 w-4" />
@@ -281,7 +287,7 @@ export default function DashboardPage() {
                               </div>
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 <Ticket className="h-4 w-4" />
-                                <span>Seats: {booking.seatNumbers?.join(', ') || 'N/A'}</span>
+                                <span>Seats: {formatSeats(booking.passengers)}</span>
                               </div>
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 <User className="h-4 w-4" />
