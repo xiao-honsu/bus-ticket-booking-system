@@ -86,6 +86,145 @@ export default function Navbar() {
             </div>
           </Link>
 
+          {/* Mobile Right Section - Theme Toggle + Hamburger */}
+          <div className="flex md:hidden items-center gap-2">
+            {mounted && <ThemeToggle />}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                  <SheetDescription>Navigate through the app</SheetDescription>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 mt-6 px-4">
+                  {/* User Info in Mobile */}
+                  {mounted && isAuthenticated && user && (
+                    <>
+                      <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary">
+                        <Avatar className="h-12 w-12">
+                          {user?.profilePictureUrl ? (
+                            <Image
+                              src={user.profilePictureUrl}
+                              alt={user?.name || 'User'}
+                              width={48}
+                              height={48}
+                              className="rounded-full object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              {user?.name?.charAt(0).toUpperCase() || user?.role?.charAt(0).toUpperCase() || 'U'}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium truncate">
+                              {user?.name ||
+                                (user?.role
+                                  ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)} User`
+                                  : 'User')}
+                            </p>
+                            {user?.role && (
+                              <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
+                                {user.role}
+                              </Badge>
+                            )}
+                          </div>
+                          {user?.email && <p className="text-xs text-muted-foreground truncate">{user.email}</p>}
+                        </div>
+                      </div>
+                      <Separator />
+                    </>
+                  )}
+
+                  {/* Navigation Links */}
+                  <div className="flex flex-col gap-2">
+                    {navigationLinks.map((link) => {
+                      const Icon = link.icon;
+                      const active = isActive(link.href);
+                      return (
+                        <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)}>
+                          <Button variant={active ? 'secondary' : 'ghost'} className="w-full justify-start gap-3">
+                            <Icon className="h-5 w-5" />
+                            {link.label}
+                          </Button>
+                        </Link>
+                      );
+                    })}
+
+                    {mounted && isAuthenticated && (user?.role === 'admin' || user?.role === 'operator') && (
+                      <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
+                        <Button
+                          variant={isActive('/admin') ? 'secondary' : 'ghost'}
+                          className="w-full justify-start gap-3"
+                        >
+                          <Shield className="h-5 w-5" />
+                          Admin
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+
+                  <Separator />
+
+                  {/* Auth Actions */}
+                  {mounted && (
+                    <div className="flex flex-col gap-2">
+                      {isAuthenticated ? (
+                        <>
+                          <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                            <Button variant="ghost" className="w-full justify-start gap-3">
+                              <Ticket className="h-5 w-5" />
+                              My Bookings
+                            </Button>
+                          </Link>
+                          <Link href="/my-promotions" onClick={() => setMobileMenuOpen(false)}>
+                            <Button variant="ghost" className="w-full justify-start gap-3">
+                              <Tag className="h-5 w-5" />
+                              My Promotions
+                            </Button>
+                          </Link>
+                          <Link href="/settings" onClick={() => setMobileMenuOpen(false)}>
+                            <Button variant="ghost" className="w-full justify-start gap-3">
+                              <Settings className="h-5 w-5" />
+                              Settings
+                            </Button>
+                          </Link>
+                          <Separator />
+                          <Button
+                            variant="ghost"
+                            onClick={handleLogout}
+                            className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <LogOut className="h-5 w-5" />
+                            Logout
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)}>
+                            <Button variant="outline" className="w-full">
+                              Login
+                            </Button>
+                          </Link>
+                          <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)}>
+                            <Button className="w-full">Sign Up</Button>
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-1 items-center">
             {navigationLinks.map((link) => {
@@ -194,140 +333,6 @@ export default function Navbar() {
               </div>
             )}
           </div>
-
-          {/* Mobile Menu */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-80">
-              <SheetHeader>
-                <SheetTitle>Menu</SheetTitle>
-                <SheetDescription>Navigate through the app</SheetDescription>
-              </SheetHeader>
-              <div className="flex flex-col gap-4 mt-6 px-4">
-                {/* User Info in Mobile */}
-                {mounted && isAuthenticated && user && (
-                  <>
-                    <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary">
-                      <Avatar className="h-12 w-12">
-                        {user?.profilePictureUrl ? (
-                          <Image
-                            src={user.profilePictureUrl}
-                            alt={user?.name || 'User'}
-                            width={48}
-                            height={48}
-                            className="rounded-full object-cover"
-                            unoptimized
-                          />
-                        ) : (
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            {user?.name?.charAt(0).toUpperCase() || user?.role?.charAt(0).toUpperCase() || 'U'}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                      <div className="flex flex-col flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium truncate">
-                            {user?.name ||
-                              (user?.role ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)} User` : 'User')}
-                          </p>
-                          {user?.role && (
-                            <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
-                              {user.role}
-                            </Badge>
-                          )}
-                        </div>
-                        {user?.email && <p className="text-xs text-muted-foreground truncate">{user.email}</p>}
-                      </div>
-                    </div>
-                    <Separator />
-                  </>
-                )}
-
-                {/* Navigation Links */}
-                <div className="flex flex-col gap-2">
-                  {navigationLinks.map((link) => {
-                    const Icon = link.icon;
-                    const active = isActive(link.href);
-                    return (
-                      <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant={active ? 'secondary' : 'ghost'} className="w-full justify-start gap-3">
-                          <Icon className="h-5 w-5" />
-                          {link.label}
-                        </Button>
-                      </Link>
-                    );
-                  })}
-
-                  {mounted && isAuthenticated && (user?.role === 'admin' || user?.role === 'operator') && (
-                    <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
-                      <Button
-                        variant={isActive('/admin') ? 'secondary' : 'ghost'}
-                        className="w-full justify-start gap-3"
-                      >
-                        <Shield className="h-5 w-5" />
-                        Admin
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-
-                <Separator />
-
-                {/* Auth Actions */}
-                {mounted && (
-                  <div className="flex flex-col gap-2">
-                    {isAuthenticated ? (
-                      <>
-                        <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                          <Button variant="ghost" className="w-full justify-start gap-3">
-                            <Ticket className="h-5 w-5" />
-                            My Bookings
-                          </Button>
-                        </Link>
-                        <Link href="/my-promotions" onClick={() => setMobileMenuOpen(false)}>
-                          <Button variant="ghost" className="w-full justify-start gap-3">
-                            <Tag className="h-5 w-5" />
-                            My Promotions
-                          </Button>
-                        </Link>
-                        <Link href="/settings" onClick={() => setMobileMenuOpen(false)}>
-                          <Button variant="ghost" className="w-full justify-start gap-3">
-                            <Settings className="h-5 w-5" />
-                            Settings
-                          </Button>
-                        </Link>
-                        <Separator />
-                        <Button
-                          variant="ghost"
-                          onClick={handleLogout}
-                          className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <LogOut className="h-5 w-5" />
-                          Logout
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)}>
-                          <Button variant="outline" className="w-full">
-                            Login
-                          </Button>
-                        </Link>
-                        <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)}>
-                          <Button className="w-full">Sign Up</Button>
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
         </div>
       </div>
     </nav>
