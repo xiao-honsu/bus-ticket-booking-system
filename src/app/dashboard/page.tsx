@@ -172,7 +172,7 @@ export default function DashboardPage() {
                         <div className="text-right">
                           <p className="text-sm text-muted-foreground">Total Price</p>
                           <p className="text-2xl font-bold text-primary">
-                            {booking.totalPrice?.toLocaleString('vi-VN')} đ
+                            {booking.totalAmount?.toLocaleString('vi-VN') || '0'} đ
                           </p>
                         </div>
                       </div>
@@ -209,31 +209,62 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {pastBookings.map((booking: any) => (
-                <Card key={booking.id} className="border-border bg-card hover:shadow-sm transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between gap-4">
+                <Card key={booking.id} className="border-border bg-card hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-3">
                           <Badge variant={getStatusVariant(booking.status)} className="gap-1">
                             {getStatusIcon(booking.status)}
                             {booking.status}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">Ref: {booking.referenceNumber}</span>
+                          <span className="text-sm text-muted-foreground">Ref: {booking.referenceNumber}</span>
                         </div>
-                        <p className="font-medium text-foreground mb-1">{booking.tripSnapshot?.routeName || 'N/A'}</p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>
-                            {booking.tripSnapshot?.departureTime
-                              ? format(parseISO(booking.tripSnapshot.departureTime), 'PP', { locale: vi })
-                              : 'N/A'}
-                          </span>
-                          <span>Seats: {booking.seatNumbers?.join(', ') || 'N/A'}</span>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-foreground">
+                            <MapPin className="h-5 w-5 text-primary" />
+                            <span className="font-semibold text-lg">{booking.tripSnapshot?.routeName || 'N/A'}</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Calendar className="h-4 w-4" />
+                              <span>
+                                {booking.tripSnapshot?.departureTime
+                                  ? format(parseISO(booking.tripSnapshot.departureTime), 'PPP', { locale: vi })
+                                  : 'N/A'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Clock className="h-4 w-4" />
+                              <span>
+                                {booking.tripSnapshot?.departureTime
+                                  ? format(parseISO(booking.tripSnapshot.departureTime), 'p', { locale: vi })
+                                  : 'N/A'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Ticket className="h-4 w-4" />
+                              <span>Seats: {booking.seatNumbers?.join(', ') || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <User className="h-4 w-4" />
+                              <span>{booking.passengers?.length || 0} Passengers</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-foreground">{booking.totalPrice?.toLocaleString('vi-VN')} đ</p>
+
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">Total Price</p>
+                          <p className="text-2xl font-bold text-primary">
+                            {booking.totalAmount?.toLocaleString('vi-VN') || '0'} đ
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
