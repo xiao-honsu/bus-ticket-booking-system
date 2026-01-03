@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import SeatLockTimer from '@/components/SeatLockTimer';
+import BookingCountdownTimer from '@/components/BookingCountdownTimer';
 import { AnimatedBackground } from '@/components/ui/animated-background';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { getSocket } from '@/lib/services/socket';
@@ -285,8 +285,8 @@ export default function BookingPage({ params }: BookingPageProps) {
 
           {/* Booking Summary - Right Side */}
           <aside className="lg:col-span-1 space-y-3">
-            {/* Timer */}
-            <SeatLockTimer />
+            {/* Timer - Always active on page load */}
+            <BookingCountdownTimer tripId={tripId} durationMinutes={3} />
 
             {/* Selected Seats */}
             {selectedSeats.length > 0 && (

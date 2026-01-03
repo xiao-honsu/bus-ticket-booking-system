@@ -51,6 +51,7 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
   const [hasUserInteracted, setHasUserInteracted] = useState(false); // Track if user has clicked any seat
   const sessionId = useAppSelector((state) => state.booking.sessionId);
   const reduxSelectedSeats = useAppSelector((state) => state.booking.selectedSeats);
+  const lockExpiresAt = useAppSelector((state) => state.booking.lockExpiresAt); // Get current timer state
 
   // Fetch seat map with sessionId
   const {
@@ -359,8 +360,15 @@ export default function SeatMap({ tripId, totalSeats = 40, occupiedSeats = [] }:
           dispatch(setSessionId(newSessionId));
         }
 
-        // Save expiration time
-        dispatch(setLockExpiresAt(response.expiresAt));
+        // Save expiration time - only on first seat selection
+        // If we already have a timer running, don't reset it when adding more seats
+        if (!lockExpiresAt) {
+          dispatch(setLockExpiresAt(response.expiresAt));
+          console.log('⏱️ [Timer] Started 3-minute countdown');
+        } else {
+          console.log('⏱️ [Timer] Keeping existing countdown (not resetting)');
+        }
+
         console.log('✅ [DONE] Seat locked successfully');
         toast.success(`Seat ${seat.seatNumber} locked for you`);
         // No need to refetch - local state already updated
