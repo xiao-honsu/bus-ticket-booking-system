@@ -88,8 +88,11 @@ export interface MockTrip {
   operator: {
     id: string;
     companyName: string;
+    email?: string;
     logoUrl?: string;
     phoneNumber: string;
+    description?: string;
+    status?: 'pending' | 'approved' | 'active' | 'suspended';
     rating: {
       overall: number;
       cleanliness: number;
@@ -98,6 +101,11 @@ export interface MockTrip {
       comfort: number;
       value: number;
       totalReviews: number;
+    };
+    stats?: {
+      totalBuses?: number;
+      totalTrips?: number;
+      totalRevenue?: number;
     };
   };
   policies: {
@@ -190,8 +198,12 @@ export const mockTripData: MockTrip = {
   operator: {
     id: 'operator001',
     companyName: 'Vietnam Express Company',
+    email: 'contact@vietnamexpress.vn',
     logoUrl: 'https://via.placeholder.com/150?text=VE',
     phoneNumber: '1900-1234',
+    description:
+      'Leading bus operator in Vietnam with over 20 years of experience. We provide comfortable, safe, and reliable transportation services.',
+    status: 'active',
     rating: {
       overall: 4.8,
       cleanliness: 4.9,
@@ -200,6 +212,11 @@ export const mockTripData: MockTrip = {
       comfort: 4.7,
       value: 4.6,
       totalReviews: 2345,
+    },
+    stats: {
+      totalBuses: 50,
+      totalTrips: 500,
+      totalRevenue: 10000000000,
     },
   },
   policies: {

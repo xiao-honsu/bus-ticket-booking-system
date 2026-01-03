@@ -9,18 +9,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function PopularRoutes() {
-  // Fetch trips from API with a reasonable limit
+  // Fetch trips from API with a reasonable limit - only scheduled trips
   const { data, isLoading, isError } = useSearchTripsQuery({
     limit: 10,
+    status: 'scheduled',
   });
 
   // Compute popular routes from API data
   const popularRoutes = useMemo(() => {
     if (!data?.results || data.results.length === 0) return [];
 
-    // Get unique routes from trips and sort by available seats (highest first)
+    // Filter only scheduled trips and get unique routes
     const routeMap = new Map<string, any>();
     data.results.forEach((trip: any) => {
+      // Only include trips with status 'scheduled'
+      if (trip.status !== 'scheduled') return;
+
       const routeKey = `${trip.route.origin.city}_${trip.route.destination.city}`;
       if (!routeMap.has(routeKey)) {
         routeMap.set(routeKey, trip);

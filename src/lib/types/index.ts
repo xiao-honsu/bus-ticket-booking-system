@@ -158,6 +158,38 @@ export interface Bus {
   updatedAt: Date;
 }
 
+// Operator types
+export interface OperatorRating {
+  overall: number;
+  cleanliness: number;
+  punctuality: number;
+  staff: number;
+  comfort: number;
+  value: number;
+  totalReviews: number;
+}
+
+export interface OperatorStats {
+  totalBuses: number;
+  totalTrips: number;
+  totalRevenue: number;
+}
+
+export interface Operator {
+  id: string;
+  companyName: string;
+  email: string;
+  phoneNumber: string;
+  licenseNumber?: string;
+  description?: string;
+  logoUrl?: string;
+  status: 'pending' | 'approved' | 'active' | 'suspended';
+  rating: OperatorRating;
+  stats?: OperatorStats;
+  createdAt: Date | string;
+  updatedAt?: Date | string;
+}
+
 // Trip types
 export interface Trip {
   id: string;
@@ -174,6 +206,7 @@ export interface Trip {
   status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
   route?: Route;
   bus?: Bus;
+  operator?: Operator; // Add operator to Trip type
   createdAt: Date;
   updatedAt: Date;
 }

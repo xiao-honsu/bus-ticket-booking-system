@@ -290,51 +290,70 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
           {/* Operator Card */}
           <Card className="py-0 gap-0">
             <CardHeader className="p-3 pb-2">
-              <CardTitle className="text-sm font-semibold">Operator</CardTitle>
+              <CardTitle className="text-sm font-semibold">Operator Information</CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-3 space-y-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 {trip.operator.logoUrl && (
                   <Image
                     src={trip.operator.logoUrl}
                     alt={trip.operator.companyName}
-                    width={36}
-                    height={36}
-                    className="rounded-full border"
+                    width={48}
+                    height={48}
+                    className="rounded-lg border object-cover"
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{trip.operator.companyName}</p>
+                  <p className="font-semibold text-sm">{trip.operator.companyName}</p>
                   {trip.operator.rating && (
                     <div className="flex items-center gap-1 mt-0.5">
                       <Star className="w-3 h-3 fill-current text-yellow-500" />
                       <span className="font-medium text-xs">{trip.operator.rating.overall.toFixed(1)}</span>
                       {trip.operator.rating.totalReviews && (
-                        <span className="text-[10px] text-muted-foreground">({trip.operator.rating.totalReviews})</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          ({trip.operator.rating.totalReviews} reviews)
+                        </span>
                       )}
                     </div>
                   )}
+                  {(trip.operator as any).description && (
+                    <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
+                      {(trip.operator as any).description}
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-2 p-2 bg-muted rounded-lg text-xs">
-                <Phone className="w-3 h-3 text-muted-foreground" />
-                <span className="font-medium">{trip.operator.phoneNumber}</span>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs">
+                  <Phone className="w-3 h-3 text-muted-foreground" />
+                  <span className="font-medium">{trip.operator.phoneNumber}</span>
+                </div>
+                {(trip.operator as any).email && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground">✉️</span>
+                    <span className="font-medium">{(trip.operator as any).email}</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Rating Details - Compact */}
+      {/* Rating Details - Detailed Breakdown */}
       {trip.operator.rating && (
         <Card className="py-0 gap-0">
           <CardHeader className="p-3 pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-semibold">
               <Star className="w-4 h-4" />
-              Operator Rating
+              Operator Ratings
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-3 pb-3">
+          <CardContent className="px-3 pb-3 space-y-3">
+            {/* Overall Rating */}
             <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
               <div className="flex items-center gap-2">
                 <Star className="w-6 h-6 fill-current text-yellow-500" />
@@ -346,6 +365,60 @@ export default function TripDetailView({ trip = mockTripData }: TripDetailViewPr
                 {trip.operator.rating.totalReviews && (
                   <p className="text-[10px] text-muted-foreground mt-1">{trip.operator.rating.totalReviews} reviews</p>
                 )}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Rating Breakdown */}
+            <div className="space-y-2">
+              {/* Cleanliness */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-xs text-muted-foreground w-20">Cleanliness</span>
+                  <Progress value={(trip.operator.rating.cleanliness / 5) * 100} className="h-1.5 flex-1" />
+                </div>
+                <span className="text-xs font-medium w-8 text-right">
+                  {trip.operator.rating.cleanliness.toFixed(1)}
+                </span>
+              </div>
+
+              {/* Punctuality */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-xs text-muted-foreground w-20">Punctuality</span>
+                  <Progress value={(trip.operator.rating.punctuality / 5) * 100} className="h-1.5 flex-1" />
+                </div>
+                <span className="text-xs font-medium w-8 text-right">
+                  {trip.operator.rating.punctuality.toFixed(1)}
+                </span>
+              </div>
+
+              {/* Staff */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-xs text-muted-foreground w-20">Staff</span>
+                  <Progress value={(trip.operator.rating.staff / 5) * 100} className="h-1.5 flex-1" />
+                </div>
+                <span className="text-xs font-medium w-8 text-right">{trip.operator.rating.staff.toFixed(1)}</span>
+              </div>
+
+              {/* Comfort */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-xs text-muted-foreground w-20">Comfort</span>
+                  <Progress value={(trip.operator.rating.comfort / 5) * 100} className="h-1.5 flex-1" />
+                </div>
+                <span className="text-xs font-medium w-8 text-right">{trip.operator.rating.comfort.toFixed(1)}</span>
+              </div>
+
+              {/* Value */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-xs text-muted-foreground w-20">Value</span>
+                  <Progress value={(trip.operator.rating.value / 5) * 100} className="h-1.5 flex-1" />
+                </div>
+                <span className="text-xs font-medium w-8 text-right">{trip.operator.rating.value.toFixed(1)}</span>
               </div>
             </div>
           </CardContent>
