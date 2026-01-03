@@ -15,7 +15,7 @@ interface PaymentInfo {
 }
 
 interface PromotionInfo {
-  userPromotionId: string; // ID of UserPromotion from validate API
+  userPromotionId: string | null; // ID of UserPromotion from validate API (nullable - backend may not return it)
   promotionId: string; // ID of Promotion
   code: string;
   title: string;

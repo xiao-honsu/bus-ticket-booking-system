@@ -47,16 +47,16 @@ export default function BookingPromoCode({ totalAmount }: BookingPromoCodeProps)
         orderAmount: totalAmount,
       }).unwrap();
 
-      console.log('🎉 Validate Promotion Response (RAW):', result);
+      console.log('🎉 Validate Promotion Response:', result);
 
-      const responseData = result.data || result;
-
-      if (responseData && responseData.promotion && responseData.userPromotion) {
-        const { promotion: promoData, userPromotion, discountAmount, finalAmount } = responseData;
+      // Backend response: { promotion, discountAmount, finalAmount }
+      // Note: userPromotion is NOT included in response
+      if (result?.promotion) {
+        const { promotion: promoData, discountAmount, finalAmount } = result;
 
         dispatch(
           setPromotion({
-            userPromotionId: userPromotion._id,
+            userPromotionId: null, // Not provided by backend
             promotionId: promoData._id,
             code: promoData.code,
             title: promoData.title,
