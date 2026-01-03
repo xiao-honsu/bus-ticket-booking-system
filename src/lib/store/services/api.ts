@@ -353,9 +353,37 @@ export const api = createApi({
         };
       },
     }),
+    // Admin: Get all bookings
     getBookings: builder.query({
       query: (params?: { page?: number; limit?: number }) => ({
         url: '/bookings',
+        params,
+      }),
+      transformResponse: (response: any) => {
+        // Handle both paginated response and direct array
+        if (Array.isArray(response)) {
+          return {
+            results: response,
+            page: 1,
+            limit: response.length,
+            totalPages: 1,
+            totalResults: response.length,
+          };
+        }
+        return {
+          results: response.docs || response.results || [],
+          page: response.page,
+          limit: response.limit,
+          totalPages: response.totalPages,
+          totalResults: response.totalDocs || response.totalResults,
+        };
+      },
+      providesTags: ['Booking'],
+    }),
+    // User: Get own bookings
+    getMyBookings: builder.query({
+      query: (params?: { page?: number; limit?: number }) => ({
+        url: '/bookings/my',
         params,
       }),
       transformResponse: (response: any) => {
@@ -856,6 +884,7 @@ export const {
   useCreateBookingMutation,
   useCreateGuestBookingMutation,
   useGetBookingsQuery,
+  useGetMyBookingsQuery,
   useGetBookingQuery,
   useUpdateBookingMutation,
   useCancelBookingMutation,

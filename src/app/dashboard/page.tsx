@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/lib/hooks';
-import { useGetBookingsQuery } from '@/lib/store/services/api';
+import { useGetMyBookingsQuery } from '@/lib/store/services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,17 +29,37 @@ import Link from 'next/link';
 export default function DashboardPage() {
   const user = useAppSelector((state) => state.auth.user);
   const router = useRouter();
-  const { data: bookingsData, isLoading } = useGetBookingsQuery({ page: 1, limit: 50 });
+  const { data: bookingsData, isLoading, error } = useGetMyBookingsQuery({ page: 1, limit: 50 });
 
   const bookings = bookingsData?.results || [];
 
+  // Helper to get trip info (fallback to trip if tripSnapshot not available)
+  const getTripInfo = (booking: any) => {
+    if (booking.tripSnapshot) return booking.tripSnapshot;
+    if (booking.trip) {
+      return {
+        routeName:
+          booking.trip.route?.routeName ||
+          `${booking.trip.route?.origin?.city} - ${booking.trip.route?.destination?.city}`,
+        departureTime: booking.trip.departureTime,
+        arrivalTime: booking.trip.arrivalTime,
+        operatorName: booking.trip.operator?.companyName || 'N/A',
+        busPlateNumber: booking.trip.bus?.licensePlate || 'N/A',
+      };
+    }
+    return null;
+  };
+
   // Separate bookings into upcoming and past
-  const upcomingBookings = bookings.filter(
-    (booking: any) => booking.tripSnapshot?.departureTime && isFuture(parseISO(booking.tripSnapshot.departureTime))
-  );
-  const pastBookings = bookings.filter(
-    (booking: any) => booking.tripSnapshot?.departureTime && !isFuture(parseISO(booking.tripSnapshot.departureTime))
-  );
+  const upcomingBookings = bookings.filter((booking: any) => {
+    const tripInfo = getTripInfo(booking);
+    return tripInfo?.departureTime && isFuture(parseISO(tripInfo.departureTime));
+  });
+
+  const pastBookings = bookings.filter((booking: any) => {
+    const tripInfo = getTripInfo(booking);
+    return tripInfo?.departureTime && !isFuture(parseISO(tripInfo.departureTime));
+  });
 
   const getStatusIcon = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -120,66 +140,69 @@ export default function DashboardPage() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {upcomingBookings.map((booking: any) => (
-                <Card key={booking.id} className="border-border bg-card hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Badge variant={getStatusVariant(booking.status)} className="gap-1">
-                            {getStatusIcon(booking.status)}
-                            {booking.status}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground">Ref: {booking.referenceNumber}</span>
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-foreground">
-                            <MapPin className="h-5 w-5 text-primary" />
-                            <span className="font-semibold text-lg">{booking.tripSnapshot?.routeName || 'N/A'}</span>
+              {upcomingBookings.map((booking: any) => {
+                const tripInfo = getTripInfo(booking);
+                return (
+                  <Card key={booking.id} className="border-border bg-card hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Badge variant={getStatusVariant(booking.status)} className="gap-1">
+                              {getStatusIcon(booking.status)}
+                              {booking.status}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">Ref: {booking.referenceNumber}</span>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Calendar className="h-4 w-4" />
-                              <span>
-                                {booking.tripSnapshot?.departureTime
-                                  ? format(parseISO(booking.tripSnapshot.departureTime), 'PPP', { locale: vi })
-                                  : 'N/A'}
-                              </span>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-foreground">
+                              <MapPin className="h-5 w-5 text-primary" />
+                              <span className="font-semibold text-lg">{tripInfo?.routeName || 'N/A'}</span>
                             </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Clock className="h-4 w-4" />
-                              <span>
-                                {booking.tripSnapshot?.departureTime
-                                  ? format(parseISO(booking.tripSnapshot.departureTime), 'p', { locale: vi })
-                                  : 'N/A'}
-                              </span>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Calendar className="h-4 w-4" />
+                                <span>
+                                  {tripInfo?.departureTime
+                                    ? format(parseISO(tripInfo.departureTime), 'PPP', { locale: vi })
+                                    : 'N/A'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Clock className="h-4 w-4" />
+                                <span>
+                                  {tripInfo?.departureTime
+                                    ? format(parseISO(tripInfo.departureTime), 'p', { locale: vi })
+                                    : 'N/A'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Ticket className="h-4 w-4" />
+                                <span>Seats: {booking.seatNumbers?.join(', ') || 'N/A'}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <User className="h-4 w-4" />
+                                <span>{booking.passengers?.length || 0} Passengers</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Ticket className="h-4 w-4" />
-                              <span>Seats: {booking.seatNumbers?.join(', ') || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <User className="h-4 w-4" />
-                              <span>{booking.passengers?.length || 0} Passengers</span>
-                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="text-right">
+                            <p className="text-sm text-muted-foreground">Total Price</p>
+                            <p className="text-2xl font-bold text-primary">
+                              {booking.totalAmount?.toLocaleString('vi-VN') || '0'} đ
+                            </p>
                           </div>
                         </div>
                       </div>
-
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="text-right">
-                          <p className="text-sm text-muted-foreground">Total Price</p>
-                          <p className="text-2xl font-bold text-primary">
-                            {booking.totalAmount?.toLocaleString('vi-VN') || '0'} đ
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
@@ -210,66 +233,69 @@ export default function DashboardPage() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {pastBookings.map((booking: any) => (
-                <Card key={booking.id} className="border-border bg-card hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Badge variant={getStatusVariant(booking.status)} className="gap-1">
-                            {getStatusIcon(booking.status)}
-                            {booking.status}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground">Ref: {booking.referenceNumber}</span>
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-foreground">
-                            <MapPin className="h-5 w-5 text-primary" />
-                            <span className="font-semibold text-lg">{booking.tripSnapshot?.routeName || 'N/A'}</span>
+              {pastBookings.map((booking: any) => {
+                const tripInfo = getTripInfo(booking);
+                return (
+                  <Card key={booking.id} className="border-border bg-card hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Badge variant={getStatusVariant(booking.status)} className="gap-1">
+                              {getStatusIcon(booking.status)}
+                              {booking.status}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">Ref: {booking.referenceNumber}</span>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Calendar className="h-4 w-4" />
-                              <span>
-                                {booking.tripSnapshot?.departureTime
-                                  ? format(parseISO(booking.tripSnapshot.departureTime), 'PPP', { locale: vi })
-                                  : 'N/A'}
-                              </span>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-foreground">
+                              <MapPin className="h-5 w-5 text-primary" />
+                              <span className="font-semibold text-lg">{tripInfo?.routeName || 'N/A'}</span>
                             </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Clock className="h-4 w-4" />
-                              <span>
-                                {booking.tripSnapshot?.departureTime
-                                  ? format(parseISO(booking.tripSnapshot.departureTime), 'p', { locale: vi })
-                                  : 'N/A'}
-                              </span>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Calendar className="h-4 w-4" />
+                                <span>
+                                  {tripInfo?.departureTime
+                                    ? format(parseISO(tripInfo.departureTime), 'PPP', { locale: vi })
+                                    : 'N/A'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Clock className="h-4 w-4" />
+                                <span>
+                                  {tripInfo?.departureTime
+                                    ? format(parseISO(tripInfo.departureTime), 'p', { locale: vi })
+                                    : 'N/A'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Ticket className="h-4 w-4" />
+                                <span>Seats: {booking.seatNumbers?.join(', ') || 'N/A'}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <User className="h-4 w-4" />
+                                <span>{booking.passengers?.length || 0} Passengers</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Ticket className="h-4 w-4" />
-                              <span>Seats: {booking.seatNumbers?.join(', ') || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <User className="h-4 w-4" />
-                              <span>{booking.passengers?.length || 0} Passengers</span>
-                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="text-right">
+                            <p className="text-sm text-muted-foreground">Total Price</p>
+                            <p className="text-2xl font-bold text-primary">
+                              {booking.totalAmount?.toLocaleString('vi-VN') || '0'} đ
+                            </p>
                           </div>
                         </div>
                       </div>
-
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="text-right">
-                          <p className="text-sm text-muted-foreground">Total Price</p>
-                          <p className="text-2xl font-bold text-primary">
-                            {booking.totalAmount?.toLocaleString('vi-VN') || '0'} đ
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
