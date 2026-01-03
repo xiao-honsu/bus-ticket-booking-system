@@ -275,6 +275,13 @@ export const api = createApi({
       }),
       invalidatesTags: ['Trip'],
     }),
+    checkBusAvailability: builder.mutation({
+      query: (data: { busId: string; departureTime: string; arrivalTime: string; excludeTripId?: string }) => ({
+        url: '/trips/check-availability',
+        method: 'POST',
+        body: data,
+      }),
+    }),
     deleteTrip: builder.mutation({
       query: (tripId: string) => ({
         url: `/trips/${tripId}`,
@@ -388,6 +395,7 @@ export const api = createApi({
       query: (bookingId: string) => ({
         url: `/bookings/${bookingId}/cancel`,
         method: 'POST',
+        body: { reason: 'Cancelled by admin' },
       }),
       invalidatesTags: ['Booking', 'Trip'],
     }),
@@ -786,6 +794,17 @@ export const api = createApi({
         params: { limit },
       }),
     }),
+
+    getTodayBookings: builder.query<{ count: number }, void>({
+      query: () => '/analytics/today-bookings',
+    }),
+
+    getBookingsByStatus: builder.query({
+      query: (period: '7d' | '30d' | '90d' = '7d') => ({
+        url: '/analytics/bookings-by-status',
+        params: { period },
+      }),
+    }),
   }),
 });
 
@@ -806,6 +825,7 @@ export const {
   useLazySearchTripsQuery,
   useGetTripQuery,
   useCreateTripMutation,
+  useCheckBusAvailabilityMutation,
   useDeleteTripMutation,
   useUpdateTripSeatPricingMutation,
   useCreateBookingMutation,
@@ -853,4 +873,6 @@ export const {
   useGetRevenueStatsQuery,
   useGetBookingStatsQuery,
   useGetPopularRoutesQuery,
+  useGetTodayBookingsQuery,
+  useGetBookingsByStatusQuery,
 } = api;

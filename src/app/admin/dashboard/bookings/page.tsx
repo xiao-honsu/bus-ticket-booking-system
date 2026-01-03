@@ -175,7 +175,6 @@ export default function BookingMonitoringPage() {
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
@@ -235,7 +234,12 @@ export default function BookingMonitoringPage() {
                       >
                         <td className="px-4 py-3 font-medium dark:text-gray-200">{bk.referenceNumber || bk.id}</td>
                         <td className="px-4 py-3 dark:text-gray-300">{bk.user?.name || 'Guest'}</td>
-                        <td className="px-4 py-3 text-sm dark:text-gray-300">{bk.tripSnapshot?.routeName || 'N/A'}</td>
+                        <td className="px-4 py-3 text-sm dark:text-gray-300">
+                          {bk.tripSnapshot?.routeName ||
+                            (bk.trip?.route
+                              ? `${bk.trip.route.origin?.city || 'N/A'} - ${bk.trip.route.destination?.city || 'N/A'}`
+                              : 'N/A')}
+                        </td>
                         <td className="px-4 py-3 text-sm dark:text-gray-300">
                           {bk.passengers?.length} ({formatSeats(bk.passengers)})
                         </td>
@@ -286,12 +290,19 @@ export default function BookingMonitoringPage() {
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-slate-600 dark:text-slate-400">Route</p>
-                    <p className="font-medium dark:text-gray-200">{selectedBooking.tripSnapshot?.routeName || 'N/A'}</p>
+                    <p className="font-medium dark:text-gray-200">
+                      {selectedBooking.tripSnapshot?.routeName ||
+                        (selectedBooking.trip?.route
+                          ? `${selectedBooking.trip.route.origin?.city || 'N/A'} - ${selectedBooking.trip.route.destination?.city || 'N/A'}`
+                          : 'N/A')}
+                    </p>
                   </div>
                   <div>
                     <p className="text-slate-600 dark:text-slate-400">Operator</p>
                     <p className="font-medium dark:text-gray-200">
-                      {selectedBooking.tripSnapshot?.operatorName || 'N/A'}
+                      {selectedBooking.tripSnapshot?.operatorName ||
+                        selectedBooking.trip?.operator?.companyName ||
+                        'N/A'}
                     </p>
                   </div>
                   <div>
@@ -301,7 +312,9 @@ export default function BookingMonitoringPage() {
                         ? format(parseISO(selectedBooking.tripSnapshot.departureTime), 'dd MMM yyyy HH:mm', {
                             locale: vi,
                           })
-                        : 'N/A'}
+                        : selectedBooking.trip?.departureTime
+                          ? format(parseISO(selectedBooking.trip.departureTime), 'dd MMM yyyy HH:mm', { locale: vi })
+                          : 'N/A'}
                     </p>
                   </div>
                   <div>
@@ -311,13 +324,15 @@ export default function BookingMonitoringPage() {
                         ? format(parseISO(selectedBooking.tripSnapshot.arrivalTime), 'dd MMM yyyy HH:mm', {
                             locale: vi,
                           })
-                        : 'N/A'}
+                        : selectedBooking.trip?.arrivalTime
+                          ? format(parseISO(selectedBooking.trip.arrivalTime), 'dd MMM yyyy HH:mm', { locale: vi })
+                          : 'N/A'}
                     </p>
                   </div>
                   <div>
                     <p className="text-slate-600 dark:text-slate-400">Bus License Plate</p>
                     <p className="font-medium dark:text-gray-200">
-                      {selectedBooking.tripSnapshot?.busPlateNumber || 'N/A'}
+                      {selectedBooking.tripSnapshot?.busPlateNumber || selectedBooking.trip?.bus?.plateNumber || 'N/A'}
                     </p>
                   </div>
                 </div>

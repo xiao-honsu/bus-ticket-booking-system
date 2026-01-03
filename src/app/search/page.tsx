@@ -58,6 +58,9 @@ function SearchContent() {
     if (searchForm.destination) params.destination = searchForm.destination;
     if (searchForm.departureDate) params.departureDate = searchForm.departureDate;
 
+    // Only show scheduled trips
+    params.status = 'scheduled';
+
     // Add filters - only if they differ from defaults
     if (minPrice > 0) params.minPrice = minPrice;
     if (maxPrice < 2000000) params.maxPrice = maxPrice;

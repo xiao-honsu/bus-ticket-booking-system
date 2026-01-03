@@ -10,11 +10,13 @@ import {
   useGetBusesQuery,
   useGetRoutesQuery,
   useGetOperatorsQuery,
+  useGetTodayBookingsQuery,
 } from '@/lib/store/services/api';
 
 export default function AdminPage() {
   const router = useRouter();
   const { data: bookingsData } = useGetBookingsQuery({ page: 1, limit: 1 });
+  const { data: todayBookings } = useGetTodayBookingsQuery();
   const { data: busesData } = useGetBusesQuery({ page: 1, limit: 1 });
   const { data: routesData } = useGetRoutesQuery({ page: 1, limit: 1 });
   const { data: operatorsData } = useGetOperatorsQuery({ page: 1, limit: 1 });
@@ -110,8 +112,8 @@ export default function AdminPage() {
                 <div className="inline-flex p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-2">
                   <TrendingUp className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                 </div>
-                <p className="text-sm text-muted-foreground mb-1">Total Bookings</p>
-                <p className="text-2xl font-bold text-foreground">{bookingsData?.totalResults || 0}</p>
+                <p className="text-sm text-muted-foreground mb-1">Today's Bookings</p>
+                <p className="text-2xl font-bold text-foreground">{todayBookings?.count || 0}</p>
               </div>
             </CardContent>
           </Card>
