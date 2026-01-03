@@ -263,58 +263,8 @@ export function ChatWidget({ className }: ChatWidgetProps) {
                         )}
                       >
                         {message.role === 'assistant' ? (
-                          <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <Markdown
-                              remarkPlugins={[remarkGfm]}
-                              components={{
-                                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                                ul: ({ children }) => <ul className="mb-2 ml-4 list-disc last:mb-0">{children}</ul>,
-                                ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal last:mb-0">{children}</ol>,
-                                li: ({ children }) => <li className="mb-1">{children}</li>,
-                                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                                em: ({ children }) => <em className="italic">{children}</em>,
-                                code: ({ children }) => (
-                                  <code className="rounded bg-muted/50 px-1 py-0.5 font-mono text-xs">{children}</code>
-                                ),
-                                pre: ({ children }) => (
-                                  <pre className="my-2 overflow-x-auto rounded bg-muted/50 p-2">{children}</pre>
-                                ),
-                                a: ({ href, children }) => (
-                                  <a
-                                    href={href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-primary underline hover:text-primary/80"
-                                  >
-                                    {children}
-                                  </a>
-                                ),
-                                table: ({ children }) => (
-                                  <div className="my-2 overflow-x-auto">
-                                    <table className="min-w-full border-collapse border border-border">
-                                      {children}
-                                    </table>
-                                  </div>
-                                ),
-                                th: ({ children }) => (
-                                  <th className="border border-border bg-muted px-2 py-1 text-left font-semibold">
-                                    {children}
-                                  </th>
-                                ),
-                                td: ({ children }) => <td className="border border-border px-2 py-1">{children}</td>,
-                                blockquote: ({ children }) => (
-                                  <blockquote className="my-2 border-l-4 border-primary pl-3 italic">
-                                    {children}
-                                  </blockquote>
-                                ),
-                                h1: ({ children }) => <h1 className="mb-2 text-lg font-bold">{children}</h1>,
-                                h2: ({ children }) => <h2 className="mb-2 text-base font-bold">{children}</h2>,
-                                h3: ({ children }) => <h3 className="mb-2 text-sm font-bold">{children}</h3>,
-                                hr: () => <hr className="my-2 border-t border-border" />,
-                              }}
-                            >
-                              {message.content}
-                            </Markdown>
+                          <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none prose-p:my-1 prose-p:last:mb-0 prose-a:text-primary prose-code:before:content-[''] prose-code:after:content-['']">
+                            <Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
                           </div>
                         ) : (
                           <div className="whitespace-pre-wrap wrap-break-word leading-relaxed">{message.content}</div>

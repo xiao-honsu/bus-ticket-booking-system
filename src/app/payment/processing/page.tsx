@@ -2,8 +2,9 @@
 
 import { useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CreditCard } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 function ProcessingContent() {
   const searchParams = useSearchParams();
@@ -28,14 +29,23 @@ function ProcessingContent() {
   }, [orderCode, status, cancel, router]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen bg-background px-4">
+      <Card className="w-full max-w-md border-primary/30 bg-card/60 backdrop-blur-sm shadow-lg">
         <CardContent className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-16 w-16 animate-spin text-blue-600 mb-6" />
-          <h1 className="text-2xl font-bold mb-2">Đang xử lý thanh toán</h1>
-          <p className="text-gray-600 text-center">
-            Vui lòng đợi, chúng tôi đang kiểm tra trạng thái thanh toán của bạn...
-          </p>
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+            <div className="relative">
+              <Loader2 className="h-16 w-16 animate-spin text-primary" />
+              <CreditCard className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-primary" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold mb-2 text-card-foreground">Processing Payment</h1>
+          <p className="text-muted-foreground text-center mb-4">Please wait, we are verifying your payment status...</p>
+          {orderCode && (
+            <Badge variant="secondary" className="font-mono">
+              Order: {orderCode}
+            </Badge>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -46,8 +56,11 @@ export default function PaymentProcessingPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+        <div className="flex items-center justify-center min-h-screen bg-background">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+            <Loader2 className="relative h-12 w-12 animate-spin text-primary" />
+          </div>
         </div>
       }
     >

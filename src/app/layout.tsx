@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   description: 'Book your bus tickets online with ease',
 };
 
+export const dynamic = 'force-dynamic';
+
 // Helper to parse user-info cookie safely
 async function getInitialAuthFromCookies(): Promise<InitialAuthState | undefined> {
   try {

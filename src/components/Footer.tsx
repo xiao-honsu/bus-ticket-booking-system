@@ -166,14 +166,14 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm text-gray-400">
                 <Mail className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                <a href="mailto:support@busticket.vn" className="hover:text-white transition-colors">
-                  support@busticket.vn
+                <a href="mailto:talenthive.website@gmail.com" className="hover:text-white transition-colors">
+                  talenthive.website@gmail.com
                 </a>
               </li>
               <li className="flex items-start gap-3 text-sm text-gray-400">
                 <Phone className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                <a href="tel:1900xxxx" className="hover:text-white transition-colors">
-                  1900 xxxx
+                <a href="tel:0762685089" className="hover:text-white transition-colors">
+                  0762685089
                 </a>
               </li>
               <li className="flex items-start gap-3 text-sm text-gray-400">
