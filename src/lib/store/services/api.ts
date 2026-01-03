@@ -275,6 +275,13 @@ export const api = createApi({
       }),
       invalidatesTags: ['Trip'],
     }),
+    checkBusAvailability: builder.mutation({
+      query: (data: { busId: string; departureTime: string; arrivalTime: string; excludeTripId?: string }) => ({
+        url: '/trips/check-availability',
+        method: 'POST',
+        body: data,
+      }),
+    }),
     deleteTrip: builder.mutation({
       query: (tripId: string) => ({
         url: `/trips/${tripId}`,
@@ -388,6 +395,7 @@ export const api = createApi({
       query: (bookingId: string) => ({
         url: `/bookings/${bookingId}/cancel`,
         method: 'POST',
+        body: { reason: 'Cancelled by admin' },
       }),
       invalidatesTags: ['Booking', 'Trip'],
     }),
@@ -806,6 +814,7 @@ export const {
   useLazySearchTripsQuery,
   useGetTripQuery,
   useCreateTripMutation,
+  useCheckBusAvailabilityMutation,
   useDeleteTripMutation,
   useUpdateTripSeatPricingMutation,
   useCreateBookingMutation,

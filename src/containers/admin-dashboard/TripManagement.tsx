@@ -10,6 +10,7 @@ import {
   useCreateTripMutation,
   useDeleteTripMutation,
   useUpdateTripStatusMutation,
+  useCheckBusAvailabilityMutation,
 } from '@/lib/store/services/api';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ export default function TripManagement() {
   const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
   const [deleteTrip, { isLoading: isDeleting }] = useDeleteTripMutation();
   const [updateTripStatus] = useUpdateTripStatusMutation();
+  const [checkBusAvailability, { isLoading: isCheckingAvailability }] = useCheckBusAvailabilityMutation();
 
   const routes = routesData?.results || [];
   const buses = busesData?.results || [];
@@ -191,12 +193,50 @@ export default function TripManagement() {
     }
   };
 
-  const checkConflicts = () => {
-    if (formData.busId && formData.departureDate && formData.departureTime) {
+  const checkConflicts = async () => {
+    if (
+      !formData.busId ||
+      !formData.departureDate ||
+      !formData.departureTime ||
+      !formData.arrivalDate ||
+      !formData.arrivalTime
+    ) {
+      setConflictMessage('⚠️ Please fill in bus, departure and arrival date/time first');
       setHasConflict(false);
-      setConflictMessage('✅ Bus is available for selected time slot (basic client check)');
-    } else {
-      setConflictMessage('Please select bus and departure time first');
+      return;
+    }
+
+    try {
+      // Combine date and time into ISO string
+      const departureTime = `${formData.departureDate}T${formData.departureTime}:00.000Z`;
+      const arrivalTime = `${formData.arrivalDate}T${formData.arrivalTime}:00.000Z`;
+
+      const result = await checkBusAvailability({
+        busId: formData.busId,
+        departureTime,
+        arrivalTime,
+      }).unwrap();
+
+      if (result.available) {
+        setHasConflict(false);
+        setConflictMessage('✅ Bus is available for selected time slot');
+      } else {
+        setHasConflict(true);
+        const conflictDetails = result.conflicts
+          .map((c: any) => {
+            const route = c.route
+              ? `${c.route.origin?.city || 'Unknown'} → ${c.route.destination?.city || 'Unknown'}`
+              : 'Unknown route';
+            const depTime = new Date(c.departureTime).toLocaleString();
+            const arrTime = new Date(c.arrivalTime).toLocaleString();
+            return `${route} (${depTime} - ${arrTime})`;
+          })
+          .join(', ');
+        setConflictMessage(`❌ Bus is NOT available. Conflicts with: ${conflictDetails}`);
+      }
+    } catch (error: any) {
+      setConflictMessage(`❌ Error checking availability: ${error?.data?.message || 'Unknown error'}`);
+      setHasConflict(false);
     }
   };
 
@@ -622,8 +662,14 @@ export default function TripManagement() {
 
             {/* Conflict Checker */}
             <div className="space-y-2">
-              <Button type="button" variant="outline" className="w-full" onClick={checkConflicts}>
-                🔍 Check Bus Availability
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={checkConflicts}
+                disabled={isCheckingAvailability}
+              >
+                🔍 {isCheckingAvailability ? 'Checking...' : 'Check Bus Availability'}
               </Button>
               {conflictMessage && (
                 <div

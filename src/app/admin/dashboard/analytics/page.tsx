@@ -58,16 +58,13 @@ export default function AnalyticsPage() {
     pending: 0,
     confirmed: 0,
     cancelled: 0,
-    completed: 0,
   };
 
-  const total =
-    statusBreakdown.pending + statusBreakdown.confirmed + statusBreakdown.cancelled + statusBreakdown.completed;
+  const total = statusBreakdown.pending + statusBreakdown.confirmed + statusBreakdown.cancelled;
   const statusPercentages = {
     pending: total > 0 ? Math.round((statusBreakdown.pending / total) * 100) : 0,
     confirmed: total > 0 ? Math.round((statusBreakdown.confirmed / total) * 100) : 0,
     cancelled: total > 0 ? Math.round((statusBreakdown.cancelled / total) * 100) : 0,
-    completed: total > 0 ? Math.round((statusBreakdown.completed / total) * 100) : 0,
   };
 
   // Find max revenue for chart scaling
@@ -173,24 +170,108 @@ export default function AnalyticsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-end gap-2 h-48">
-                {revenueByDay.map((item: any, index: number) => {
-                  const heightPercent = (item.revenue / maxRevenue) * 100;
-                  return (
-                    <div key={index} className="flex-1 flex flex-col items-center">
-                      <div className="w-full flex flex-col-reverse h-40">
-                        <div
-                          className="bg-blue-500 rounded-t-md w-full hover:bg-blue-600 transition-colors"
-                          style={{ height: `${heightPercent}%` }}
-                          title={`${format(parseISO(item.date), 'MMM dd')}: ${item.revenue.toLocaleString('vi-VN')} đ`}
-                        />
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-                        {format(parseISO(item.date), 'MMM dd')}
-                      </p>
-                    </div>
-                  );
-                })}
+              <div className="relative h-48">
+                <svg className="w-full h-full" viewBox="0 0 800 200" preserveAspectRatio="none">
+                  {/* Grid lines */}
+                  <line
+                    x1="0"
+                    y1="0"
+                    x2="800"
+                    y2="0"
+                    stroke="currentColor"
+                    className="text-slate-200 dark:text-slate-700"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="0"
+                    y1="50"
+                    x2="800"
+                    y2="50"
+                    stroke="currentColor"
+                    className="text-slate-200 dark:text-slate-700"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="0"
+                    y1="100"
+                    x2="800"
+                    y2="100"
+                    stroke="currentColor"
+                    className="text-slate-200 dark:text-slate-700"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="0"
+                    y1="150"
+                    x2="800"
+                    y2="150"
+                    stroke="currentColor"
+                    className="text-slate-200 dark:text-slate-700"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="0"
+                    y1="200"
+                    x2="800"
+                    y2="200"
+                    stroke="currentColor"
+                    className="text-slate-200 dark:text-slate-700"
+                    strokeWidth="1"
+                  />
+
+                  {/* Line chart */}
+                  {revenueByDay.length > 0 && (
+                    <>
+                      <polyline
+                        fill="none"
+                        stroke="#3b82f6"
+                        strokeWidth="3"
+                        points={revenueByDay
+                          .map((item: any, index: number) => {
+                            const x = (index / (revenueByDay.length - 1)) * 800;
+                            const y = 200 - (item.revenue / maxRevenue) * 180;
+                            return `${x},${y}`;
+                          })
+                          .join(' ')}
+                      />
+                      {/* Data points */}
+                      {revenueByDay.map((item: any, index: number) => {
+                        const x = (index / (revenueByDay.length - 1)) * 800;
+                        const y = 200 - (item.revenue / maxRevenue) * 180;
+                        return (
+                          <circle
+                            key={index}
+                            cx={x}
+                            cy={y}
+                            r="4"
+                            fill="#3b82f6"
+                            className="hover:r-6 transition-all cursor-pointer"
+                          >
+                            <title>{`${format(parseISO(item.date), 'MMM dd')}: ${item.revenue.toLocaleString('vi-VN')} đ`}</title>
+                          </circle>
+                        );
+                      })}
+                    </>
+                  )}
+                </svg>
+                {/* X-axis labels */}
+                <div className="flex justify-between mt-2 px-1">
+                  {revenueByDay.map((item: any, index: number) => {
+                    // Show only first, middle, and last labels to avoid crowding
+                    if (
+                      index === 0 ||
+                      index === Math.floor(revenueByDay.length / 2) ||
+                      index === revenueByDay.length - 1
+                    ) {
+                      return (
+                        <p key={index} className="text-xs text-slate-600 dark:text-slate-400">
+                          {format(parseISO(item.date), 'MMM dd')}
+                        </p>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -206,21 +287,6 @@ export default function AnalyticsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-700 dark:text-slate-300">Completed</span>
-                  <Badge
-                    className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                    variant="secondary"
-                  >
-                    {statusPercentages.completed}%
-                  </Badge>
-                </div>
-                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="bg-green-500 h-2" style={{ width: `${statusPercentages.completed}%` }} />
-                </div>
-              </div>
-
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-700 dark:text-slate-300">Confirmed</span>

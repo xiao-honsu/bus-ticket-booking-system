@@ -47,7 +47,6 @@ export default function OperatorManagement() {
     email: '',
     phoneNumber: '',
     licenseNumber: '',
-    status: 'pending',
     description: '',
   });
 
@@ -77,7 +76,6 @@ export default function OperatorManagement() {
         email: formData.email,
         phoneNumber: formData.phoneNumber,
         licenseNumber: formData.licenseNumber,
-        status: formData.status,
         description: formData.description || undefined,
       };
 
@@ -89,7 +87,6 @@ export default function OperatorManagement() {
         email: '',
         phoneNumber: '',
         licenseNumber: '',
-        status: 'pending',
         description: '',
       });
     } catch (error: any) {
@@ -160,7 +157,6 @@ export default function OperatorManagement() {
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead>License</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -171,9 +167,6 @@ export default function OperatorManagement() {
                       <TableCell>{operator.email}</TableCell>
                       <TableCell>{operator.phoneNumber}</TableCell>
                       <TableCell className="text-sm">{operator.licenseNumber}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(operator.status)}>{operator.status}</Badge>
-                      </TableCell>
                       <TableCell>
                         <Button
                           variant="destructive"
@@ -268,21 +261,6 @@ export default function OperatorManagement() {
                 value={formData.licenseNumber}
                 onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending Approval</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">
