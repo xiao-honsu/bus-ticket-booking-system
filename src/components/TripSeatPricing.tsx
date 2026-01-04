@@ -114,7 +114,7 @@ const TripSeatPricing: React.FC<TripSeatPricingProps> = ({
       [selectedSeat.seatNumber]: price,
     });
 
-    toast.success(`Price set for seat ${selectedSeat.seatNumber}: $${price}`);
+    toast.success(`Price set for seat ${selectedSeat.seatNumber}: ${price}đ`);
     setSelectedSeat(null);
     setPriceInput('');
   };
@@ -134,7 +134,7 @@ const TripSeatPricing: React.FC<TripSeatPricingProps> = ({
     });
 
     setSeatPricing(updatedPricing);
-    toast.success(`Price set for all ${seatType} seats: $${price}`);
+    toast.success(`Price set for all ${seatType} seats: ${price}đ`);
   };
 
   const handleResetToBase = () => {
@@ -175,7 +175,7 @@ const TripSeatPricing: React.FC<TripSeatPricingProps> = ({
           <div className="space-y-4">
             <div className="border rounded-lg p-3 bg-blue-50 border-blue-200">
               <div className="text-sm font-medium mb-2 text-blue-900">💰 Base Price</div>
-              <div className="text-2xl font-bold text-blue-900">${basePricePerSeat}</div>
+              <div className="text-2xl font-bold text-blue-900">{basePricePerSeat}đ</div>
               <p className="text-xs text-gray-600 mt-1">Default price per seat</p>
             </div>
 
@@ -184,7 +184,7 @@ const TripSeatPricing: React.FC<TripSeatPricingProps> = ({
                 <div className="text-sm font-medium mb-2 text-green-900">🎯 Selected: {selectedSeat.seatNumber}</div>
                 <Badge className="mb-2">{selectedSeat.seatType}</Badge>
                 <div className="space-y-2">
-                  <Label htmlFor="seatPrice">Set Price ($)</Label>
+                  <Label htmlFor="seatPrice">Set Price (đ)</Label>
                   <Input
                     id="seatPrice"
                     type="number"
@@ -205,7 +205,7 @@ const TripSeatPricing: React.FC<TripSeatPricingProps> = ({
             <div className="border rounded-lg p-3 bg-purple-50 border-purple-200">
               <div className="text-sm font-medium mb-2 text-purple-900">🎨 Bulk Pricing</div>
               <div className="space-y-2">
-                <Label htmlFor="bulkPrice">Price ($)</Label>
+                <Label htmlFor="bulkPrice">Price (đ)</Label>
                 <Input
                   id="bulkPrice"
                   type="number"
@@ -244,7 +244,7 @@ const TripSeatPricing: React.FC<TripSeatPricingProps> = ({
               <ol className="text-xs text-gray-600 space-y-1 list-decimal list-inside">
                 <li>Click a seat to set its individual price</li>
                 <li>Or use bulk pricing to set all seats of same type</li>
-                <li>Unpriced seats use base price (${basePricePerSeat})</li>
+                <li>Unpriced seats use base price ({basePricePerSeat}đ)</li>
               </ol>
             </div>
           </div>
@@ -279,13 +279,13 @@ const TripSeatPricing: React.FC<TripSeatPricingProps> = ({
                               className={`w-12 h-12 rounded border-2 transition-all relative ${
                                 seatTypeColors[seat.seatType]
                               } ${isSelected ? 'border-blue-600 ring-2 ring-blue-500' : 'border-gray-400'}`}
-                              title={`${seat.seatNumber} - $${price}`}
+                              title={`${seat.seatNumber} - ${price}đ`}
                             >
                               <div className="text-xs font-semibold">{seat.seatNumber}</div>
                               <div
                                 className={`text-[10px] ${hasCustomPrice ? 'text-green-700 font-bold' : 'text-gray-600'}`}
                               >
-                                ${price}
+                                {price}đ
                               </div>
                             </button>
 
@@ -297,8 +297,7 @@ const TripSeatPricing: React.FC<TripSeatPricingProps> = ({
 
                             {/* Hover tooltip */}
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              {seat.seatNumber} - {seat.seatType} - ${price}
-                              {!hasCustomPrice && ' (base)'}
+                              {seat.seatNumber} - {seat.seatType} - {price}đ{!hasCustomPrice && ' (base)'}
                             </div>
                           </div>
                         );

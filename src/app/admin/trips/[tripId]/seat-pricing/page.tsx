@@ -100,7 +100,7 @@ export default function TripSeatPricingPage() {
       [selectedSeat.seatNumber]: price,
     });
 
-    toast.success(`Price set for seat ${selectedSeat.seatNumber}: $${price}`);
+    toast.success(`Price set for seat ${selectedSeat.seatNumber}: ${price}đ`);
     setSelectedSeat(null);
     setPriceInput('');
   };
@@ -122,7 +122,7 @@ export default function TripSeatPricingPage() {
     });
 
     setSeatPricing(updatedPricing);
-    toast.success(`Price set for all ${seatType} seats: $${price}`);
+    toast.success(`Price set for all ${seatType} seats: ${price}đ`);
   };
 
   const handleResetToBase = () => {
@@ -223,7 +223,7 @@ export default function TripSeatPricingPage() {
                 <DollarSign className="w-4 h-4" />
                 Base Price
               </h3>
-              <div className="text-3xl font-bold text-blue-900 dark:text-blue-200">${basePricePerSeat}</div>
+              <div className="text-3xl font-bold text-blue-900 dark:text-blue-200">{basePricePerSeat}đ</div>
               <p className="text-xs text-muted-foreground mt-2">Default price per seat</p>
             </div>
 
@@ -237,7 +237,7 @@ export default function TripSeatPricingPage() {
                 <div className="space-y-3">
                   <div>
                     <Label htmlFor="seatPrice" className="text-sm mb-1.5 block">
-                      Set Price ($)
+                      Set Price (đ)
                     </Label>
                     <Input
                       id="seatPrice"
@@ -268,7 +268,7 @@ export default function TripSeatPricingPage() {
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="bulkPrice" className="text-sm mb-1.5 block">
-                    Price ($)
+                    Price (đ)
                   </Label>
                   <Input
                     id="bulkPrice"
@@ -311,7 +311,7 @@ export default function TripSeatPricingPage() {
               <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
                 <li>Click a seat to set its individual price</li>
                 <li>Or use bulk pricing to set all seats of same type</li>
-                <li>Unpriced seats use base price (${basePricePerSeat})</li>
+                <li>Unpriced seats use base price ({basePricePerSeat}đ)</li>
               </ol>
             </div>
           </div>
@@ -352,13 +352,13 @@ export default function TripSeatPricingPage() {
                               className={`w-20 h-20 rounded-xl border-2 transition-all relative shadow-sm ${
                                 seatTypeColors[seat.seatType]
                               } ${isSelected ? 'border-blue-600 ring-4 ring-blue-300 dark:border-blue-400 dark:ring-blue-500' : 'border-border'}`}
-                              title={`${seat.seatNumber} - $${price}`}
+                              title={`${seat.seatNumber} - ${price}đ`}
                             >
                               <div className="text-sm font-bold">{seat.seatNumber}</div>
                               <div
                                 className={`text-xs ${hasCustomPrice ? 'text-green-700 dark:text-green-300 font-bold' : 'text-muted-foreground'}`}
                               >
-                                ${price}
+                                {price}đ
                               </div>
                             </button>
 
@@ -370,8 +370,7 @@ export default function TripSeatPricingPage() {
 
                             {/* Hover tooltip */}
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-lg">
-                              {seat.seatNumber} - {seat.seatType} - ${price}
-                              {!hasCustomPrice && ' (base)'}
+                              {seat.seatNumber} - {seat.seatType} - {price}đ{!hasCustomPrice && ' (base)'}
                             </div>
                           </div>
                         );
@@ -399,22 +398,22 @@ export default function TripSeatPricingPage() {
                     <div className="text-center">
                       <div className="text-sm text-muted-foreground mb-1">Min Price</div>
                       <div className="text-xl font-bold text-foreground">
-                        ${Math.min(...seatMap.seats.map((s) => getSeatPrice(s.seatNumber)))}
+                        {Math.min(...seatMap.seats.map((s) => getSeatPrice(s.seatNumber)))}đ
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-sm text-muted-foreground mb-1">Max Price</div>
                       <div className="text-xl font-bold text-foreground">
-                        ${Math.max(...seatMap.seats.map((s) => getSeatPrice(s.seatNumber)))}
+                        {Math.max(...seatMap.seats.map((s) => getSeatPrice(s.seatNumber)))}đ
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-sm text-muted-foreground mb-1">Avg Price</div>
                       <div className="text-xl font-bold text-foreground">
-                        $
                         {(
                           seatMap.seats.reduce((sum, s) => sum + getSeatPrice(s.seatNumber), 0) / seatMap.seats.length
                         ).toFixed(2)}
+                        đ
                       </div>
                     </div>
                   </div>
